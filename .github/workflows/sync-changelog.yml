@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "changelog.json" # only runs when this file actually changes
+      - "changelog.json"
 
 jobs:
   sync:
@@ -20,11 +20,8 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install dependencies
-        run: npm install @notionhq/client
-
       - name: Push changelog to Notion
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_ACCESS_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
         run: node .github/scripts/push-changelog.mjs
