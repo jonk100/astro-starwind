@@ -12,6 +12,22 @@
         "Configured Tailwind CSS v4 with custom theme variables",
         "Set up project structure with layouts, styles, and utilities"
       ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-05-10",
+      "description": "Added comprehensive form component library with advanced features",
+      "changes": [
+        "Installed and documented 15 form components: Button Group, Checkbox, Combobox, Dropzone, Input, Input Group, Input OTP, Label, Native Select, Radio Group, Select, Slider, Switch, Textarea, Toggle",
+        "Created comprehensive documentation files for each component with usage examples, API references, and best practices",
+        "Generated agent-friendly AGENTS.md summaries for easy integration and development",
+        "Added fetch-component workflow for automated component installation and documentation",
+        "Implemented advanced features: search functionality, drag-and-drop, range sliders, synchronized toggles, OTP input with paste handling",
+        "Ensured full accessibility support with ARIA attributes and keyboard navigation",
+        "Added multiple variants (default, primary, secondary, info, success, warning, error) and sizes (sm, md, lg)",
+        "Implemented event-driven architecture for modern web applications",
+        "Updated package.json and starwind.config.json with new dependencies"
+      ]
     }
   ],
   "unreleased": []
