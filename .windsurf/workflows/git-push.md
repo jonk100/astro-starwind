@@ -77,48 +77,52 @@ This workflow stages all changes, commits them with a relevant message, creates 
 
 8. **Update changelog when necessary** - Only update when completing significant features worth a new version
 
-   **When to update changelog:**
-   - Adding major new components or features
-   - Completing a significant milestone
-   - Releasing a new version with breaking changes
-   - Finishing a complete feature set
+**When to update changelog:**
 
-   **How to update changelog:**
+- Adding major new components or features
+- Completing a significant milestone
+- Releasing a new version with breaking changes
+- Finishing a complete feature set
 
-   ```bash
-   # Update changelog.json with new version entry
-   # Add new version object to versions array with:
-   # - version: "x.y.z" (increment based on change type)
-   # - date: current date in YYYY-MM-DD format
-   # - description: concise summary of changes
-   # - changes: array of specific accomplishments
-   ```
+**How to update changelog:**
 
-   Example changelog update:
-   ```json
-   {
-     "version": "1.1.0",
-     "date": "2026-05-10",
-     "description": "Added navigation and form components",
-     "changes": [
-       "Implemented navigation menu component with mobile support",
-       "Added form validation components with error handling",
-       "Enhanced accessibility across all components"
-     ]
-   }
-   ```
+```bash
+# Update changelog.json with new version entry
+# Add new version object to versions array with:
+# - version: "x.y.z" (increment based on change type)
+# - date: current date in YYYY-MM-DD format
+# - description: concise summary of changes
+# - changes: array of specific accomplishments
+```
 
-   **Version incrementing guidelines:**
-   - **Major (x.0.0)**: Breaking changes, major architectural changes
-   - **Minor (x.y.0)**: New features, significant enhancements
-   - **Patch (x.y.z)**: Bug fixes, minor improvements, documentation updates
+Example changelog update:
 
-   After updating changelog.json:
-   ```bash
-   git add changelog.json
-   git commit -m "Update changelog to v1.1.0"
-   git push
-   ```
+```json
+{
+   "version": "1.1.0",
+   "date": "2026-05-10",
+   "description": "Added navigation and form components",
+   "changes": [
+      "Implemented navigation menu component with mobile support",
+      "Added form validation components with error handling",
+      "Enhanced accessibility across all components"
+   ]
+}
+```
+
+**Version incrementing guidelines:**
+
+- **Major (x.0.0)**: Breaking changes, major architectural changes
+- **Minor (x.y.0)**: New features, significant enhancements
+- **Patch (x.y.z)**: Bug fixes, minor improvements, documentation updates
+
+After updating changelog.json:
+
+```bash
+git add changelog.json
+git commit -m "Update changelog to v1.1.0"
+git push
+```
 
 ## Usage
 

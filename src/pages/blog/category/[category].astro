@@ -1,0 +1,182 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import BlogHeader from '../../../components/BlogHeader.astro';
+import BlogPreviewCard from '../../../components/BlogPreviewCard.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../../../consts';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  
+  // Extract all unique categories
+  const categories = new Set();
+  posts.forEach(post => {
+    if (post.data.categories) {
+      post.data.categories.forEach(category => {
+        categories.add(category);
+      });
+    }
+  });
+
+  // Create paths for each category
+  return Array.from(categories).map(category => ({
+    params: { category },
+    props: { posts: posts.filter(post => post.data.categories?.includes(category)) }
+  }));
+}
+
+const { category } = Astro.params;
+const { posts } = Astro.props;
+
+// Sort posts by date
+const sortedPosts = posts.sort(
+  (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
+);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`${category} - ${SITE_TITLE}`} description={`${SITE_DESCRIPTION} - Posts in ${category} category`} />
+    <style>
+      .category-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+      }
+
+      .category-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--text-primary, #111827);
+      }
+
+      .category-count {
+        font-size: 1.25rem;
+        color: var(--text-secondary, #6b7280);
+        margin-bottom: 0.5rem;
+      }
+
+      .category-description {
+        font-size: 1.125rem;
+        color: var(--text-secondary, #6b7280);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .blog-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .no-posts {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-secondary, #6b7280);
+      }
+
+      .no-posts h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .back-to-blog {
+        display: inline-block;
+        margin-top: 2rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--accent, #3b82f6);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+      }
+
+      .back-to-blog:hover {
+        background: var(--accent-dark, #2563eb);
+      }
+
+      @media (max-width: 768px) {
+        .category-title {
+          font-size: 2rem;
+        }
+
+        .blog-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .category-header {
+          margin-bottom: 2rem;
+          padding: 1rem 0;
+        }
+
+        .category-title {
+          font-size: 1.75rem;
+        }
+
+        .blog-grid {
+          gap: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <BlogHeader />
+    
+    <container class="blog-index-page-container">
+      <div class="category-header">
+        <h1 class="category-title">{category}</h1>
+        <p class="category-count">{sortedPosts.length} {sortedPosts.length === 1 ? 'post' : 'posts'} in this category</p>
+        <p class="category-description">
+          Explore all articles related to {category}. Discover insights, tips, and stories on this topic.
+        </p>
+      </div>
+
+      <main>
+        {sortedPosts.length > 0 ? (
+          <ul class="blog-grid">
+            {sortedPosts.map((post, index) => (
+              <li>
+                <BlogPreviewCard 
+                  post={post} 
+                  isFeatured={index === 0}
+                  variant="default"
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="no-posts">
+            <h2>No posts found in {category}</h2>
+            <p>Check back later for new content in this category.</p>
+            <a href="/blog/" class="back-to-blog">Back to Blog</a>
+          </div>
+        )}
+      </main>
+
+      <Footer />
+    </container>
+  </body>
+</html>
+
+<style>
+  .blog-index-page-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+</style>

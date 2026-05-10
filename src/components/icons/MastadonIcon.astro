@@ -1,0 +1,52 @@
+---
+import Icon from '../ui/icon/Icon.astro';
+import Mastadon from '!svg/mastadon.svg';
+
+interface Props {
+  /** Preset size. Default: "md" */
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  /** Explicit pixel size — overrides `size` when provided */
+  px?: number;
+  /**
+   * Icon colour. Accepts any CSS colour value.
+   * Defaults to `currentColor` so it inherits from the parent.
+   */
+  color?: string;
+  /** Accessible label. Marks the icon as decorative if omitted. */
+  label?: string;
+  /** Additional CSS styles */
+  style?: string;
+  /** Additional CSS classes */
+  class?: string;
+}
+
+/** Maps named sizes to pixel values. */
+const SIZE_MAP: Record<NonNullable<Props["size"]>, number> = {
+  xs: 12,
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 32,
+};
+
+const {
+  size = "md",
+  px,
+  color = "currentColor",
+  label,
+  style,
+  class: className,
+} = Astro.props;
+
+const resolvedSize = px ?? SIZE_MAP[size];
+---
+
+<Icon 
+  size={size} 
+  color={color} 
+  label={label} 
+  style={style}
+  class={className}
+>
+  <Mastadon width={resolvedSize} height={resolvedSize} />
+</Icon>

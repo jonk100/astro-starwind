@@ -4,9 +4,26 @@
   License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
  */
 
+ @import "./starwind.css";
+
 :root {
 	--accent: #2337ff;
 	--accent-dark: #000d8a;
+	--yellow: rgb(255, 255, 0);
+	--yellow-dark: rgb(170, 170, 0);
+	--yellow-light: rgb(255, 255, 136);
+	--green: rgb(0, 207, 86);
+	--green-dark: rgb(0, 170, 71);
+	--green-light: rgb(102, 255, 170);
+	--red: rgb(235, 42, 17);
+	--red-dark: rgb(190, 25, 0);
+	--red-light: rgb(255, 87, 68);
+	--blue: rgb(0, 123, 255);
+	--blue-dark: rgb(0, 82, 170);
+	--blue-light: rgb(162, 204, 255);
+	--purple: rgb(128, 0, 128);
+	--purple-dark: rgb(85, 0, 85);
+	--purple-light: rgb(204, 153, 255);
 	--black: 15, 18, 25;
 	--gray: 96, 115, 159;
 	--gray-light: 229, 233, 240;
@@ -17,7 +34,7 @@
 		0 16px 32px rgba(var(--gray), 33%);
 }
 body {
-	font-family: var(--font-atkinson);
+	font-family: var(--sans);
 	margin: 0;
 	padding: 0;
 	text-align: left;
@@ -26,15 +43,42 @@ body {
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 	color: rgb(var(--gray-dark));
-	font-size: 20px;
-	line-height: 1.7;
 }
 main {
-	width: 720px;
-	max-width: calc(100% - 2em);
+	width: clamp(60vw, calc(60vw + 1vw), 70vw);
+	max-width: calc(100vw - 2em);
 	margin: auto;
 	padding: 3em 1em;
 }
+
+.layout-main-content {
+	font-size: clamp(1.25rem, 1.25rem + 0.125vw, 1.75rem);
+	line-height: 1.5;
+}
+.layout-main-content a {
+	color: var(--purple);
+	font-weight: 500;
+}
+
+.layout-main-content a:hover {
+	color: var(--purple-light);
+	transition: color 0.5s ease;
+}
+ul, ol {
+	margin-bottom: 1.5em;
+	padding-left: 1.5em;
+	margin-top: -1.0em;
+}
+.layout-main-content ul {
+	list-style: disc;
+}
+.layout-main-content ol {
+	list-style: decimal;
+}
+.layout-main-content li {
+	margin-bottom: 0.125em;
+}
+
 h1,
 h2,
 h3,
@@ -43,7 +87,7 @@ h5,
 h6 {
 	margin: 0 0 0.5rem 0;
 	color: rgb(var(--black));
-	line-height: 1.2;
+	line-height: 1.5;
 }
 h1 {
 	font-size: 3.052em;
@@ -64,14 +108,9 @@ strong,
 b {
 	font-weight: 700;
 }
-a {
-	color: var(--accent);
-}
-a:hover {
-	color: var(--accent);
-}
+
 p {
-	margin-bottom: 1em;
+	margin-bottom: 1.5em;
 }
 .prose p {
 	margin-bottom: 2em;
@@ -92,9 +131,7 @@ img {
 	border-radius: 8px;
 }
 code {
-	padding: 2px 5px;
-	background-color: rgb(var(--gray-light));
-	border-radius: 2px;
+	@apply bg-red-200 px-1 py-0.5 text-lg font-mono ;
 }
 pre {
 	padding: 1.5em;

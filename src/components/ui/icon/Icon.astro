@@ -1,0 +1,73 @@
+---
+/**
+ * Icon.astro
+ *
+ * A thin sizing/colour wrapper for icons. Two usage patterns:
+ *
+ * 1. **Slot pattern** — pass any SVG or `@lucide/astro` icon as a child:
+ *    ```astro
+ *    import { Search } from "@lucide/astro";
+ *    <Icon size="md" label="Search"><Search /></Icon>
+ *    ```
+ *
+ * 2. **Inline SVG slot** — drop raw SVG markup inside:
+ *    ```astro
+ *    <Icon size="lg">
+ *      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ...>...</svg>
+ *    </Icon>
+ *    ```
+ *
+ * The wrapper sets `width`, `height`, `color`, and `aria-label` on the
+ * container so any child SVG that uses `currentColor` inherits the colour.
+ */
+
+interface Props {
+  /** Preset size. Default: "md" */
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  /** Explicit pixel size — overrides `size` when provided */
+  px?: number;
+  /**
+   * Icon colour. Accepts any CSS colour value.
+   * Defaults to `currentColor` so it inherits from the parent.
+   */
+  color?: string;
+  /** Accessible label. Marks the icon as decorative if omitted. */
+  label?: string;
+  /** Additional CSS classes */
+  class?: string;
+  /** Additional inline styles */
+  style?: string;
+}
+
+/** Maps named sizes to pixel values. */
+const SIZE_MAP: Record<NonNullable<Props["size"]>, number> = {
+  xs: 12,
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 32,
+};
+
+const {
+  size = "md",
+  px,
+  color = "currentColor",
+  label,
+  style: styleName,
+  class: className,
+} = Astro.props;
+
+const resolvedSize = px ?? SIZE_MAP[size];
+---
+
+<span
+  data-slot="icon"
+  data-size={size}
+  aria-hidden={label ? undefined : "true"}
+  aria-label={label}
+  role={label ? "img" : undefined}
+  style={`--icon-size: ${resolvedSize}px; color: ${color};${styleName ? ` ${styleName}` : ""}`}
+  class={className}
+>
+  <slot />
+</span>

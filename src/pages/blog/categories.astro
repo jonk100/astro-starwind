@@ -1,0 +1,346 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '@/layouts/BaseHead.astro';
+import Footer from '@/layouts/Footer.astro';
+import Header from '@/components/header/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
+
+// Get all posts and extract categories
+const posts = await getCollection('posts');
+
+// Extract and organize categories
+const categoryMap = new Map();
+posts.forEach(post => {
+  if (post.data.categories) {
+    post.data.categories.forEach(category => {
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, []);
+      }
+      categoryMap.get(category).push(post);
+    });
+  }
+});
+
+// Sort categories alphabetically and by post count
+const sortedCategories = Array.from(categoryMap.entries())
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([category, categoryPosts]) => ({
+    name: category,
+    posts: categoryPosts.sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()),
+    count: categoryPosts.length
+  }));
+
+// Sort by post count (descending) for display
+const categoriesByCount = [...sortedCategories].sort((a, b) => b.count - a.count);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`Categories - ${SITE_TITLE}`} description={`${SITE_DESCRIPTION} - Browse all blog categories`} />
+    <style>
+      .categories-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+      }
+
+      .categories-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--text-primary, #111827);
+      }
+
+      .categories-description {
+        font-size: 1.25rem;
+        color: var(--text-secondary, #6b7280);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .categories-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin: 2rem 0;
+        flex-wrap: wrap;
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent, #3b82f6);
+      }
+
+      .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary, #6b7280);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .category-card {
+        background: var(--bg-primary, #ffffff);
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px;
+        padding: 2rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+
+      .category-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.1));
+      }
+
+      .category-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary, #111827);
+      }
+
+      .category-count {
+        font-size: 1.125rem;
+        color: var(--text-secondary, #6b7280);
+        margin-bottom: 1rem;
+      }
+
+      .category-posts {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border, #e5e7eb);
+      }
+
+      .category-posts-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary, #6b7280);
+        margin-bottom: 0.75rem;
+      }
+
+      .recent-posts {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .recent-post {
+        font-size: 0.875rem;
+        color: var(--text-secondary, #6b7280);
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .recent-post:hover {
+        color: var(--accent, #3b82f6);
+      }
+
+      .popular-categories {
+        margin-top: 3rem;
+      }
+
+      .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        color: var(--text-primary, #111827);
+      }
+
+      .popular-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+      }
+
+      .popular-tag {
+        background: var(--accent, #3b82f6);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .popular-tag:hover {
+        background: var(--accent-dark, #2563eb);
+        transform: translateY(-2px);
+      }
+
+      .post-count {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+      }
+
+      .back-to-blog {
+        display: inline-block;
+        margin: 2rem auto;
+        padding: 0.75rem 1.5rem;
+        background: var(--bg-secondary, #f3f4f6);
+        color: var(--text-primary, #111827);
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+        border: 1px solid var(--border, #e5e7eb);
+      }
+
+      .back-to-blog:hover {
+        background: var(--accent, #3b82f6);
+        color: white;
+        border-color: var(--accent, #3b82f6);
+      }
+
+      @media (max-width: 768px) {
+        .categories-title {
+          font-size: 2rem;
+        }
+
+        .categories-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .categories-stats {
+          gap: 1rem;
+        }
+
+        .stat-number {
+          font-size: 1.5rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .categories-header {
+          margin-bottom: 2rem;
+          padding: 1rem 0;
+        }
+
+        .categories-title {
+          font-size: 1.75rem;
+        }
+
+        .category-card {
+          padding: 1.5rem;
+        }
+
+        .popular-list {
+          gap: 0.75rem;
+        }
+
+        .popular-tag {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    
+    <container class="blog-index-page-container">
+      <div class="categories-header">
+        <h1 class="categories-title">Categories</h1>
+        <p class="categories-description">
+          Browse all blog categories to find content that interests you. Each category contains related articles on specific topics.
+        </p>
+        
+        <div class="categories-stats">
+          <div class="stat">
+            <div class="stat-number">{sortedCategories.length}</div>
+            <div class="stat-label">Categories</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">{posts.length}</div>
+            <div class="stat-label">Total Posts</div>
+          </div>
+        </div>
+      </div>
+
+      <main>
+        <div class="categories-grid">
+          {sortedCategories.map(({ name, posts, count }) => (
+            <a href={`/blog/category/${name}/`} class="category-card">
+              <h2 class="category-name">{name}</h2>
+              <p class="category-count">{count} {count === 1 ? 'post' : 'posts'}</p>
+              
+              {posts.length > 0 && (
+                <div class="category-posts">
+                  <h3 class="category-posts-title">Recent Posts</h3>
+                  <ul class="recent-posts">
+                    {posts.slice(0, 3).map(post => (
+                      <li>
+                        <a href={`/blog/${post.id}/`} class="recent-post">
+                          {post.data.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+
+        {categoriesByCount.length > 0 && (
+          <div class="popular-categories">
+            <h2 class="section-title">Popular Categories</h2>
+            <div class="popular-list">
+              {categoriesByCount.slice(0, 10).map(({ name, count }) => (
+                <a href={`/blog/category/${name}/`} class="popular-tag">
+                  {name}
+                  <span class="post-count">{count}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style="text-align: center;">
+          <a href="/blog/" class="back-to-blog">← Back to Blog</a>
+        </div>
+      </main>
+
+      <Footer />
+    </container>
+  </body>
+</html>
+
+<style>
+  .blog-index-page-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+</style>

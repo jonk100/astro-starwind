@@ -1,0 +1,211 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import BlogHeader from '../../../components/BlogHeader.astro';
+import BlogPreviewCard from '../../../components/BlogPreviewCard.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../../../consts';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  
+  // Extract all unique tags
+  const tags = new Set();
+  posts.forEach(post => {
+    if (post.data.tags) {
+      post.data.tags.forEach(tag => {
+        tags.add(tag);
+      });
+    }
+  });
+
+  // Create paths for each tag
+  return Array.from(tags).map(tag => ({
+    params: { tag },
+    props: { posts: posts.filter(post => post.data.tags?.includes(tag)) }
+  }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+
+// Sort posts by date
+const sortedPosts = posts.sort(
+  (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
+);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`${tag} - ${SITE_TITLE}`} description={`${SITE_DESCRIPTION} - Posts tagged with ${tag}`} />
+    <style>
+      .tag-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+      }
+
+      .tag-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--text-primary, #111827);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .tag-icon {
+        width: 1.5em;
+        height: 1.5em;
+        opacity: 0.8;
+      }
+
+      .tag-count {
+        font-size: 1.25rem;
+        color: var(--text-secondary, #6b7280);
+        margin-bottom: 0.5rem;
+      }
+
+      .tag-description {
+        font-size: 1.125rem;
+        color: var(--text-secondary, #6b7280);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .blog-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .no-posts {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-secondary, #6b7280);
+      }
+
+      .no-posts h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .back-to-blog {
+        display: inline-block;
+        margin-top: 2rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--accent, #3b82f6);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+      }
+
+      .back-to-blog:hover {
+        background: var(--accent-dark, #2563eb);
+      }
+
+      .tag-badge {
+        display: inline-block;
+        background: var(--accent, #3b82f6);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        margin-bottom: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .tag-title {
+          font-size: 2rem;
+        }
+
+        .blog-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .tag-header {
+          margin-bottom: 2rem;
+          padding: 1rem 0;
+        }
+
+        .tag-title {
+          font-size: 1.75rem;
+        }
+
+        .blog-grid {
+          gap: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <BlogHeader />
+    
+    <container class="blog-index-page-container">
+      <div class="tag-header">
+        <div class="tag-badge">#{tag}</div>
+        <h1 class="tag-title">
+          <svg class="tag-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+          </svg>
+          {tag}
+        </h1>
+        <p class="tag-count">{sortedPosts.length} {sortedPosts.length === 1 ? 'post' : 'posts'} tagged with {tag}</p>
+        <p class="tag-description">
+          Explore all articles tagged with {tag}. Find content related to this specific topic.
+        </p>
+      </div>
+
+      <main>
+        {sortedPosts.length > 0 ? (
+          <ul class="blog-grid">
+            {sortedPosts.map((post, index) => (
+              <li>
+                <BlogPreviewCard 
+                  post={post} 
+                  isFeatured={index === 0}
+                  variant="default"
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="no-posts">
+            <h2>No posts found tagged with {tag}</h2>
+            <p>Check back later for new content with this tag.</p>
+            <a href="/blog/" class="back-to-blog">Back to Blog</a>
+          </div>
+        )}
+      </main>
+
+      <Footer />
+    </container>
+  </body>
+</html>
+
+<style>
+  .blog-index-page-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+</style>

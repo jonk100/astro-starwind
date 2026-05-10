@@ -1,0 +1,42 @@
+---
+import { GitHubIcon, MastodonIcon, TwitterIcon } from '../icons';
+---
+
+<div class="header-icons">
+  <a href="https://m.webtoo.ls/@astro" target="_blank" class="icon-link">
+    <span class="sr-only">Follow Astro on Mastodon</span>
+    <MastodonIcon size="xl" />
+  </a>
+  <a href="https://twitter.com/astrodotbuild" target="_blank" class="icon-link">
+    <span class="sr-only">Follow Astro on Twitter</span>
+    <TwitterIcon size="xl" />
+  </a>
+  <a href="https://github.com/withastro/astro" target="_blank" class="icon-link">
+    <span class="sr-only">Go to Astro's GitHub repo</span>
+    <GitHubIcon size="xl" color="" />
+  </a>
+</div>
+
+<style>
+  .header-icons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    
+  }
+  
+  .icon-link {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    color: var(--color-primary-300);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  
+  .icon-link:hover {
+    color: var(--primary-accent);
+    background-color: transparent;
+    transform: scale(1.125);
+  }
+</style>

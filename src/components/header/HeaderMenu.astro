@@ -1,0 +1,126 @@
+---
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '@/components/starwind/dropdown';
+import { Button } from '@/components/starwind/button';
+import Logo from '../Logo.astro';
+import HeaderLink from './HeaderLink.astro';
+import HeaderIcons from './HeaderIcons.astro';
+import { getNavItems, isActivePath, getBlogPages } from '@/lib/utils';
+
+const pathname = Astro.url.pathname.replace(/\/$/, '');
+const nav = getNavItems();
+const dropdownItems = getBlogPages();
+---
+
+<header>
+  <nav>
+    <!-- <a href="/"><span><Logo /></span></a> -->
+    <div class="internal-links">
+      <HeaderLink href="/">Home</HeaderLink>
+      <Dropdown class="max-w-80vw mx-auto">
+        <DropdownTrigger asChild>
+          <Button variant="ghost">Blog</Button>
+        </DropdownTrigger>
+        <DropdownContent align="center" class="bg-teal-300 rounded-lg flex flex-row gap-4 dropdown-full-width submenu">
+          {dropdownItems.map((item) => (
+            <DropdownItem as="a" href={item.href} class="flex-1 text-center">
+              <span class="submenu-item">{item.label}</span>
+            </DropdownItem>
+          ))}
+        </DropdownContent>
+      </Dropdown>
+      <HeaderLink href="/about">About</HeaderLink>
+      <!-- <HeaderIcons /> -->
+    </div>
+
+  </nav>
+</header>
+
+<style>
+  header {
+    margin: 0;
+    padding: 0;
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    vertical-align: middle;
+  }
+    .internal-links {
+      display: flex;
+      /* width: 50%; */
+      justify-content: center;
+      margin-left: auto;
+      margin-top: auto;
+      margin-bottom: auto;
+      transition: all 0.2s ease;
+  }
+  
+  .internal-links a,
+  .internal-links button {
+    font-size: clamp(1.25rem, calc(1.25rem + 1vw), 2rem);
+    padding: 0 1.5rem;
+    margin: auto 0;
+    color: var(--color-primary-300);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 600;
+  }
+  
+  .internal-links a:hover,
+  .internal-links button:hover {
+    color: var(--primary-accent);
+    background-color: transparent;
+    transform: scale(1.125);
+  }
+
+  .internal-links button[aria-expanded="true"] {
+    color: var(--primary-accent);
+    transform: scale(1.125);
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.125); }
+    100% { transform: scale(1); }
+  }
+
+  .dropdown-full-width {
+    position: absolute !important;
+    /* left: 50% !important; */
+    /* transform: translateX(-50%) !important; */
+    /* width: 90vw !important;
+    max-width: 90vw !important;
+    min-width: 90vw !important; */
+    /* margin-left: -45vw !important; */
+    margin: 0 auto;
+  }
+  
+  .dropdown-full-width[style*="width"] {
+    /* width: 90vw !important; */
+    min-width: 50ch;
+    /* max-width: 90vw !important; */
+  }
+
+  .submenu a {
+    color: var(--color-primary-300);
+    background-color: transparent;
+    justify-content: center;
+    vertical-align: middle;
+    margin: auto;
+  }
+  
+  .submenu-item {
+    font-size: 1.25rem;
+    align-items: center;
+    margin: 0 auto;
+  }
+
+
+@media (max-width: 720px) {
+    .social-links {
+      display: none;
+    }
+  }
+</style>

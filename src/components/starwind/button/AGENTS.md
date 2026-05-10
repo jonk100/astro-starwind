@@ -20,6 +20,7 @@ A versatile button component with multiple variants and sizes.
 ## Usage Examples
 
 ### Basic Buttons
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";
@@ -37,6 +38,7 @@ import { Button } from "@/components/starwind/button";
 ```
 
 ### Button Sizes
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";
@@ -52,6 +54,7 @@ import Mail from "@tabler/icons/outline/mail.svg";
 ```
 
 ### Button as Link
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";
@@ -62,6 +65,7 @@ import { Button } from "@/components/starwind/button";
 ```
 
 ### Custom Styling
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";
@@ -74,6 +78,7 @@ import { Button } from "@/components/starwind/button";
 ```
 
 ### Icon Buttons
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";

@@ -1,0 +1,14 @@
+---
+import { Image } from "@/components/starwind/image";
+import LogoAsset from '@/assets/logo-black.png';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<a href="/" class={className}>
+  <Image src={LogoAsset} alt="Logo" class="h-auto w-auto max-h-8" />
+</a>
