@@ -2,7 +2,6 @@
 import { Select, SelectContent, SelectGroup, SelectItem, SelectSearch, SelectTrigger, SelectValue } from "@/components/starwind/select";
 import { tv } from "tailwind-variants";
 import type { BlogPost } from "../types";
-import { searchPosts } from "../utils";
 
 interface BlogSearchComboboxProps {
   posts: BlogPost[];
@@ -41,7 +40,7 @@ const blogSearchCombobox = tv({
         emptyText={emptyText}
       />
       <SelectGroup>
-        {posts.slice(0, maxResults).map((post) => (
+        {posts.slice(0, maxResults).map((post: BlogPost) => (
           <SelectItem value={post.slug} class="py-3">
             <div class="flex flex-col gap-1">
               <div class="font-medium line-clamp-1">{post.title}</div>
@@ -67,7 +66,7 @@ const blogSearchCombobox = tv({
               </div>
               {showTags && post.tags && post.tags.length > 0 && (
                 <div class="flex flex-wrap gap-1 mt-1">
-                  {post.tags.slice(0, 3).map((tag) => (
+                  {post.tags.slice(0, 3).map((tag: string) => (
                     <span class="inline-block px-2 py-0.5 text-xs bg-muted text-muted-foreground rounded">
                       {tag}
                     </span>
@@ -83,10 +82,21 @@ const blogSearchCombobox = tv({
 </div>
 
 <script>
+  interface BlogPost {
+    title: string;
+    description?: string;
+    date: string | Date;
+    slug: string;
+    author?: string;
+    image?: string;
+    tags?: string[];
+    minutesRead?: string;
+  }
+
   class BlogSearchComboboxHandler {
     private select: HTMLElement;
-    private searchInput: HTMLInputElement;
-    private posts: any[];
+    private searchInput: HTMLInputElement | null = null;
+    private posts: BlogPost[];
 
     constructor(element: HTMLElement) {
       this.select = element;
@@ -96,7 +106,7 @@ const blogSearchCombobox = tv({
 
     private init() {
       // Find the search input within the select
-      this.searchInput = this.select.querySelector('input[type="search"]') as HTMLInputElement;
+      this.searchInput = this.select.querySelector('input[type="search"]');
       
       if (this.searchInput) {
         this.searchInput.addEventListener('input', () => this.handleSearch());
@@ -112,6 +122,8 @@ const blogSearchCombobox = tv({
     }
 
     private handleSearch() {
+      if (!this.searchInput) return;
+      
       const query = this.searchInput.value.trim();
       
       if (!query) {

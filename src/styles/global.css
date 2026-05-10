@@ -9,6 +9,7 @@
 :root {
 	--accent: #2337ff;
 	--accent-dark: #000d8a;
+	--accent-light: #a3b3ff;
 	--yellow: rgb(255, 255, 0);
 	--yellow-dark: rgb(170, 170, 0);
 	--yellow-light: rgb(255, 255, 136);

@@ -8,7 +8,7 @@ export async function getStaticPaths() {
   const posts = await getCollection('blog');
   
   // Extract all unique tags
-  const tags = new Set();
+  const tags = new Set<string>();
   posts.forEach(post => {
     if (post.data.tags) {
       post.data.tags.forEach(tag => {
@@ -28,6 +28,7 @@ export async function getStaticPaths() {
 }
 
 const { tag } = Astro.params;
+const tagString = tag as string;
 const { posts, allTags } = Astro.props;
 
 // Sort posts by date
@@ -61,27 +62,27 @@ const getTagGradient = (tag: string) => {
 };
 ---
 <BlogIndexLayout 
-  title={`${tag} - ${SITE_TITLE}`} 
-  description={`${SITE_DESCRIPTION} - Posts tagged with ${tag}`}
+  title={`${tagString} - ${SITE_TITLE}`} 
+  description={`${SITE_DESCRIPTION} - Posts tagged with ${tagString}`}
   showProgress={true}
   breadcrumbs={[
     { label: 'Home', href: '/' }, 
     { label: 'Blog', href: '/blog' }, 
     { label: 'Tags', href: '/blog/tags' },
-    { label: tag, href: `/blog/tag/${tag}`, current: true }
+    { label: tagString, href: `/blog/tag/${tagString}`, current: true }
   ]}
 >
   <div class="space-y-12">
     <!-- Tag Header -->
     <div class="text-center space-y-6">
-      <div class={`inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r ${getTagGradient(tag)} text-white font-bold text-xl shadow-2xl`}>
+      <div class={`inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r ${getTagGradient(tagString)} text-white font-bold text-xl shadow-2xl`}>
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
         </svg>
-        {tag}
+        {tagString}
       </div>
       <p class="text-2xl text-muted-foreground max-w-3xl mx-auto">
-        Explore <span class="font-bold text-[rgb(var(--purple))]">{sortedPosts.length}</span> article{sortedPosts.length !== 1 ? 's' : ''} about <span class="font-bold text-[rgb(var(--accent))]">{tag}</span>
+        Explore <span class="font-bold text-[rgb(var(--purple))]">{sortedPosts.length}</span> article{sortedPosts.length !== 1 ? 's' : ''} about <span class="font-bold text-[rgb(var(--accent))]">{tagString}</span>
       </p>
     </div>
 
@@ -89,7 +90,7 @@ const getTagGradient = (tag: string) => {
     <div class="max-w-6xl mx-auto">
       <h3 class="text-xl font-semibold text-center mb-6 text-[rgb(var(--purple))]">Browse All Tags</h3>
       <div class="flex flex-wrap gap-3 justify-center">
-        {allTags.map((t) => (
+        {allTags.map((t: string) => (
           <a 
             href={`/blog/tag/${t}`}
             class={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg ${
@@ -107,16 +108,16 @@ const getTagGradient = (tag: string) => {
 
     <!-- Search Section -->
     <div class="max-w-2xl mx-auto">
-      <BlogSearch posts={postsData} placeholder={`Search "${tag}" articles...`} showFilters={true} />
+      <BlogSearch posts={postsData} placeholder={`Search "${tagString}" articles...`} showFilters={true} />
     </div>
 
     <!-- Articles Grid -->
     <div class="space-y-8">
       <div class="text-center space-y-4">
         <h2 class="text-3xl font-bold text-[rgb(var(--purple))]">
-          {tag} Articles
+          {tagString} Articles
         </h2>
-        <div class={`inline-block px-6 py-2 bg-gradient-to-r ${getTagGradient(tag)} text-white rounded-full text-sm font-semibold`}>
+        <div class={`inline-block px-6 py-2 bg-gradient-to-r ${getTagGradient(tagString)} text-white rounded-full text-sm font-semibold`}>
           {sortedPosts.length} {sortedPosts.length === 1 ? 'Article' : 'Articles'}
         </div>
       </div>
@@ -138,7 +139,7 @@ const getTagGradient = (tag: string) => {
             </svg>
           </div>
           <h3 class="text-2xl font-semibold text-muted-foreground">
-            No articles found for "{tag}"
+            No articles found for "{tagString}"
           </h3>
           <p class="text-muted-foreground max-w-md mx-auto">
             Try browsing other tags or check back later for new content.

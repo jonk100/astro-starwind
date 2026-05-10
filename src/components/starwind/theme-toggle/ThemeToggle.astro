@@ -103,9 +103,14 @@ const {
       this.initializeState();
       this.setupEventListeners();
 
-      // Mark initialization complete after a microtask
+      // Mark initialization complete after a microtask with proper error handling
       queueMicrotask(() => {
-        this.isInitializing = false;
+        try {
+          this.isInitializing = false;
+        } catch (error) {
+          console.warn('Theme toggle initialization error:', error);
+          this.isInitializing = false;
+        }
       });
     }
 

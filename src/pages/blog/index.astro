@@ -24,17 +24,17 @@ const allPostsData = posts.map(post => ({
   showProgress={true}
   breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog', current: true }]}
 >
-  <div class="space-y-12">
+  <div class="bg-blue-200/50 p-8 rounded-xl">
     <!-- Hero Section -->
-    <div class="text-center space-y-4">
-      <h1 class="text-4xl lg:text-6xl font-bold text-[rgb(var(--purple))]">Blog</h1>
-      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+    <div class="text-center space-y-4 p-2">
+      <h1 class="text-4xl lg:text-6xl mt-0 pt-0 font-bold text-[rgb(var(--purple))]">Blog</h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto my-1 font-bold">
         Explore our latest articles, insights, and stories on technology, design, and development.
       </p>
     </div>
 
     <!-- Search Section -->
-    <div class="max-w-2xl mx-auto">
+    <div class="max-w-2xl mx-auto gap-4 p-2">
       <BlogSearch posts={allPostsData} placeholder="Search articles..." showFilters={true} />
     </div>
 
@@ -49,7 +49,7 @@ const allPostsData = posts.map(post => ({
         />
       </section>
     )} -->
-
+  </div>
     <!-- Recent Posts Carousel -->
     <RecentPostsCarousel recentPosts={recentPosts} />
 
@@ -65,5 +65,5 @@ const allPostsData = posts.map(post => ({
         showReadTime={true}
       />
     </section>
-  </div>
+
 </BlogIndexLayout>

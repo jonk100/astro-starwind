@@ -9,24 +9,24 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 const posts = await getCollection('blog');
 
 // Extract and organize tags
-const tagMap = new Map();
+const tagMap = new Map<string, any[]>();
 posts.forEach(post => {
   if (post.data.tags) {
     post.data.tags.forEach(tag => {
       if (!tagMap.has(tag)) {
         tagMap.set(tag, []);
       }
-      tagMap.get(tag).push(post);
+      tagMap.get(tag)?.push(post);
     });
   }
 });
 
 // Sort tags alphabetically and by post count
 const sortedTags = Array.from(tagMap.entries())
-  .sort(([a, b]) => a.localeCompare(b))
+  .sort(([a]: [string, any[]], [b]: [string, any[]]) => a.localeCompare(b))
   .map(([tag, tagPosts]) => ({
     name: tag,
-    posts: tagPosts.sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()),
+    posts: tagPosts.sort((a: any, b: any) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()),
     count: tagPosts.length
   }));
 
@@ -134,7 +134,7 @@ const allPostsData = posts.map(post => ({
                     Recent Posts
                   </h4>
                   <ul class="space-y-1 text-sm text-muted-foreground">
-                    {tagData.posts.slice(0, 3).map((post) => (
+                    {tagData.posts.slice(0, 3).map((post: any) => (
                       <li class="truncate hover:text-[rgb(var(--accent))] transition-colors">
                         {post.data.title}
                       </li>

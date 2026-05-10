@@ -1,10 +1,9 @@
 ---
 import { Input } from "@/components/starwind/input";
 import { Button } from "@/components/starwind/button";
-import { Badge } from "@/components/starwind/badge";
 import { tv } from "tailwind-variants";
 import type { BlogPost, SearchOptions } from "../types";
-import { searchPosts, formatDate } from "../utils";
+import { formatDate } from "../utils";
 
 interface BlogSearchProps {
   posts: BlogPost[];
@@ -21,7 +20,7 @@ const {
   posts,
   placeholder = "Search articles...",
   showFilters = true,
-  maxResults = 10,
+  maxResults = 14,
   showDate = true,
   showAuthor = true,
   showTags = true,
@@ -30,13 +29,13 @@ const {
 } = Astro.props;
 
 const blogSearch = tv({
-  base: "w-full space-y-4"
+  base: "w-full space-y-2"
 });
 
 // Get unique tags and categories for filters
-const allTags = Array.from(new Set(posts.flatMap((post: BlogPost) => post.tags || [])));
-const allCategories = Array.from(new Set(posts.flatMap((post: BlogPost) => post.categories || [])));
-const allAuthors = Array.from(new Set(posts.map((post: BlogPost) => post.author || post.authors).filter(Boolean)));
+const allTags: string[] = Array.from(new Set(posts.flatMap((post: BlogPost) => post.tags || [])));
+const allCategories: string[] = Array.from(new Set(posts.flatMap((post: BlogPost) => post.categories || [])));
+const allAuthors: string[] = Array.from(new Set(posts.map((post: BlogPost) => post.author || post.authors).filter(Boolean)));
 
 // Function to get tag colors for filter buttons
 const getTagColor = (tag: string) => {
@@ -67,28 +66,38 @@ const getTagColor = (tag: string) => {
   data-show-tags={showTags}
   {...rest}
 >
-  <div class="relative">
+  <div class="relative bg-pink-300/50 rounded-lg font-black font-xl">
     <Input
       type="search"
       placeholder={placeholder}
-      class="pr-10"
+      class="pr-20"
       data-blog-search-input
     />
-    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+    <div class="absolute right-8 top-1/2 transform -translate-y-1/2">
       <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
     </div>
+    <button 
+      type="button"
+      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-muted"
+      data-blog-search-clear
+      title="Clear search"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
   </div>
 
   {showFilters && (
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-1 transition-all duration-500 ease-out justify-center" data-filter-container>
       {allTags.slice(0, 8).map((tag) => (
         <Button
           size="sm"
           variant="outline"
           data-filter-tag={tag}
-          class="text-medium font-medium transition-all duration-200 hover:scale-105"
+          class="text-medium font-medium transition-all duration-300 hover:scale-105 transform"
           style={getTagColor(tag)}
         >
           {tag}
@@ -103,6 +112,30 @@ const getTagColor = (tag: string) => {
 </div>
 
 <script>
+  interface BlogPost {
+    title: string;
+    description?: string;
+    date: string | Date;
+    slug: string;
+    author?: string;
+    authors?: string;
+    image?: string;
+    tags?: string[];
+    categories?: string[];
+    minutesRead?: string;
+  }
+
+  interface SearchOptions {
+    query?: string;
+    tags?: string[];
+    categories?: string[];
+    author?: string;
+    dateRange?: {
+      from?: Date;
+      to?: Date;
+    };
+  }
+
   class BlogSearchHandler {
     private container: HTMLElement;
     private input: HTMLInputElement;
@@ -118,7 +151,7 @@ const getTagColor = (tag: string) => {
       this.container = element;
       this.input = element.querySelector('[data-blog-search-input]') as HTMLInputElement;
       this.resultsContainer = element.querySelector('[data-search-results]') as HTMLElement;
-      this.maxResults = parseInt(element.dataset.maxResults || '10');
+      this.maxResults = parseInt(element.dataset.maxResults || '14');
       this.showDate = element.dataset.showDate !== 'false';
       this.showAuthor = element.dataset.showAuthor !== 'false';
       this.showTags = element.dataset.showTags !== 'false';
@@ -133,6 +166,19 @@ const getTagColor = (tag: string) => {
     private init() {
       // Search on input
       this.input.addEventListener('input', () => this.performSearch());
+      
+      // Clear on Escape key
+      this.input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          this.clearSearch();
+        }
+      });
+      
+      // Clear button
+      const clearButton = this.container.querySelector('[data-blog-search-clear]');
+      if (clearButton) {
+        clearButton.addEventListener('click', () => this.clearSearch());
+      }
       
       // Filter buttons
       const filterButtons = this.container.querySelectorAll('[data-filter-tag]');
@@ -161,10 +207,37 @@ const getTagColor = (tag: string) => {
       this.performSearch();
     }
 
+    private clearSearch() {
+      this.input.value = '';
+      this.activeFilters.clear();
+      
+      // Clear filter button states
+      const filterButtons = this.container.querySelectorAll('[data-filter-tag]');
+      filterButtons.forEach(button => {
+        button.classList.remove('bg-[rgb(var(--accent))]', 'text-white');
+      });
+      
+      // Show filter container again
+      const filterContainer = this.container.querySelector('[data-filter-container]');
+      if (filterContainer) {
+        filterContainer.classList.remove('opacity-0', 'scale-95', 'translate-y-2');
+        filterContainer.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+      }
+      
+      // Clear results
+      this.renderResults([]);
+    }
+
     private performSearch() {
       const query = this.input.value.trim();
       
-      const options: any = {
+      // If both query and filters are empty, clear results
+      if (!query && this.activeFilters.size === 0) {
+        this.renderResults([]);
+        return;
+      }
+      
+      const options: SearchOptions = {
         query: query || undefined,
         tags: this.activeFilters.size > 0 ? Array.from(this.activeFilters) : undefined
       };
@@ -173,7 +246,7 @@ const getTagColor = (tag: string) => {
       this.renderResults(results);
     }
 
-    private searchPosts(posts: any[], options: any): any[] {
+    private searchPosts(posts: BlogPost[], options: SearchOptions): BlogPost[] {
       const { query, tags } = options;
       
       return posts.filter(post => {
@@ -199,63 +272,102 @@ const getTagColor = (tag: string) => {
       }).slice(0, this.maxResults);
     }
 
-    private renderResults(results: any[]) {
+    private renderResults(results: BlogPost[]) {
+      const filterContainer = this.container.querySelector('[data-filter-container]');
+      
       if (results.length === 0) {
+        const query = this.input.value.trim();
+        const hasFilters = this.activeFilters.size > 0;
+        
+        // Show filter container when no results
+        if (filterContainer) {
+          filterContainer.classList.remove('opacity-0', 'scale-95', 'translate-y-2');
+          filterContainer.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+        }
+        
         this.resultsContainer.innerHTML = `
           <div class="text-center py-8 text-muted-foreground">
-            <p class="text-lg">Type to search articles or click tags above to filter</p>
+            <p class="text-lg">
+              ${query && hasFilters 
+                ? `No articles found matching "${query}" with selected filters` 
+                : query 
+                ? `No articles found matching "${query}"`
+                : hasFilters
+                ? 'No articles found with selected filters'
+                : ''
+              }
+            </p>
           </div>
         `;
         return;
       }
 
-      this.resultsContainer.innerHTML = results.map(post => `
-        <a href="/blog/${post.slug}" class="block p-6 rounded-xl border border-border hover:border-[rgb(var(--accent))] hover:shadow-lg hover:bg-gradient-to-br hover:from-[rgba(var(--accent),0.05)] hover:to-[rgba(var(--accent-dark),0.02)] transition-all duration-300 mb-4">
-          <div class="flex items-start gap-4">
-            ${post.image ? `
-              <img src="${post.image}" alt="${post.title}" class="w-20 h-20 object-cover rounded-lg flex-shrink-0">
-            ` : ''}
-            <div class="flex-1 min-w-0">
-              <h3 class="font-bold text-xl hover:text-[rgb(var(--purple))] transition-colors line-clamp-2 mb-2">
-                ${post.title}
-              </h3>
-              
-              ${post.description ? `
-                <p class="text-muted-foreground text-sm line-clamp-2 mb-3">
-                  ${post.description}
-                </p>
-              ` : ''}
-              
-              <div class="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                ${this.showAuthor && post.author ? `
-                  <span class="font-medium">${post.author}</span>
-                  <span class="text-gray-400">•</span>
-                ` : ''}
-                ${this.showDate && post.date ? `
-                  <time datetime="${post.date}" class="text-gray-600">
-                    ${new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </time>
-                ` : ''}
-                ${post.minutesRead ? `
-                  <span class="text-gray-400">•</span>
-                  <span class="text-gray-600">${post.minutesRead}</span>
-                ` : ''}
+      // Animate tags out when results appear
+      if (filterContainer) {
+        filterContainer.classList.add('opacity-0', 'scale-95', 'translate-y-2');
+        filterContainer.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
+      }
+
+      this.resultsContainer.innerHTML = results.map(post => this.renderSearchResultCard(post)).join('');
+    }
+
+    private renderSearchResultCard(post: BlogPost): string {
+      const imageUrl = post.image || '/src/assets/blog-placeholder-1.jpg';
+      const author = post.author || 'Anonymous';
+      const date = post.date ? new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+      const readTime = post.minutesRead || '';
+      
+      return `
+        <a href="/blog/${post.slug}" class="block group">
+          <div class="bg-gradient-to-br from-red-400/40 to-pink-300/60 rounded-lg dark:from-gray-950 dark:to-black hover:from-red-400/30 hover:to-pink-300/50 border border-gray-700 dark:border-gray-800 p-4 hover:border-black-800 transition-all duration-300 h-[150px]">
+            <div class="flex gap-3">
+              <!-- Image -->
+              <div class="flex-shrink-0 relative h-[130px] mr-auto overflow-hidden w-auto max-w-[120px]">
+                <img src="${imageUrl}" alt="${post.title}" class="h-full w-full object-cover">
               </div>
               
-              ${this.showTags && post.tags && post.tags.length > 0 ? `
-                <div class="flex flex-wrap gap-2">
-                  ${post.tags.slice(0, 4).map((tag: string) => this.renderColorfulTag(tag)).join('')}
-                  ${post.tags.length > 4 ? `
-                    <span class="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">
-                      +${post.tags.length - 4}
-                    </span>
+              <!-- Content -->
+              <div class="flex-1 min-w-0 ">
+                <span class="font-semibold text-md lh-1 line-clamp-1 text-gray-900 dark:text-gray-100 transition-colors leading-tight mb-1">
+                  ${post.title}
+                </span>
+                
+                ${post.description ? `
+                  <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-0 line-clamp-1">
+                    ${post.description}
+                  </p>
+                ` : ''}
+                
+                <!-- Meta info & Tags Row -->
+                <div class="flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  ${this.showAuthor || this.showDate || (this.showTags && post.tags && post.tags.length > 0) ? `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                      ${this.showAuthor ? `
+                        <span class="font-medium">${author}</span>
+                        <span class="text-gray-400">•</span>
+                      ` : ''}
+                      ${this.showDate && date ? `
+                        <time datetime="${post.date}">${date}</time>
+                        <span class="text-gray-400">•</span>
+                      ` : ''}
+                      ${this.showTags && post.tags && post.tags.length > 0 ? `
+                        ${post.tags.slice(0, 2).map((tag: string) => this.renderColorfulTag(tag)).join('')}
+                        ${post.tags.length > 2 ? `
+                          <span class="inline-block px-1 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
+                            +${post.tags.length - 2}
+                          </span>
+                        ` : ''}
+                      ` : ''}
+                    </div>
                   ` : ''}
+                  
+                  ${readTime ? `<span class="text-gray-600 dark:text-gray-400">${readTime}</span>` : ''}
                 </div>
-              ` : ''}
+              </div>
             </div>
           </div>
         </a>
-      `).join('');
+      `;
     }
 
     private renderColorfulTag(tag: string): string {
@@ -266,20 +378,14 @@ const getTagColor = (tag: string) => {
         'anxiety': 'bg-gradient-to-r from-red-100 to-pink-200 text-red-800 dark:from-red-900 dark:to-pink-800 dark:text-red-200',
         'self-care': 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 dark:from-purple-900 dark:to-purple-800 dark:text-purple-200',
         'educational': 'bg-gradient-to-r from-cyan-100 to-cyan-200 text-cyan-800 dark:from-cyan-900 dark:to-cyan-800 dark:text-cyan-200',
-        'cognitive': 'bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-800 dark:from-indigo-900 dark:to-indigo-800 dark:text-indigo-200',
-        'emotional regulation': 'bg-gradient-to-r from-pink-100 to-pink-200 text-pink-800 dark:from-pink-900 dark:to-pink-800 dark:text-pink-200',
-        'sleep': 'bg-gradient-to-r from-blue-100 to-indigo-200 text-indigo-800 dark:from-blue-900 dark:to-indigo-800 dark:text-indigo-200',
-        'well-being': 'bg-gradient-to-r from-teal-100 to-teal-200 text-teal-800 dark:from-teal-900 dark:to-teal-800 dark:text-teal-200'
       };
-
-      const colorClass = tagColors[tag.toLowerCase()] || 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 dark:from-gray-900 dark:to-gray-800 dark:text-gray-200';
+      
+      const colorClass = tagColors[tag.toLowerCase()] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
       
       return `
-        <a href="/blog/tag/${encodeURIComponent(tag.toLowerCase().replace(/\s+/g, '-'))}" 
-           class="inline-block px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 hover:scale-105 hover:shadow-md ${colorClass}"
-           onclick="event.stopPropagation()">
+        <span class="inline-block px-1.5 py-0.5 text-xs rounded-full ${colorClass}">
           ${tag}
-        </a>
+        </span>
       `;
     }
   }

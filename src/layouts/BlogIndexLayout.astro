@@ -34,22 +34,24 @@ import '@/styles/starwind.css';
 	</head>
 
 	<body class="layout-body">
-    {showProgress && <ScrollProgress height={3} color="rgb(var(--accent))" position="top" />}
+    
     
     <header class="layout-header">
+      {showProgress && <ScrollProgress height={3} color="rgb(var(--accent))" position="top" />}
       <Header />
       <slot name="header" />
     </header>
+    {showBreadcrumbs && (
+      <div class="relative top-4 left-0 z-10 text-color-foreground font-size-lg mt-0">
+        <BlogBreadcrumbs breadcrumbs={breadcrumbs} />
+      </div>
+    )}
     
     <main class="layout-main">
-      <div class="layout-main-content">
-        {showBreadcrumbs && (
-          <div class="mb-8">
-            <BlogBreadcrumbs breadcrumbs={breadcrumbs} />
-          </div>
-        )}
-        
-        <slot />
+      <div class="layout-main-content relative">
+        <div class="pt-0 mt-0">
+          <slot />
+        </div>
       </div>
     </main>
 

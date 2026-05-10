@@ -1,19 +1,18 @@
-# Astro Starter Kit: Blog
+# Astro Starwind Blog
 
-```sh
-pnpm create astro@latest -- --template blog
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+A modern, high-performance blog built with Astro and Starwind UI components.
 
 Features:
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+- ✅ **Starwind UI Components** - Professional UI components with Pro blocks
+- ✅ **100/100 Lighthouse Performance** - Optimized for speed and accessibility
+- ✅ **TypeScript Support** - Full type safety with Astro Check
+- ✅ **SEO Optimized** - Canonical URLs, Open Graph data, and meta tags
+- ✅ **Content Management** - Markdown & MDX support with content collections
+- ✅ **RSS & Sitemap** - Automatic RSS feed and sitemap generation
+- ✅ **Responsive Design** - Mobile-first responsive layout
+- ✅ **Modern Tooling** - Tailwind CSS v4, pnpm, and ES6 modules
+- ✅ **CI/CD Pipeline** - Automated testing, linting, and security auditing
 
 ## 🚀 Project Structure
 
@@ -45,14 +44,14 @@ Any static assets, like images, can be placed in the `public/` directory.
 
 All commands are run from the root of the project, from a terminal:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+| Command                 | Action                                           |
+| :---------------------- | :----------------------------------------------- |
+| `pnpm install`          | Installs dependencies                            |
+| `pnpm dev`              | Starts local dev server at `localhost:4321`      |
+| `pnpm build`            | Build your production site to `./dist/`          |
+| `pnpm preview`          | Preview your build locally, before deploying     |
+| `pnpm astro ...`        | Run CLI commands like `astro add`, `astro check` |
+| `pnpm astro -- --help`  | Get help using the Astro CLI                     |
 
 ## 👀 Want to learn more?
 
