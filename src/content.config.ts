@@ -24,4 +24,4 @@ const posts = defineCollection({
 });
 
 // Export the collections object
-export const collections = { posts };
+export const collections = { blog: posts };

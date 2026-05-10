@@ -89,10 +89,11 @@ This workflow stages all changes, commits them with a relevant message, creates 
 ```bash
 # Update changelog.json with new version entry
 # Add new version object to versions array with:
-# - version: "x.y.z" (increment based on change type)
-# - date: current date in YYYY-MM-DD format
-# - description: concise summary of changes
-# - changes: array of specific accomplishments
+# - Version: "x.y.z" (increment based on change type)
+# - Date: current date in YYYY-MM-DD format
+# - Type: "feature", "fix", "chore", "breaking"
+# - Name: concise summary of changes
+# - Notes: array of specific accomplishments
 ```
 
 Example changelog update:

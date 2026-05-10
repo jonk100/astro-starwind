@@ -1,0 +1,23 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { BlogCardCarousel } from '../BlogCarousel';
+
+interface Props {
+  recentPosts: CollectionEntry<'blog'>[];
+}
+
+const { recentPosts } = Astro.props as Props;
+---
+
+<!-- Recent Posts Carousel -->
+    {recentPosts.length > 0 && (
+      <section class="space-y-6">
+        <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">Recent Articles</h2>
+        <BlogCardCarousel 
+          posts={recentPosts.map(post => ({ ...post.data, slug: post.id }))}
+          autoplay={false}
+          showArrows={true}
+          slidesPerView={2}
+        />
+      </section>
+    )}

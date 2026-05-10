@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
 import { HeroCard, ThreeColumnGrid, BlogSearch, BlogCardCarousel } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
+import { RecentPostsCarousel } from '@/components/blog/RecentPosts';
 
 const posts = (await getCollection('blog')).sort(
 	(a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
@@ -16,6 +17,7 @@ const allPostsData = posts.map(post => ({
   content: post.body
 }));
 ---
+
 <BlogIndexLayout 
   title={`${SITE_TITLE} | Blog`} 
   description={`${SITE_DESCRIPTION} | Blog posts`}
@@ -37,7 +39,7 @@ const allPostsData = posts.map(post => ({
     </div>
 
     <!-- Featured Post -->
-    {featuredPost && (
+    <!-- {featuredPost && (
       <section class="space-y-6">
         <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">Featured Article</h2>
         <HeroCard 
@@ -46,20 +48,10 @@ const allPostsData = posts.map(post => ({
           href={`/blog/${featuredPost.id}`}
         />
       </section>
-    )}
+    )} -->
 
     <!-- Recent Posts Carousel -->
-    {recentPosts.length > 0 && (
-      <section class="space-y-6">
-        <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">Recent Articles</h2>
-        <BlogCardCarousel 
-          posts={recentPosts.map(post => ({ ...post.data, slug: post.id }))}
-          autoplay={false}
-          showArrows={true}
-          slidesPerView={1}
-        />
-      </section>
-    )}
+    <RecentPostsCarousel recentPosts={recentPosts} />
 
     <!-- All Posts Grid -->
     <section class="space-y-6">

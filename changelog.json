@@ -1,10 +1,11 @@
 {
   "versions": [
     {
-      "version": "1.0.0",
-      "date": "2026-05-09",
-      "description": "Initial release with comprehensive Starwind UI component reference",
-      "changes": [
+      "Version": "1.0.0",
+      "Date": "2026-05-09",
+      "Type": "chore",
+      "Name": "Initial release with comprehensive Starwind UI component reference",
+      "Notes": [
         "Added complete Starwind UI component library integration",
         "Created comprehensive AGENTS.md quick reference files for 11 components",
         "Implemented dropdown, card, table, item, breadcrumb, sidebar, tabs, pagination, theme-toggle, aspect-ratio, and separator components",
@@ -14,10 +15,11 @@
       ]
     },
     {
-      "version": "1.1.0",
-      "date": "2026-05-10",
-      "description": "Added comprehensive form component library with advanced features",
-      "changes": [
+      "Version": "1.1.0",
+      "Date": "2026-05-10",
+      "Type": "feature",
+      "Name": "Added comprehensive form component library with advanced features",
+      "Notes": [
         "Installed and documented 15 form components: Button Group, Checkbox, Combobox, Dropzone, Input, Input Group, Input OTP, Label, Native Select, Radio Group, Select, Slider, Switch, Textarea, Toggle",
         "Created comprehensive documentation files for each component with usage examples, API references, and best practices",
         "Generated agent-friendly AGENTS.md summaries for easy integration and development",

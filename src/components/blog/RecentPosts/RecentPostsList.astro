@@ -1,0 +1,20 @@
+---
+
+interface Props {
+  posts: any[];
+}
+
+const { posts } = Astro.props as Props;
+---
+<div class="category-posts">
+  <h3 class="category-posts-title">Recent Posts</h3>
+  <ul class="recent-posts">
+    {posts.slice(0, 3).map(post => (
+      <li>
+        <a href={`/blog/${post.id}/`} class="recent-post">
+          {post.data.title}
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
