@@ -44,7 +44,8 @@
         "Fixed content collection exports (posts -> blog)",
         "Added comprehensive code review documentation",
         "Updated git-push workflow with changelog guidelines",
-        "Enhanced project structure with better component organization"
+        "Enhanced project structure with better component organization",
+        "Testing...."
       ]
     }
   ],
