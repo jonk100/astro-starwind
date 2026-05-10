@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 // @ts-check
 
 import mdx from '@astrojs/mdx';
@@ -32,4 +33,7 @@ export default defineConfig({
 			},
 		},
 	],
+	vite: {
+		plugins: [tailwindcss()],
+	},
 });
