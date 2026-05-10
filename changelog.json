@@ -17,7 +17,7 @@
     {
       "Version": "1.1.0",
       "Date": "2026-05-10",
-      "Type": "feature",
+      "Type": "feat",
       "Name": "Added comprehensive form component library with advanced features",
       "Notes": [
         "Installed and documented 15 form components: Button Group, Checkbox, Combobox, Dropzone, Input, Input Group, Input OTP, Label, Native Select, Radio Group, Select, Slider, Switch, Textarea, Toggle",
@@ -29,6 +29,22 @@
         "Added multiple variants (default, primary, secondary, info, success, warning, error) and sizes (sm, md, lg)",
         "Implemented event-driven architecture for modern web applications",
         "Updated package.json and starwind.config.json with new dependencies"
+      ]
+    },
+    {
+      "Version": "1.2.0",
+      "Date": "2026-05-10",
+      "Type": "feat",
+      "Name": "Added Notion integration and improved blog components",
+      "Notes": [
+        "Added GitHub workflow to sync changelog.json to Notion database",
+        "Created Node script for automated changelog entry creation in Notion",
+        "Refactored RecentPosts component with carousel implementation",
+        "Updated blog index page with improved carousel component usage",
+        "Fixed content collection exports (posts -> blog)",
+        "Added comprehensive code review documentation",
+        "Updated git-push workflow with changelog guidelines",
+        "Enhanced project structure with better component organization"
       ]
     }
   ],
