@@ -1,0 +1,154 @@
+---
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CardAction } from "@/components/starwind/card";
+import { Badge } from "@/components/starwind/badge";
+import { Button } from "@/components/starwind/button";
+import { Image } from "@/components/starwind/image";
+import { tv } from "tailwind-variants";
+import type { BlogPost, BlogCardVariant, BlogCardSize } from "../shared/types";
+import { formatDate } from "../shared/utils";
+
+interface VerticalBlogCardProps {
+  post: BlogPost;
+  variant?: BlogCardVariant;
+  size?: BlogCardSize;
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  href?: string;
+  class?: string;
+}
+
+const {
+  post,
+  variant = "default",
+  size = "md",
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  href,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const verticalBlogCard = tv({
+  base: "group hover:shadow-lg transition-all duration-300",
+  variants: {
+    variant: {
+      default: "border-border bg-card",
+      featured: "border-[rgb(var(--accent))] bg-[rgba(var(--accent),0.05)] shadow-md",
+      minimal: "border-transparent bg-transparent shadow-none",
+      compact: "border-border bg-card",
+      colorful: "border-transparent shadow-md"
+    },
+    size: {
+      sm: "w-full max-w-sm",
+      md: "w-full max-w-md", 
+      lg: "w-full max-w-lg"
+    }
+  }
+});
+
+// Function to determine card color based on tags
+const getCardColor = (post: BlogPost) => {
+  const tags = post.tags || [];
+  if (tags.includes('mental health') || tags.includes('emotional regulation')) {
+    return 'from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950';
+  } else if (tags.includes('mindfulness') || tags.includes('meditation')) {
+    return 'from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-950';
+  } else if (tags.includes('stress management') || tags.includes('anxiety')) {
+    return 'from-yellow-50 to-orange-100 dark:from-yellow-950 dark:to-orange-950';
+  } else if (tags.includes('self-care') || tags.includes('well-being')) {
+    return 'from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950';
+  } else if (tags.includes('educational') || tags.includes('cognitive')) {
+    return 'from-cyan-50 to-blue-100 dark:from-cyan-950 dark:to-blue-950';
+  } else {
+    return 'from-gray-50 to-slate-100 dark:from-gray-950 dark:to-slate-950';
+  }
+};
+
+const cardColorClass = variant === 'colorful' ? getCardColor(post) : '';
+
+const cardSize = size === "sm" ? "sm" : "default";
+
+const CardWrapper = href ? "a" : "div";
+const wrapperProps = href ? { href, class: "block" } : { class: "block" };
+---
+
+<CardWrapper {...wrapperProps}>
+  <Card 
+    class={`${verticalBlogCard({ variant, size, class: className })} ${variant === 'colorful' ? `bg-gradient-to-br ${cardColorClass}` : ''}`} 
+    size={cardSize}
+    {...rest}
+  >
+    {showImage && post.image && (
+      <div class="relative overflow-hidden rounded-t-lg">
+        <Image 
+          src={post.image} 
+          alt={post.title}
+          class="w-full aspect-[16/10] object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        {variant === "featured" && (
+          <div class="absolute top-3 right-3">
+            <Badge size="sm" variant="primary">Featured</Badge>
+          </div>
+        )}
+      </div>
+    )}
+    
+    <CardHeader class="pb-3">
+      {variant !== "minimal" && post.tags && post.tags.includes("featured") && (
+        <CardAction>
+          <Badge size="sm" variant="secondary">Featured</Badge>
+        </CardAction>
+      )}
+      <CardTitle class="line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors">
+        {post.title}
+      </CardTitle>
+      <CardDescription class="line-clamp-3">
+        {post.description}
+      </CardDescription>
+    </CardHeader>
+
+    <CardContent class="space-y-3">
+      {showTags && post.tags && post.tags.length > 0 && (
+        <div class="flex flex-wrap gap-1">
+          {post.tags.slice(0, 3).map((tag: string) => (
+            <Badge size="sm" variant="outline">
+              {tag}
+            </Badge>
+          ))}
+          {post.tags.length > 3 && (
+            <Badge size="sm" variant="ghost">
+              +{post.tags.length - 3}
+            </Badge>
+          )}
+        </div>
+      )}
+    </CardContent>
+
+    <CardFooter class="flex items-center justify-between pt-0">
+      <div class="flex items-center gap-2 text-sm text-muted-foreground">
+        {showAuthor && post.author && (
+          <>
+            <span>{post.author}</span>
+            <span>•</span>
+          </>
+        )}
+        {post.date && (
+          <span>{formatDate(post.date)}</span>
+        )}
+        {showReadTime && post.minutesRead && (
+          <>
+            <span>•</span>
+            <span>{post.minutesRead}</span>
+          </>
+        )}
+      </div>
+      <Button size="sm" variant="ghost" class="opacity-0 group-hover:opacity-100 transition-opacity">
+        Read →
+      </Button>
+    </CardFooter>
+  </Card>
+</CardWrapper>

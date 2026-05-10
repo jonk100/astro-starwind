@@ -1,20 +1,105 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
-import BlogPost from '../../layouts/BlogPost.astro';
+import BlogPostLayout from '@/layouts/BlogPostLayout.astro';
+import { Image } from '@/components/starwind/image';
+import { getRelatedPosts, generateBlogBreadcrumb } from '@/components/blog';
+import { CldImage } from 'astro-cloudinary';
 
 export async function getStaticPaths() {
-	const posts = await getCollection('posts');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: post,
+  }));
 }
-type Props = CollectionEntry<'posts'>;
+
+type Props = CollectionEntry<'blog'>;
 
 const post = Astro.props;
 const { Content } = await render(post);
+
+/** All published blog posts, used for related posts and prev/next navigation. */
+const allPosts = await getCollection('blog');
+
+/**
+ * Flattens each collection entry into a plain BlogPost-shaped object
+ * by spreading `p.data` and appending the derived `slug` and `content` fields.
+ */
+const allPostsData = allPosts.map((p) => ({
+  ...p.data,
+  slug: p.id,
+  content: p.body,
+}));
+
+/** Index of the current post within the full collection (sorted as returned by getCollection). */
+const currentPostIndex = allPosts.findIndex((p) => p.id === post.id);
+
+/**
+ * Previous post in the list, or undefined (not null) when the current
+ * post is the first entry. BlogNavigation.previous is typed as
+ * `BlogNavigationPost | undefined`, so null would be a type error.
+ */
+const previousPost = currentPostIndex > 0
+  ? allPosts[currentPostIndex - 1]
+  : undefined;
+
+/**
+ * Next post in the list, or undefined when the current post is the last entry.
+ */
+const nextPost = currentPostIndex < allPosts.length - 1
+  ? allPosts[currentPostIndex + 1]
+  : undefined;
+
+/**
+ * Navigation object passed to BlogPostLayout.
+ * Each side is either a minimal BlogNavigationPost shape or undefined.
+ */
+const navigation = {
+  previous: previousPost
+    ? { ...previousPost.data, slug: previousPost.id }
+    : undefined,
+  next: nextPost
+    ? { ...nextPost.data, slug: nextPost.id }
+    : undefined,
+};
+
+/**
+ * Full post data object passed to BlogPostLayout as `post`.
+ * Merges collection entry data with the derived slug and raw body content.
+ */
+const postData = {
+  ...post.data,
+  slug: post.id,
+  content: post.body,
+};
 ---
 
-<BlogPost {...post.data}>
-	<Content />
-</BlogPost>
+<BlogPostLayout
+  title={post.data.title}
+  description={post.data.description || ''}
+  post={postData}
+  allPosts={allPostsData}
+  navigation={navigation}
+  showProgress={true}
+  showToc={true}
+  showRelatedPosts={true}
+  showNavigation={true}
+>
+  {post.data.image && (
+    <div class="mb-8">
+      <div class="relative overflow-hidden rounded-xl">
+        <CldImage
+          src={post.data.image}
+          alt={post.data.title}
+          width={800}
+          height={450}
+          class="w-full aspect-[16/9] object-cover"
+        />
+      </div>
+    </div>
+  )}
+
+  <div class="prose prose-lg max-w-none">
+    <Content />
+  </div>
+</BlogPostLayout>

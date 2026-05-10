@@ -1,0 +1,77 @@
+---
+import { tv } from "tailwind-variants";
+import type { BlogPost, RelatedPostsOptions } from "../types";
+import { getRelatedPosts } from "../utils";
+import VerticalBlogCard from "../BlogCard/VerticalBlogCard.astro";
+
+interface RelatedPostsCardsProps {
+  currentPost: BlogPost;
+  allPosts: BlogPost[];
+  options?: RelatedPostsOptions;
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  maxPosts?: number;
+  columns?: 1 | 2 | 3 | 4;
+  class?: string;
+}
+
+const {
+  currentPost,
+  allPosts,
+  options = {},
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  maxPosts = 3,
+  columns = 3,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const relatedPostsCards = tv({
+  base: "w-full",
+  variants: {
+    columns: {
+      1: "grid grid-cols-1",
+      2: "grid grid-cols-1 md:grid-cols-2",
+      3: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+      4: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+    }
+  }
+});
+
+const relatedPosts = getRelatedPosts(currentPost, allPosts, { ...options, limit: maxPosts });
+---
+
+<div class={relatedPostsCards({ columns, class: className })} {...rest}>
+  {relatedPosts.length > 0 ? (
+    <>
+      <div class="col-span-full mb-6">
+        <h2 class="text-2xl font-bold text-[rgb(var(--purple))]">Related Posts</h2>
+        <p class="text-muted-foreground mt-1">Discover more articles like this one</p>
+      </div>
+      
+      {relatedPosts.map((post) => (
+        <div>
+          <VerticalBlogCard
+            post={post}
+            variant="compact"
+            size="md"
+            showImage={showImage}
+            showTags={showTags}
+            showAuthor={showAuthor}
+            showReadTime={showReadTime}
+            href={`/blog/${post.slug}`}
+          />
+        </div>
+      ))}
+    </>
+  ) : (
+    <div class="col-span-full text-center py-8 text-muted-foreground">
+      <p>No related posts found</p>
+    </div>
+  )}
+</div>

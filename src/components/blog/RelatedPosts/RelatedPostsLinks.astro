@@ -1,0 +1,108 @@
+---
+import { Separator } from "@/components/starwind/separator";
+import { tv } from "tailwind-variants";
+import type { BlogPost, RelatedPostsOptions } from "../types";
+import { getRelatedPosts, formatDate } from "../utils";
+
+interface RelatedPostsLinksProps {
+  currentPost: BlogPost;
+  allPosts: BlogPost[];
+  options?: RelatedPostsOptions;
+  showDate?: boolean;
+  showDescription?: boolean;
+  maxPosts?: number;
+  layout?: "vertical" | "horizontal";
+  class?: string;
+}
+
+const {
+  currentPost,
+  allPosts,
+  options = {},
+  showDate = true,
+  showDescription = false,
+  maxPosts = 5,
+  layout = "vertical",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const relatedPostsLinks = tv({
+  base: "space-y-4",
+  variants: {
+    layout: {
+      vertical: "space-y-4",
+      horizontal: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+    }
+  }
+});
+
+const relatedPosts = getRelatedPosts(currentPost, allPosts, { ...options, limit: maxPosts });
+---
+
+<div class={relatedPostsLinks({ layout, class: className })} {...rest}>
+  {relatedPosts.length > 0 ? (
+    <>
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-[rgb(var(--purple))]">Related Posts</h2>
+        <p class="text-muted-foreground mt-1">Discover more articles like this one</p>
+      </div>
+      
+      <div class={layout === "vertical" ? "space-y-4" : ""}>
+        {relatedPosts.map((post: BlogPost, index: number) => (
+          <div>
+            <a 
+              href={`/blog/${post.slug}`}
+              class="group block p-4 rounded-lg border border-border hover:border-[rgb(var(--accent))] hover:bg-[rgba(var(--accent),0.02)] transition-all duration-200"
+            >
+              <h3 class="font-semibold text-lg group-hover:text-[rgb(var(--purple))] transition-colors line-clamp-2">
+                {post.title}
+              </h3>
+              
+              {showDescription && post.description && (
+                <p class="text-muted-foreground mt-2 line-clamp-2 text-sm">
+                  {post.description}
+                </p>
+              )}
+              
+              <div class="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                {showDate && post.date && (
+                  <time datetime={post.date instanceof Date ? post.date.toISOString() : post.date}>
+                    {formatDate(post.date)}
+                  </time>
+                )}
+                
+                {post.minutesRead && (
+                  <>
+                    <span>•</span>
+                    <span>{post.minutesRead}</span>
+                  </>
+                )}
+              </div>
+              
+              {post.tags && post.tags.length > 0 && (
+                <div class="flex flex-wrap gap-1 mt-2">
+                  {post.tags.slice(0, 2).map((tag: string) => (
+                    <span 
+                      class="inline-block px-2 py-1 text-xs bg-muted text-muted-foreground rounded"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </a>
+            
+            {layout === "vertical" && index < relatedPosts.length - 1 && (
+              <Separator class="mt-4" />
+            )}
+          </div>
+        ))}
+      </div>
+    </>
+  ) : (
+    <div class="text-center py-8 text-muted-foreground">
+      <p>No related posts found</p>
+    </div>
+  )}
+</div>

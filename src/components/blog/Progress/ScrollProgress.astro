@@ -1,0 +1,88 @@
+---
+import { tv } from "tailwind-variants";
+
+interface ScrollProgressProps {
+  height?: number;
+  color?: string;
+  position?: "top" | "bottom";
+  zIndex?: number;
+  showShadow?: boolean;
+  class?: string;
+}
+
+const {
+  height = 3,
+  color = "rgb(var(--accent))",
+  position = "top",
+  zIndex = 50,
+  showShadow = true,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const scrollProgress = tv({
+  base: "fixed left-0 transition-all duration-150 ease-out",
+  variants: {
+    position: {
+      top: "top-0",
+      bottom: "bottom-0"
+    }
+  }
+});
+---
+
+<div 
+  class={scrollProgress({ position, class: className })}
+  style={`height: ${height}px; background-color: ${color}; z-index: ${zIndex}; width: 0%;`}
+  data-scroll-progress
+  {...rest}
+/>
+
+<script>
+  class ScrollProgressHandler {
+    private progressBar: HTMLElement;
+    private height: number;
+
+    constructor(element: HTMLElement) {
+      this.progressBar = element;
+      this.height = parseInt(element.dataset.height || '3');
+      this.init();
+    }
+
+    private init() {
+      const updateProgress = () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrollProgress = (scrollTop / scrollHeight) * 100;
+        
+        this.progressBar.style.width = `${Math.min(scrollProgress, 100)}%`;
+      };
+
+      // Initial update
+      updateProgress();
+      
+      // Update on scroll with throttling
+      let ticking = false;
+      const requestTick = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(updateProgress);
+          ticking = true;
+          setTimeout(() => { ticking = false; }, 16); // ~60fps
+        }
+      };
+      
+      window.addEventListener('scroll', requestTick, { passive: true });
+    }
+  }
+
+  // Initialize all scroll progress bars
+  const setupScrollProgress = () => {
+    const elements = document.querySelectorAll('[data-scroll-progress]');
+    elements.forEach((element) => {
+      new ScrollProgressHandler(element as HTMLElement);
+    });
+  };
+
+  setupScrollProgress();
+  document.addEventListener('astro:after-swap', setupScrollProgress);
+</script>

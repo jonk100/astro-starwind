@@ -1,0 +1,61 @@
+---
+import BaseHead from './BaseHead.astro';
+import Footer from './Footer.astro';
+import Header from '../components/header/Header.astro';
+import { BlogBreadcrumbs } from '../components/blog';
+import { ScrollProgress } from '../components/blog';
+
+interface Props {
+  title: string;
+  description: string;
+  showProgress?: boolean;
+  showBreadcrumbs?: boolean;
+  breadcrumbs?: Array<{label: string; href: string; current?: boolean}>;
+  children: any;
+}
+
+const { 
+  title, 
+  description, 
+  showProgress = false,
+  showBreadcrumbs = true,
+  breadcrumbs,
+  children 
+} = Astro.props;
+
+import '@/styles/global.css';
+import '@/styles/starwind.css';
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+    <slot name="head" />
+	</head>
+
+	<body class="layout-body">
+    {showProgress && <ScrollProgress height={3} color="rgb(var(--accent))" position="top" />}
+    
+    <header class="layout-header">
+      <Header />
+      <slot name="header" />
+    </header>
+    
+    <main class="layout-main">
+      <div class="layout-main-content">
+        {showBreadcrumbs && (
+          <div class="mb-8">
+            <BlogBreadcrumbs breadcrumbs={breadcrumbs} />
+          </div>
+        )}
+        
+        <slot />
+      </div>
+    </main>
+
+    <footer class="layout-footer">
+      <slot name="footer" />
+      <Footer />
+    </footer>
+	</body>
+</html>

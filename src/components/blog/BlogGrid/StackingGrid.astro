@@ -1,0 +1,58 @@
+---
+import { tv } from "tailwind-variants";
+import type { BlogPost, BlogCardVariant } from "../shared/types";
+import HorizontalBlogCard from "../BlogCard/HorizontalBlogCard.astro";
+
+interface StackingGridProps {
+  posts: BlogPost[];
+  cardVariant?: BlogCardVariant;
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  maxPosts?: number;
+  spacing?: "compact" | "normal" | "loose";
+  class?: string;
+}
+
+const {
+  posts,
+  cardVariant = "default",
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  maxPosts,
+  spacing = "normal",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const stackingGrid = tv({
+  base: "space-y-6",
+  variants: {
+    spacing: {
+      compact: "space-y-4",
+      normal: "space-y-6",
+      loose: "space-y-8"
+    }
+  }
+});
+
+const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
+---
+
+<div class={stackingGrid({ spacing, class: className })} {...rest}>
+  {displayPosts.map((post, index) => (
+    <HorizontalBlogCard
+      post={post}
+      variant={index === 0 ? "featured" : cardVariant}
+      size="lg"
+      showImage={showImage}
+      showTags={showTags}
+      showAuthor={showAuthor}
+      showReadTime={showReadTime}
+      href={`/blog/${post.slug}`}
+    />
+  ))}
+</div>

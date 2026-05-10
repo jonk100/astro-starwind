@@ -1,0 +1,86 @@
+---
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/starwind/breadcrumb";
+import { tv } from "tailwind-variants";
+import type { BlogBreadcrumb } from "../shared/types";
+
+interface BlogBreadcrumbsProps {
+  breadcrumbs?: BlogBreadcrumb[];
+  homeLabel?: string;
+  showHome?: boolean;
+  variant?: "default" | "minimal";
+  class?: string;
+}
+
+const {
+  breadcrumbs,
+  homeLabel = "Home",
+  showHome = true,
+  variant = "default",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const blogBreadcrumbs = tv({
+  base: "flex items-center space-x-2 text-sm",
+  variants: {
+    variant: {
+      default: "",
+      minimal: "text-sm"
+    }
+  }
+});
+
+// If no breadcrumbs provided, generate from current URL
+const generateFromUrl = () => {
+  const url = Astro.url.pathname;
+  const parts = url.split('/').filter(Boolean);
+  const crumbs: BlogBreadcrumb[] = [];
+  
+  if (showHome) {
+    crumbs.push({ label: homeLabel, href: "/", current: parts.length === 0 });
+  }
+  
+  let path = '';
+  parts.forEach((part, index) => {
+    path += `/${part}`;
+    const isCurrent = index === parts.length - 1;
+    crumbs.push({
+      label: part.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      href: path,
+      current: isCurrent
+    });
+  });
+  
+  return crumbs;
+};
+
+const breadcrumbItems = breadcrumbs || generateFromUrl();
+---
+
+<div class={blogBreadcrumbs({ variant, class: className })} {...rest}>
+  <Breadcrumb>
+    <BreadcrumbList>
+      {breadcrumbItems.map((crumb: BlogBreadcrumb, index: number) => (
+        <>
+          <BreadcrumbItem>
+            {crumb.current ? (
+              <BreadcrumbPage class="text-[rgb(var(--purple))] font-medium">
+                {crumb.label}
+              </BreadcrumbPage>
+            ) : (
+              <BreadcrumbLink 
+                href={crumb.href}
+                class="hover:text-[rgb(var(--purple))] transition-colors"
+              >
+                {crumb.label}
+              </BreadcrumbLink>
+            )}
+          </BreadcrumbItem>
+          {index < breadcrumbItems.length - 1 && (
+            <BreadcrumbSeparator class="text-muted-foreground" />
+          )}
+        </>
+      ))}
+    </BreadcrumbList>
+  </Breadcrumb>
+</div>

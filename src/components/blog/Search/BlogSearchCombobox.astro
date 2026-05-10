@@ -1,0 +1,150 @@
+---
+import { Select, SelectContent, SelectGroup, SelectItem, SelectSearch, SelectTrigger, SelectValue } from "@/components/starwind/select";
+import { tv } from "tailwind-variants";
+import type { BlogPost } from "../types";
+import { searchPosts } from "../utils";
+
+interface BlogSearchComboboxProps {
+  posts: BlogPost[];
+  placeholder?: string;
+  emptyText?: string;
+  maxResults?: number;
+  showTags?: boolean;
+  showDate?: boolean;
+  class?: string;
+}
+
+const {
+  posts,
+  placeholder = "Search articles...",
+  emptyText = "No articles found",
+  maxResults = 50,
+  showTags = true,
+  showDate = true,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const blogSearchCombobox = tv({
+  base: "w-full max-w-md"
+});
+---
+
+<div class={blogSearchCombobox({ class: className })} {...rest}>
+  <Select id="blog-search-combobox" name="blog-search">
+    <SelectTrigger class="w-full">
+      <SelectValue placeholder={placeholder} />
+    </SelectTrigger>
+    <SelectContent class="w-full max-h-96">
+      <SelectSearch 
+        placeholder={placeholder} 
+        emptyText={emptyText}
+      />
+      <SelectGroup>
+        {posts.slice(0, maxResults).map((post) => (
+          <SelectItem value={post.slug} class="py-3">
+            <div class="flex flex-col gap-1">
+              <div class="font-medium line-clamp-1">{post.title}</div>
+              {post.description && (
+                <div class="text-sm text-muted-foreground line-clamp-2">
+                  {post.description}
+                </div>
+              )}
+              <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                {post.author && <span>{post.author}</span>}
+                {post.date && (
+                  <>
+                    <span>•</span>
+                    <time>{new Date(post.date).toLocaleDateString()}</time>
+                  </>
+                )}
+                {post.minutesRead && (
+                  <>
+                    <span>•</span>
+                    <span>{post.minutesRead}</span>
+                  </>
+                )}
+              </div>
+              {showTags && post.tags && post.tags.length > 0 && (
+                <div class="flex flex-wrap gap-1 mt-1">
+                  {post.tags.slice(0, 3).map((tag) => (
+                    <span class="inline-block px-2 py-0.5 text-xs bg-muted text-muted-foreground rounded">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </SelectItem>
+        ))}
+      </SelectGroup>
+    </SelectContent>
+  </Select>
+</div>
+
+<script>
+  class BlogSearchComboboxHandler {
+    private select: HTMLElement;
+    private searchInput: HTMLInputElement;
+    private posts: any[];
+
+    constructor(element: HTMLElement) {
+      this.select = element;
+      this.posts = JSON.parse(element.dataset.posts || '[]');
+      this.init();
+    }
+
+    private init() {
+      // Find the search input within the select
+      this.searchInput = this.select.querySelector('input[type="search"]') as HTMLInputElement;
+      
+      if (this.searchInput) {
+        this.searchInput.addEventListener('input', () => this.handleSearch());
+      }
+
+      // Handle selection change
+      this.select.addEventListener('change', (e) => {
+        const target = e.target as HTMLSelectElement;
+        if (target.value) {
+          window.location.href = `/blog/${target.value}`;
+        }
+      });
+    }
+
+    private handleSearch() {
+      const query = this.searchInput.value.trim();
+      
+      if (!query) {
+        // Show all options
+        this.showAllOptions();
+        return;
+      }
+
+      // Filter options based on search
+      const options = this.select.querySelectorAll('select option') as NodeListOf<HTMLOptionElement>;
+      options.forEach(option => {
+        const text = option.textContent?.toLowerCase() || '';
+        const matches = text.includes(query.toLowerCase());
+        option.style.display = matches ? 'block' : 'none';
+      });
+    }
+
+    private showAllOptions() {
+      const options = this.select.querySelectorAll('select option') as NodeListOf<HTMLOptionElement>;
+      options.forEach(option => {
+        option.style.display = 'block';
+      });
+    }
+  }
+
+  // Initialize all blog search combobox components
+  const setupBlogSearchCombobox = () => {
+    const elements = document.querySelectorAll('[data-blog-search-combobox]');
+    elements.forEach((element) => {
+      new BlogSearchComboboxHandler(element as HTMLElement);
+    });
+  };
+
+  setupBlogSearchCombobox();
+  document.addEventListener('astro:after-swap', setupBlogSearchCombobox);
+</script>

@@ -1,0 +1,55 @@
+---
+import { tv } from "tailwind-variants";
+import type { BlogPost, BlogCardVariant } from "../shared/types";
+import VerticalBlogCard from "../BlogCard/VerticalBlogCard.astro";
+
+interface ThreeColumnGridProps {
+  posts: BlogPost[];
+  cardVariant?: BlogCardVariant;
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  maxPosts?: number;
+  class?: string;
+}
+
+const {
+  posts,
+  cardVariant = "default",
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  maxPosts,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const threeColumnGrid = tv({
+  base: "grid gap-6",
+  variants: {
+    responsive: {
+      true: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+      false: "grid-cols-3"
+    }
+  }
+});
+
+const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
+---
+
+<div class={threeColumnGrid({ responsive: true, class: className })} {...rest}>
+  {displayPosts.map((post) => (
+    <VerticalBlogCard
+      post={post}
+      variant={cardVariant}
+      size="md"
+      showImage={showImage}
+      showTags={showTags}
+      showAuthor={showAuthor}
+      showReadTime={showReadTime}
+      href={`/blog/${post.slug}`}
+    />
+  ))}
+</div>

@@ -1,0 +1,92 @@
+---
+import { Badge } from "@/components/starwind/badge";
+import { tv } from "tailwind-variants";
+import type { BlogPost } from "../shared/types";
+import { formatDate } from "../shared/utils";
+
+interface BlogCardMetaProps {
+  post: BlogPost;
+  showAuthor?: boolean;
+  showDate?: boolean;
+  showReadTime?: boolean;
+  showTags?: boolean;
+  variant?: "default" | "compact" | "minimal";
+  layout?: "horizontal" | "vertical";
+  class?: string;
+}
+
+const {
+  post,
+  showAuthor = true,
+  showDate = true,
+  showReadTime = true,
+  showTags = true,
+  variant = "default",
+  layout = "horizontal",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const blogCardMeta = tv({
+  base: "flex items-center gap-2 text-sm",
+  variants: {
+    variant: {
+      default: "text-muted-foreground",
+      compact: "text-xs text-muted-foreground",
+      minimal: "text-xs text-muted-foreground/70"
+    },
+    layout: {
+      horizontal: "flex-row flex-wrap",
+      vertical: "flex-col items-start"
+    }
+  }
+});
+
+const separator = "•";
+---
+
+<div class={blogCardMeta({ variant, layout, class: className })} {...rest}>
+  {showAuthor && post.author && (
+    <span class="font-medium">{post.author}</span>
+  )}
+  
+  {showAuthor && post.author && showDate && post.date && <span class="mx-1">{separator}</span>}
+  
+  {showDate && post.date && (
+    <time datetime={post.date instanceof Date ? post.date.toISOString() : post.date}>
+      {formatDate(post.date)}
+    </time>
+  )}
+  
+  {showDate && post.date && showReadTime && post.minutesRead && <span class="mx-1">{separator}</span>}
+  
+  {showReadTime && post.minutesRead && (
+    <span>{post.minutesRead}</span>
+  )}
+  
+  {showTags && post.tags && post.tags.length > 0 && (
+    <>
+      {layout === "horizontal" && (showAuthor || showDate || showReadTime) && <span class="mx-1">{separator}</span>}
+      <div class="flex flex-wrap gap-1">
+        {post.tags.slice(0, variant === "compact" ? 2 : 3).map((tag: string) => (
+          <Badge 
+            size={variant === "compact" ? "sm" : "sm"} 
+            variant="outline"
+            class="text-xs"
+          >
+            {tag}
+          </Badge>
+        ))}
+        {post.tags.length > (variant === "compact" ? 2 : 3) && (
+          <Badge 
+            size="sm" 
+            variant="ghost"
+            class="text-xs"
+          >
+            +{post.tags.length - (variant === "compact" ? 2 : 3)}
+          </Badge>
+        )}
+      </div>
+    </>
+  )}
+</div>

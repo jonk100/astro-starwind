@@ -1,0 +1,134 @@
+---
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CardAction } from "@/components/starwind/card";
+import { Badge } from "@/components/starwind/badge";
+import { Button } from "@/components/starwind/button";
+import { Image } from "@/components/starwind/image";
+import { tv } from "tailwind-variants";
+import type { BlogPost, BlogCardVariant, BlogCardSize } from "../shared/types";
+import { formatDate } from "../shared/utils";
+
+interface HorizontalBlogCardProps {
+  post: BlogPost;
+  variant?: BlogCardVariant;
+  size?: BlogCardSize;
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  href?: string;
+  class?: string;
+}
+
+const {
+  post,
+  variant = "default",
+  size = "md",
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  href,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const horizontalBlogCard = tv({
+  base: "group hover:shadow-lg transition-all duration-300",
+  variants: {
+    variant: {
+      default: "border-border bg-card",
+      featured: "border-[rgb(var(--accent))] bg-[rgba(var(--accent),0.05)] shadow-md",
+      minimal: "border-transparent bg-transparent shadow-none",
+      compact: "border-border bg-card"
+    },
+    size: {
+      sm: "w-full max-w-sm",
+      md: "w-full max-w-2xl", 
+      lg: "w-full max-w-4xl"
+    }
+  }
+});
+
+const CardWrapper = href ? "a" : "div";
+const wrapperProps = href ? { href, class: "block" } : { class: "block" };
+---
+
+<CardWrapper {...wrapperProps}>
+  <Card 
+    class={horizontalBlogCard({ variant, size, class: className })} 
+    {...rest}
+  >
+    <div class="flex flex-col sm:flex-row gap-4">
+      {showImage && post.image && (
+        <div class="relative overflow-hidden rounded-lg sm:rounded-r-none sm:rounded-l-lg flex-shrink-0">
+          <Image 
+            src={post.image} 
+            alt={post.title}
+            class="w-full sm:w-48 h-32 sm:h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          {variant === "featured" && (
+            <div class="absolute top-2 right-2">
+              <Badge size="sm" variant="primary">Featured</Badge>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div class="flex-1 flex flex-col">
+        <CardHeader class="pb-2 flex-1">
+          {variant !== "minimal" && post.tags && post.tags.includes("featured") && (
+            <CardAction>
+              <Badge size="sm" variant="secondary">Featured</Badge>
+            </CardAction>
+          )}
+          <CardTitle class="line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors">
+            {post.title}
+          </CardTitle>
+          <CardDescription class="line-clamp-2">
+            {post.description}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent class="pb-2">
+          {showTags && post.tags && post.tags.length > 0 && (
+            <div class="flex flex-wrap gap-1">
+              {post.tags.slice(0, 2).map((tag) => (
+                <Badge key={tag} size="sm" variant="outline">
+                  {tag}
+                </Badge>
+              ))}
+              {post.tags.length > 2 && (
+                <Badge size="sm" variant="ghost">
+                  +{post.tags.length - 2}
+                </Badge>
+              )}
+            </div>
+          )}
+        </CardContent>
+
+        <CardFooter class="flex items-center justify-between pt-0 mt-auto">
+          <div class="flex items-center gap-2 text-sm text-muted-foreground">
+            {showAuthor && post.author && (
+              <>
+                <span>{post.author}</span>
+                <span>•</span>
+              </>
+            )}
+            {post.date && (
+              <span>{formatDate(post.date)}</span>
+            )}
+            {showReadTime && post.minutesRead && (
+              <>
+                <span>•</span>
+                <span>{post.minutesRead}</span>
+              </>
+            )}
+          </div>
+          <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
+            Read →
+          </Button>
+        </CardFooter>
+      </div>
+    </div>
+  </Card>
+</CardWrapper>

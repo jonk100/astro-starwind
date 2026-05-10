@@ -1,0 +1,59 @@
+---
+import { Button } from "@/components/starwind/button";
+import { tv } from "tailwind-variants";
+import type { BlogNavigationPost } from "../shared/types";
+
+interface NextPostButtonProps {
+  nextPost: BlogNavigationPost;
+  variant?: "default" | "outline" | "ghost";
+  size?: "default" | "sm" | "lg";
+  showDate?: boolean;
+  class?: string;
+}
+
+const {
+  nextPost,
+  variant = "default",
+  size = "default",
+  showDate = true,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const nextPostButton = tv({
+  base: "group flex items-center justify-between w-full",
+  variants: {
+    variant: {
+      default: "",
+      outline: "",
+      ghost: ""
+    }
+  }
+});
+---
+
+<div class={nextPostButton({ variant, class: className })} {...rest}>
+  <Button 
+    variant={variant}
+    size={size}
+    href={`/blog/${nextPost.slug}`}
+    class="w-full justify-between"
+  >
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 text-muted-foreground">
+        <span>Next</span>
+        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+      <div class="text-left">
+        <div class="font-medium">{nextPost.title}</div>
+        {showDate && nextPost.date && (
+          <div class="text-sm text-muted-foreground">
+            {nextPost.date instanceof Date ? nextPost.date.toLocaleDateString() : nextPost.date}
+          </div>
+        )}
+      </div>
+    </div>
+  </Button>
+</div>

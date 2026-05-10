@@ -10,6 +10,21 @@ import aao from 'astro-agent-optimised';
 export default defineConfig({
 	site: 'https://example.com',
 	integrations: [mdx(), sitemap(), aao()],
+	image: {
+		domains: ['res.cloudinary.com'],
+		remotePatterns: [{
+			protocol: 'https',
+			hostname: 'res.cloudinary.com',
+			path: '/**'
+		}],
+		service: {
+			entrypoint: 'astro/assets/services/sharp',
+			config: {
+				quality: 80
+			}
+		},
+		dangerouslyProcessSVG: true
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),

@@ -1,0 +1,95 @@
+---
+import { tv } from "tailwind-variants";
+import type { BlogPost, BlogCardVariant } from "../shared/types";
+import VerticalBlogCard from "../BlogCard/VerticalBlogCard.astro";
+import BlogCardImage from "../BlogCard/BlogCardImage.astro";
+
+interface MasonryGridProps {
+  posts: BlogPost[];
+  cardVariant?: BlogCardVariant;
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  maxPosts?: number;
+  columns?: 2 | 3 | 4;
+  class?: string;
+}
+
+const {
+  posts,
+  cardVariant = "default",
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  maxPosts,
+  columns = 3,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const masonryGrid = tv({
+  base: "columns-1 gap-6 space-y-6",
+  variants: {
+    columns: {
+      2: "md:columns-2 lg:columns-2",
+      3: "md:columns-2 lg:columns-3", 
+      4: "md:columns-2 lg:columns-4"
+    }
+  }
+});
+
+const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
+
+// Create a mix of card types for visual interest
+const getCardType = (index: number): "image" | "card" => {
+  if (index % 3 === 0) return "image";
+  if (index % 3 === 1) return "card";
+  return "card";
+};
+---
+
+<div class={masonryGrid({ columns, class: className })} {...rest}>
+  {displayPosts.map((post: BlogPost, index: number) => {
+    const cardType = getCardType(index);
+    
+    if (cardType === "image" && post.image) {
+      return (
+        <div class="break-inside-avoid mb-6">
+          <BlogCardImage
+            post={post}
+            aspectRatio={index % 2 === 0 ? "16/9" : "4/3"}
+            showOverlay={true}
+            showTitle={true}
+            showBadge={post.tags?.includes("featured")}
+            href={`/blog/${post.slug}`}
+          />
+          <div class="mt-3">
+            <h3 class="font-semibold line-clamp-2 hover:text-[rgb(var(--purple))] transition-colors">
+              {post.title}
+            </h3>
+            <p class="text-sm text-muted-foreground line-clamp-2 mt-1">
+              {post.description}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div class="break-inside-avoid">
+        <VerticalBlogCard
+          post={post}
+          variant={cardVariant}
+          size={index % 2 === 0 ? "lg" : "md"}
+          showImage={showImage}
+          showTags={showTags}
+          showAuthor={showAuthor}
+          showReadTime={showReadTime}
+          href={`/blog/${post.slug}`}
+        />
+      </div>
+    );
+  })}
+</div>

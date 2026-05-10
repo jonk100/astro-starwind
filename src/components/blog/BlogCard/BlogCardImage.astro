@@ -1,0 +1,72 @@
+---
+import { Image } from "@/components/starwind/image";
+import { Badge } from "@/components/starwind/badge";
+import { tv } from "tailwind-variants";
+import type { BlogPost } from "../shared/types";
+
+interface BlogCardImageProps {
+  post: BlogPost;
+  aspectRatio?: "16/9" | "4/3" | "1/1" | "3/2";
+  showOverlay?: boolean;
+  showTitle?: boolean;
+  showBadge?: boolean;
+  href?: string;
+  class?: string;
+}
+
+const {
+  post,
+  aspectRatio = "16/9",
+  showOverlay = false,
+  showTitle = true,
+  showBadge = true,
+  href,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const blogCardImage = tv({
+  base: "group relative overflow-hidden rounded-lg transition-all duration-300",
+  variants: {
+    aspectRatio: {
+      "16/9": "aspect-video",
+      "4/3": "aspect-[4/3]", 
+      "1/1": "aspect-square",
+      "3/2": "aspect-[3/2]"
+    }
+  }
+});
+
+const ImageWrapper = href ? "a" : "div";
+const wrapperProps = href ? { href, class: "block" } : { class: "block" };
+---
+
+<ImageWrapper {...wrapperProps}>
+  <div class={blogCardImage({ aspectRatio, class: className })} {...rest}>
+    <Image 
+      src={post.image || "/blog-placeholder-1.jpg"} 
+      alt={post.title}
+      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+    />
+    
+    {showOverlay && (
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    )}
+    
+    {showBadge && post.tags && post.tags.includes("featured") && (
+      <div class="absolute top-3 right-3 z-10">
+        <Badge size="sm" variant="primary" className="bg-[rgb(var(--accent))] text-white">
+          Featured
+        </Badge>
+      </div>
+    )}
+    
+    {showTitle && (
+      <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+        <h3 class="text-white font-semibold line-clamp-2 group-hover:text-[rgb(var(--purple-light))] transition-colors">
+          {post.title}
+        </h3>
+      </div>
+    )}
+  </div>
+</ImageWrapper>

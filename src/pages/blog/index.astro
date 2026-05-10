@@ -1,52 +1,77 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseHead from '@/layouts/BaseHead.astro';
-import Header from '@/components/header/Header.astro';
-import Footer from '@/layouts/Footer.astro';
-import Layout from '@/layouts/Layout.astro';
-// import BlogHeader from '@/layouts/BlogHeader.astro';
-// import BlogPreviewCard from '@/components/BlogPreviewCard.astro';
+import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
+import { HeroCard, ThreeColumnGrid, BlogSearch, BlogCardCarousel } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 
 const posts = (await getCollection('blog')).sort(
 	(a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
 );
----
-<Layout title={`${SITE_TITLE} | Blog`} description={`${SITE_DESCRIPTION} | Blog posts`}>
-		<div class="blog-hero">
-			<div class="blog-hero-content">
-				<h1>Blog</h1>
-				<p>Explore our latest articles, insights, and stories on technology, design, and development.</p>
-			</div>
-		</div>
-		<container class="blog-index-page-container">
-		<main>
-			<section>
-				<ul class="blog-grid">
-					{
-						posts.map((post, index) => (
-							<li>
-								{/* <BlogPreviewCard 
-									post={post} 
-									isFeatured={index === 0}
-									variant="default"
-								/> */}
-							</li>
-						))
-					}
-				</ul>
-			</section>
-		</container>
-</Layout>
 
-<style>
-	.blog-index-page-container {
-		display: flex;
-		flex-direction: column;
-		max-width: 960px;
-		margin: 0 auto;
-	}
-	.blog-index-page-container h1 {
-		text-align: center;
-	}
-</style>
+const featuredPost = posts[0];
+const recentPosts = posts.slice(1, 7);
+const allPostsData = posts.map(post => ({
+  ...post.data,
+  slug: post.id,
+  content: post.body
+}));
+---
+<BlogIndexLayout 
+  title={`${SITE_TITLE} | Blog`} 
+  description={`${SITE_DESCRIPTION} | Blog posts`}
+  showProgress={true}
+  breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog', current: true }]}
+>
+  <div class="space-y-12">
+    <!-- Hero Section -->
+    <div class="text-center space-y-4">
+      <h1 class="text-4xl lg:text-6xl font-bold text-[rgb(var(--purple))]">Blog</h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        Explore our latest articles, insights, and stories on technology, design, and development.
+      </p>
+    </div>
+
+    <!-- Search Section -->
+    <div class="max-w-2xl mx-auto">
+      <BlogSearch posts={allPostsData} placeholder="Search articles..." showFilters={true} />
+    </div>
+
+    <!-- Featured Post -->
+    {featuredPost && (
+      <section class="space-y-6">
+        <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">Featured Article</h2>
+        <HeroCard 
+          post={{ ...featuredPost.data, slug: featuredPost.id }}
+          style="modern"
+          href={`/blog/${featuredPost.id}`}
+        />
+      </section>
+    )}
+
+    <!-- Recent Posts Carousel -->
+    {recentPosts.length > 0 && (
+      <section class="space-y-6">
+        <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">Recent Articles</h2>
+        <BlogCardCarousel 
+          posts={recentPosts.map(post => ({ ...post.data, slug: post.id }))}
+          autoplay={false}
+          showArrows={true}
+          slidesPerView={1}
+        />
+      </section>
+    )}
+
+    <!-- All Posts Grid -->
+    <section class="space-y-6">
+      <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">All Articles</h2>
+      <ThreeColumnGrid 
+        posts={allPostsData}
+        cardVariant="colorful"
+        showImage={true}
+        showTags={true}
+        showAuthor={true}
+        showReadTime={true}
+      />
+    </section>
+  </div>
+</BlogIndexLayout>

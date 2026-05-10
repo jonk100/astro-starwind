@@ -1,0 +1,59 @@
+---
+import { Button } from "@/components/starwind/button";
+import { tv } from "tailwind-variants";
+import type { BlogNavigationPost } from "../shared/types";
+
+interface PreviousPostButtonProps {
+  previousPost: BlogNavigationPost;
+  variant?: "default" | "outline" | "ghost";
+  size?: "default" | "sm" | "lg";
+  showDate?: boolean;
+  class?: string;
+}
+
+const {
+  previousPost,
+  variant = "default",
+  size = "default",
+  showDate = true,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const previousPostButton = tv({
+  base: "group flex items-center justify-between w-full",
+  variants: {
+    variant: {
+      default: "",
+      outline: "",
+      ghost: ""
+    }
+  }
+});
+---
+
+<div class={previousPostButton({ variant, class: className })} {...rest}>
+  <Button 
+    variant={variant}
+    size={size}
+    href={`/blog/${previousPost.slug}`}
+    class="w-full justify-between"
+  >
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 text-muted-foreground">
+        <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Previous</span>
+      </div>
+      <div class="text-left">
+        <div class="font-medium">{previousPost.title}</div>
+        {showDate && previousPost.date && (
+          <div class="text-sm text-muted-foreground">
+            {previousPost.date instanceof Date ? previousPost.date.toLocaleDateString() : previousPost.date}
+          </div>
+        )}
+      </div>
+    </div>
+  </Button>
+</div>

@@ -1,0 +1,17 @@
+---
+import { CldImage } from 'astro-cloudinary';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+
+
+
+
+---
+<CldImage
+  src="<Public ID>"
+  width={100}
+  height={100}
+  alt="<Description>"
+  sizes="100vw" // Optional
+/>

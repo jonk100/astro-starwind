@@ -1,0 +1,181 @@
+---
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/starwind/card";
+import { tv } from "tailwind-variants";
+import type { TableOfContentsItem } from "../types";
+import { extractTableOfContents } from "../utils";
+
+interface TableOfContentsProps {
+  content?: string;
+  items?: TableOfContentsItem[];
+  title?: string;
+  maxDepth?: number;
+  showCounts?: boolean;
+  sticky?: boolean;
+  variant?: "default" | "minimal" | "sidebar";
+  class?: string;
+}
+
+const {
+  content,
+  items: providedItems,
+  title = "Table of Contents",
+  maxDepth = 6,
+  showCounts = false,
+  sticky = false,
+  variant = "default",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const tableOfContents = tv({
+  base: "",
+  variants: {
+    variant: {
+      default: "",
+      minimal: "border-0 shadow-none bg-transparent",
+      sidebar: "border-l-4 border-[rgb(var(--accent))]"
+    },
+    sticky: {
+      true: "sticky top-4",
+      false: ""
+    }
+  }
+});
+
+// Extract items from content if not provided
+const items = providedItems || (content ? extractTableOfContents(content) : []);
+
+// Filter by max depth
+const filteredItems = items.filter((item: TableOfContentsItem) => item.level <= maxDepth);
+
+// Count items at each level
+const levelCounts = filteredItems.reduce((acc: Record<number, number>, item: TableOfContentsItem) => {
+  acc[item.level] = (acc[item.level] || 0) + 1;
+  return acc;
+}, {} as Record<number, number>);
+---
+
+<div class={tableOfContents({ variant, sticky, class: className })} {...rest}>
+  {filteredItems.length > 0 ? (
+    <Card>
+      <CardHeader class="pb-3">
+        <CardTitle class="text-lg font-semibold text-[rgb(var(--purple))]">
+          {title}
+          {showCounts && (
+            <span class="text-sm font-normal text-muted-foreground ml-2">
+              ({filteredItems.length} items)
+            </span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent class="pt-0">
+        <nav class="space-y-1">
+          {filteredItems.map((item: TableOfContentsItem) => (
+            <a
+              href={`#${item.id}`}
+              class={`block py-1 px-2 text-sm rounded transition-colors hover:bg-[rgba(var(--accent),0.1)] hover:text-[rgb(var(--accent))] ${
+                item.level === 1 ? "font-semibold" :
+                item.level === 2 ? "font-medium pl-4" :
+                item.level === 3 ? "pl-8" :
+                item.level === 4 ? "pl-12" :
+                item.level === 5 ? "pl-16" :
+                "pl-20"
+              }`}
+              data-toc-link
+              data-target={item.id}
+            >
+              {item.title}
+            </a>
+          ))}
+        </nav>
+      </CardContent>
+    </Card>
+  ) : (
+    <div class="text-center py-4 text-muted-foreground text-sm">
+      No table of contents available
+    </div>
+  )}
+</div>
+
+<script>
+  class TableOfContentsHandler {
+    private container: HTMLElement;
+    private links: HTMLElement[];
+    private headings: HTMLElement[] = [];
+    private activeClass: string;
+
+    constructor(element: HTMLElement) {
+      this.container = element;
+      this.links = Array.from(element.querySelectorAll('[data-toc-link]')) as HTMLElement[];
+      this.activeClass = 'bg-[rgba(var(--accent),0.1)] text-[rgb(var(--accent))]';
+      this.init();
+    }
+
+    private init() {
+      // Find all headings
+      this.headings = this.links
+        .map(link => document.querySelector(`#${link.dataset.target}`) as HTMLElement)
+        .filter(Boolean);
+
+      // Update active link on scroll
+      const updateActiveLink = () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Find the current heading
+        let currentHeading: HTMLElement | null = null;
+        for (let i = this.headings.length - 1; i >= 0; i--) {
+          const heading = this.headings[i];
+          if (heading && heading.offsetTop <= scrollTop + 100) {
+            currentHeading = heading;
+            break;
+          }
+        }
+
+        // Update active states
+        this.links.forEach(link => {
+          const isActive = currentHeading && link.dataset.target === currentHeading.id;
+          if (isActive) {
+            link.classList.add(...this.activeClass.split(' '));
+          } else {
+            link.classList.remove(...this.activeClass.split(' '));
+          }
+        });
+      };
+
+      // Smooth scroll for links
+      this.links.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = link.dataset.target;
+          const target = document.querySelector(`#${targetId}`) as HTMLElement;
+          
+          if (target) {
+            const offset = 80; // Account for fixed headers
+            const targetPosition = target.offsetTop - offset;
+            
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+
+      // Initial update and scroll listener
+      updateActiveLink();
+      window.addEventListener('scroll', updateActiveLink, { passive: true });
+    }
+  }
+
+  // Initialize all table of contents components
+  const setupTableOfContents = () => {
+    const elements = document.querySelectorAll('[data-toc-container]');
+    elements.forEach((element) => {
+      new TableOfContentsHandler(element as HTMLElement);
+    });
+  };
+
+  setupTableOfContents();
+  document.addEventListener('astro:after-swap', setupTableOfContents);
+</script>

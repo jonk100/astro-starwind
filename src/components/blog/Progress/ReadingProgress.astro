@@ -1,0 +1,117 @@
+---
+import { Progress } from "@/components/starwind/progress";
+import { tv } from "tailwind-variants";
+
+interface ReadingProgressProps {
+  value?: number;
+  max?: number;
+  size?: "sm" | "md" | "lg";
+  variant?: "default" | "primary" | "secondary";
+  showLabel?: boolean;
+  label?: string;
+  position?: "top" | "bottom" | "fixed-top";
+  class?: string;
+}
+
+const {
+  value = 0,
+  max = 100,
+  size = "sm",
+  variant = "primary",
+  showLabel = true,
+  label = "Reading Progress",
+  position = "top",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const readingProgress = tv({
+  base: "w-full",
+  variants: {
+    position: {
+      top: "",
+      bottom: "",
+      "fixed-top": "fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm border-b"
+    }
+  }
+});
+---
+
+<div class={readingProgress({ position, class: className })} {...rest}>
+  {showLabel && (
+    <div class="flex items-center justify-between px-4 py-2">
+      <span class="text-sm font-medium text-muted-foreground">{label}</span>
+      <span class="text-sm text-muted-foreground">{Math.round((value / max) * 100)}%</span>
+    </div>
+  )}
+  <div class="px-4 pb-2">
+    <div class="w-full bg-muted rounded-full overflow-hidden">
+      <div 
+        class="h-2 bg-[rgb(var(--accent))] transition-all duration-300"
+        style={`width: ${(value / max) * 100}%`}
+      />
+    </div>
+  </div>
+</div>
+
+<script>
+  class ReadingProgressHandler {
+    private progress: HTMLElement;
+    private maxValue: number;
+    private updateInterval: number;
+
+    constructor(element: HTMLElement) {
+      this.progress = element;
+      this.maxValue = parseInt(element.dataset.max || '100');
+      this.updateInterval = 100; // Update every 100ms
+      this.init();
+    }
+
+    private init() {
+      // Update progress based on scroll position
+      const updateProgress = () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrollProgress = (scrollTop / scrollHeight) * 100;
+        
+        // Update progress value
+        const progressBar = this.progress.querySelector('[data-progress-value]') as HTMLElement;
+        if (progressBar) {
+          progressBar.style.width = `${scrollProgress}%`;
+        }
+        
+        // Update label
+        const label = this.progress.querySelector('[data-progress-label]') as HTMLElement;
+        if (label) {
+          label.textContent = `${Math.round(scrollProgress)}%`;
+        }
+      };
+
+      // Initial update
+      updateProgress();
+      
+      // Update on scroll
+      let ticking = false;
+      const requestTick = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(updateProgress);
+          ticking = true;
+          setTimeout(() => { ticking = false; }, this.updateInterval);
+        }
+      };
+      
+      window.addEventListener('scroll', requestTick, { passive: true });
+    }
+  }
+
+  // Initialize all reading progress components
+  const setupReadingProgress = () => {
+    const elements = document.querySelectorAll('[data-reading-progress]');
+    elements.forEach((element) => {
+      new ReadingProgressHandler(element as HTMLElement);
+    });
+  };
+
+  setupReadingProgress();
+  document.addEventListener('astro:after-swap', setupReadingProgress);
+</script>

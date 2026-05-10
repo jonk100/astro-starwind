@@ -1,0 +1,113 @@
+---
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/starwind/carousel";
+import { tv } from "tailwind-variants";
+import type { BlogPost, BlogCardVariant } from "../shared/types";
+import VerticalBlogCard from "../BlogCard/VerticalBlogCard.astro";
+import HorizontalBlogCard from "../BlogCard/HorizontalBlogCard.astro";
+
+interface BlogGridCarouselProps {
+  posts: BlogPost[];
+  cardVariant?: BlogCardVariant;
+  layout?: "mixed" | "vertical" | "horizontal";
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  maxPosts?: number;
+  autoplay?: boolean;
+  showArrows?: boolean;
+  slidesPerView?: number;
+  class?: string;
+}
+
+const {
+  posts,
+  cardVariant = "default",
+  layout = "mixed",
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  maxPosts,
+  autoplay = false,
+  showArrows = true,
+  slidesPerView = 1,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const blogGridCarousel = tv({
+  base: "w-full",
+  variants: {
+    slidesPerView: {
+      1: "",
+      2: "",
+      3: ""
+    }
+  }
+});
+
+const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
+const carouselOpts = {
+  align: "start" as const,
+  loop: true,
+  ...(autoplay && { autoplay: true })
+};
+
+const getCardType = (index: number) => {
+  if (layout === "vertical") return "vertical";
+  if (layout === "horizontal") return "horizontal";
+  return index % 2 === 0 ? "vertical" : "horizontal";
+};
+---
+
+<div class={blogGridCarousel({ slidesPerView, class: className })} {...rest}>
+  <Carousel 
+    opts={carouselOpts}
+    class="w-full"
+  >
+    <CarouselContent class="-ml-2 md:-ml-4">
+      {displayPosts.map((post, index) => {
+        const cardType = getCardType(index);
+        
+        return (
+          <CarouselItem class={`pl-2 md:pl-4 basis-full ${
+            slidesPerView === 2 ? 'md:basis-1/2' : 
+            slidesPerView === 3 ? 'md:basis-1/3 lg:basis-1/3' : ''
+          }`}>
+            {cardType === "horizontal" ? (
+              <HorizontalBlogCard
+                post={post}
+                variant={cardVariant}
+                size="lg"
+                showImage={showImage}
+                showTags={showTags}
+                showAuthor={showAuthor}
+                showReadTime={showReadTime}
+                href={`/blog/${post.slug}`}
+              />
+            ) : (
+              <VerticalBlogCard
+                post={post}
+                variant={cardVariant}
+                size="md"
+                showImage={showImage}
+                showTags={showTags}
+                showAuthor={showAuthor}
+                showReadTime={showReadTime}
+                href={`/blog/${post.slug}`}
+              />
+            )}
+          </CarouselItem>
+        );
+      })}
+    </CarouselContent>
+    
+    {showArrows && (
+      <>
+        <CarouselPrevious class="hidden md:flex" />
+        <CarouselNext class="hidden md:flex" />
+      </>
+    )}
+  </Carousel>
+</div>

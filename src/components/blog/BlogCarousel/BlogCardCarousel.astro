@@ -1,0 +1,92 @@
+---
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/starwind/carousel";
+import { Card, CardContent } from "@/components/starwind/card";
+import { tv } from "tailwind-variants";
+import type { BlogPost, BlogCardVariant } from "../shared/types";
+import VerticalBlogCard from "../BlogCard/VerticalBlogCard.astro";
+
+interface BlogCardCarouselProps {
+  posts: BlogPost[];
+  cardVariant?: BlogCardVariant;
+  showImage?: boolean;
+  showTags?: boolean;
+  showAuthor?: boolean;
+  showReadTime?: boolean;
+  maxPosts?: number;
+  autoplay?: boolean;
+  showArrows?: boolean;
+  slidesPerView?: number;
+  class?: string;
+}
+
+const {
+  posts,
+  cardVariant = "default",
+  showImage = true,
+  showTags = true,
+  showAuthor = true,
+  showReadTime = true,
+  maxPosts,
+  autoplay = false,
+  showArrows = true,
+  slidesPerView = 1,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const blogCardCarousel = tv({
+  base: "w-full",
+  variants: {
+    slidesPerView: {
+      1: "",
+      2: "",
+      3: ""
+    }
+  }
+});
+
+const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
+const carouselOpts = {
+  align: "start" as const,
+  loop: true,
+  ...(autoplay && { autoplay: true })
+};
+---
+
+<div class={blogCardCarousel({ slidesPerView, class: className })} {...rest}>
+  <Carousel 
+    opts={carouselOpts}
+    class="w-full"
+  >
+    <CarouselContent class="-ml-2 md:-ml-4">
+      {displayPosts.map((post) => (
+        <CarouselItem class={`pl-2 md:pl-4 basis-full ${
+          slidesPerView === 2 ? 'md:basis-1/2' : 
+          slidesPerView === 3 ? 'md:basis-1/3 lg:basis-1/3' : ''
+        }`}>
+          <Card class="border-0 shadow-none">
+            <CardContent class="p-0">
+              <VerticalBlogCard
+                post={post}
+                variant={cardVariant}
+                size="md"
+                showImage={showImage}
+                showTags={showTags}
+                showAuthor={showAuthor}
+                showReadTime={showReadTime}
+                href={`/blog/${post.slug}`}
+              />
+            </CardContent>
+          </Card>
+        </CarouselItem>
+      ))}
+    </CarouselContent>
+    
+    {showArrows && (
+      <>
+        <CarouselPrevious class="hidden md:flex" />
+        <CarouselNext class="hidden md:flex" />
+      </>
+    )}
+  </Carousel>
+</div>
