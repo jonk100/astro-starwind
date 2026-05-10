@@ -92,8 +92,8 @@ const wrapperProps = href ? { href, class: "block" } : { class: "block" };
         <CardContent class="pb-2">
           {showTags && post.tags && post.tags.length > 0 && (
             <div class="flex flex-wrap gap-1">
-              {post.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} size="sm" variant="outline">
+              {post.tags.slice(0, 2).map((tag: string) => (
+                <Badge size="sm" variant="outline">
                   {tag}
                 </Badge>
               ))}
@@ -124,7 +124,7 @@ const wrapperProps = href ? { href, class: "block" } : { class: "block" };
               </>
             )}
           </div>
-          <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button size="sm" variant="ghost" class="opacity-0 group-hover:opacity-100 transition-opacity">
             Read →
           </Button>
         </CardFooter>

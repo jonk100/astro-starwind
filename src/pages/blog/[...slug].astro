@@ -1,8 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPostLayout from '@/layouts/BlogPostLayout.astro';
-import { Image } from '@/components/starwind/image';
-import { getRelatedPosts, generateBlogBreadcrumb } from '@/components/blog';
 import { CldImage } from 'astro-cloudinary';
 
 export async function getStaticPaths() {

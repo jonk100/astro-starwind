@@ -43,7 +43,7 @@ const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
 ---
 
 <div class={stackingGrid({ spacing, class: className })} {...rest}>
-  {displayPosts.map((post, index) => (
+  {displayPosts.map((post: BlogPost, index: number) => (
     <HorizontalBlogCard
       post={post}
       variant={index === 0 ? "featured" : cardVariant}

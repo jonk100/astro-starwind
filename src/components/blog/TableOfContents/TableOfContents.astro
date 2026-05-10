@@ -4,16 +4,6 @@ import { tv } from "tailwind-variants";
 import type { TableOfContentsItem } from "../types";
 import { extractTableOfContents } from "../utils";
 
-interface TableOfContentsProps {
-  content?: string;
-  items?: TableOfContentsItem[];
-  title?: string;
-  maxDepth?: number;
-  showCounts?: boolean;
-  sticky?: boolean;
-  variant?: "default" | "minimal" | "sidebar";
-  class?: string;
-}
 
 const {
   content,
@@ -48,11 +38,6 @@ const items = providedItems || (content ? extractTableOfContents(content) : []);
 // Filter by max depth
 const filteredItems = items.filter((item: TableOfContentsItem) => item.level <= maxDepth);
 
-// Count items at each level
-const levelCounts = filteredItems.reduce((acc: Record<number, number>, item: TableOfContentsItem) => {
-  acc[item.level] = (acc[item.level] || 0) + 1;
-  return acc;
-}, {} as Record<number, number>);
 ---
 
 <div class={tableOfContents({ variant, sticky, class: className })} {...rest}>

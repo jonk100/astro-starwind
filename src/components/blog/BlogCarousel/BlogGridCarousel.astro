@@ -67,7 +67,7 @@ const getCardType = (index: number) => {
     class="w-full"
   >
     <CarouselContent class="-ml-2 md:-ml-4">
-      {displayPosts.map((post, index) => {
+      {displayPosts.map((post: BlogPost, index: number) => {
         const cardType = getCardType(index);
         
         return (

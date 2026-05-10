@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
-import { HeroCard, ThreeColumnGrid, BlogSearch, BlogCardCarousel } from '@/components/blog';
+import { ThreeColumnGrid, BlogSearch } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { RecentPostsCarousel } from '@/components/blog/RecentPosts';
 
@@ -9,7 +9,6 @@ const posts = (await getCollection('blog')).sort(
 	(a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
 );
 
-const featuredPost = posts[0];
 const recentPosts = posts.slice(1, 7);
 const allPostsData = posts.map(post => ({
   ...post.data,

@@ -40,7 +40,7 @@ const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
 ---
 
 <div class={threeColumnGrid({ responsive: true, class: className })} {...rest}>
-  {displayPosts.map((post) => (
+  {displayPosts.map((post: BlogPost) => (
     <VerticalBlogCard
       post={post}
       variant={cardVariant}

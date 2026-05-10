@@ -16,7 +16,6 @@ interface Props {
   post?: BlogPostWithContent;
   allPosts?: BlogPost[];
   navigation?: BlogNavigation;
-  children: any;
 }
 
 const { 
@@ -28,8 +27,7 @@ const {
   showNavigation = true,
   post,
   allPosts = [],
-  navigation,
-  children 
+  navigation
 } = Astro.props;
 
 import '@/styles/global.css';

@@ -1,13 +1,9 @@
 ---
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '@/components/starwind/dropdown';
 import { Button } from '@/components/starwind/button';
-import Logo from '../Logo.astro';
 import HeaderLink from './HeaderLink.astro';
-import HeaderIcons from './HeaderIcons.astro';
-import { getNavItems, isActivePath, getBlogPages } from '@/lib/utils';
+import { getBlogPages } from '@/lib/utils';
 
-const pathname = Astro.url.pathname.replace(/\/$/, '');
-const nav = getNavItems();
 const dropdownItems = getBlogPages();
 ---
 

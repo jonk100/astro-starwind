@@ -11,7 +11,6 @@ interface Props {
   showProgress?: boolean;
   showBreadcrumbs?: boolean;
   breadcrumbs?: Array<{label: string; href: string; current?: boolean}>;
-  children: any;
 }
 
 const { 
@@ -19,8 +18,7 @@ const {
   description, 
   showProgress = false,
   showBreadcrumbs = true,
-  breadcrumbs,
-  children 
+  breadcrumbs
 } = Astro.props;
 
 import '@/styles/global.css';

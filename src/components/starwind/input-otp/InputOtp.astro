@@ -139,7 +139,7 @@ const inputMode = isNumericOnly ? "numeric" : "text";
       this.container.addEventListener("focus", () => this.handleContainerFocus());
       this.container.addEventListener("blur", () => this.handleContainerBlur());
       this.container.addEventListener("paste", (e) => this.handlePaste(e));
-      this.container.addEventListener("click", (e) => this.handleClick(e));
+      this.container.addEventListener("click", () => this.handleClick());
 
       if (this.hiddenInput) {
         this.hiddenInput.addEventListener("input", (e) => this.handleHiddenInput(e));
@@ -212,7 +212,7 @@ const inputMode = isNumericOnly ? "numeric" : "text";
       this.updateValue();
     }
 
-    private handleClick(e: MouseEvent) {
+    private handleClick() {
       const isDisabled = this.container.dataset.disabled === "true";
       if (isDisabled) return;
 
