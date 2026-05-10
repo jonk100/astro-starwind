@@ -1,0 +1,18 @@
+{
+  "versions": [
+    {
+      "version": "1.0.0",
+      "date": "2026-05-09",
+      "description": "Initial release with comprehensive Starwind UI component reference",
+      "changes": [
+        "Added complete Starwind UI component library integration",
+        "Created comprehensive AGENTS.md quick reference files for 11 components",
+        "Implemented dropdown, card, table, item, breadcrumb, sidebar, tabs, pagination, theme-toggle, aspect-ratio, and separator components",
+        "Added component documentation with usage patterns and API references",
+        "Configured Tailwind CSS v4 with custom theme variables",
+        "Set up project structure with layouts, styles, and utilities"
+      ]
+    }
+  ],
+  "unreleased": []
+}
