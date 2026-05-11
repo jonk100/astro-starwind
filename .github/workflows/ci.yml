@@ -26,9 +26,31 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify lockfile integrity
+        run: pnpm install --frozen-lockfile --verify
+
       - name: Run security audit
-        run: pnpm audit --audit-level moderate
-        continue-on-error: true
+        run: pnpm audit --audit-level moderate --json > audit-report.json || true
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-report
+          path: audit-report.json
+
+      - name: Check for high severity vulnerabilities
+        run: |
+          if [ -f audit-report.json ]; then
+            HIGH_VULNS=$(jq -r '.vulnerabilities | to_entries[] | select(.value.severity == "high" or .value.severity == "critical") | .key' audit-report.json | wc -l)
+            if [ "$HIGH_VULNS" -gt 0 ]; then
+              echo "❌ Found $HIGH_VULNS high/critical vulnerabilities"
+              jq -r '.vulnerabilities | to_entries[] | select(.value.severity == "high" or .value.severity == "critical") | "- \(.key): \(.value.severity)"' audit-report.json
+              exit 1
+            else
+              echo "✅ No high/critical vulnerabilities found"
+            fi
+          fi
 
       - name: Typecheck
         run: pnpm typecheck

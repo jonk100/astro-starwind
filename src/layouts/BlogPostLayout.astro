@@ -2,7 +2,7 @@
 import BaseHead from './BaseHead.astro';
 import Footer from './Footer.astro';
 import Header from '../components/header/Header.astro';
-import { BlogBreadcrumbs, ReadingProgress, TableOfContents, RelatedPostsCards, NextPostButton, PreviousPostButton } from '../components/blog';
+import { TableOfContents, RelatedPostsCards, NextPostButton, PreviousPostButton } from '../components/blog';
 import { Separator } from '@/components/starwind/separator';
 import type { BlogPost, BlogPostWithContent, BlogNavigation } from '../components/blog/types';
 
@@ -21,7 +21,6 @@ interface Props {
 const { 
   title, 
   description, 
-  showProgress = true,
   showToc = true,
   showRelatedPosts = true,
   showNavigation = true,
@@ -42,7 +41,6 @@ import '@/styles/starwind.css';
 	</head>
 
 	<body class="layout-body">
-    {showProgress && <ReadingProgress position="fixed-top" showLabel={true} />}
     
     <header class="layout-header">
       <Header />
@@ -51,9 +49,8 @@ import '@/styles/starwind.css';
     
     <main class="layout-main">
       <div class="layout-main-content max-w-4xl">
-        <div class="mb-8">
-          <BlogBreadcrumbs />
-        </div>
+        <!-- <div class="mb-8"> -->
+        <!-- </div> -->
         
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div class="lg:col-span-3">

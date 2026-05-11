@@ -13,13 +13,14 @@
 ### Setup with CLI (Recommended)
 
 1. Create a new astro project with `npm create astro@latest` or start with an existing Astro project.
+
 2. If using pnpm, create a .npmrc file:
 
-```sh
-auto-install-peers=true
-node-linker=hoisted
-lockfile=true
-```
+  ```sh
+  auto-install-peers=true
+  node-linker=hoisted
+  lockfile=true
+  ```
 
 3. Run the CLI to initialize:
 

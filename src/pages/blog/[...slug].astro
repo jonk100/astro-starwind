@@ -1,7 +1,10 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPostLayout from '@/layouts/BlogPostLayout.astro';
-import { CldImage } from 'astro-cloudinary';
+import { Image } from 'astro:assets';
+import BlogBreadcrumbs from '@/components/blog/Navigation/BlogBreadcrumbs.astro';
+
+export const prerender = true;
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -86,7 +89,7 @@ const postData = {
   {post.data.image && (
     <div class="mb-8">
       <div class="relative overflow-hidden rounded-xl">
-        <CldImage
+        <Image
           src={post.data.image}
           alt={post.data.title}
           width={800}
@@ -94,8 +97,10 @@ const postData = {
           class="w-full aspect-[16/9] object-cover"
         />
       </div>
+      
     </div>
   )}
+  <BlogBreadcrumbs />
 
   <div class="prose prose-lg max-w-none">
     <Content />

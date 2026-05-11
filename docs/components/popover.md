@@ -256,16 +256,16 @@ import {
 
 ## API Reference
 
-### Popover
+### Popover API
 
 The root component that manages popover state and interaction behavior.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop          | Type      | Default |
+|---------------|-----------|---------|
 | `openOnHover` | `boolean` | `false` |
-| `closeDelay` | `number` | `200` |
+| `closeDelay`  | `number`  | `200`   |
 | `defaultOpen` | `boolean` | `false` |
-| `class` | `string` | - |
+| `class`       | `string`  | -       |
 
 ```astro
 <Popover openOnHover closeDelay={300} defaultOpen={false}>
@@ -275,6 +275,7 @@ The root component that manages popover state and interaction behavior.
 ```
 
 **Additional Notes:**
+
 - `openOnHover`: Opens popover on pointer hover (mouse) in addition to click and keyboard interactions
 - `closeDelay`: Delay in milliseconds before hover-open popovers close after pointer leave
 - `defaultOpen`: Sets the initial rendered state to open
@@ -283,10 +284,10 @@ The root component that manages popover state and interaction behavior.
 
 The interactive trigger element that toggles popover.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop      | Type      | Default |
+|-----------|-----------|---------|
 | `asChild` | `boolean` | `false` |
-| `class` | `string` | - |
+| `class`   | `string`  | -       |
 
 ```astro
 <PopoverTrigger asChild>
@@ -295,20 +296,21 @@ The interactive trigger element that toggles popover.
 ```
 
 **Additional Notes:**
+
 - `asChild`: Renders the child element as a trigger while preserving popover behavior
 
 ### PopoverContent
 
 The positioned floating panel rendered when popover is open.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `side` | `"top" \| "bottom" \| "left" \| "right"` | `"bottom"` |
-| `align` | `"start" \| "center" \| "end"` | `"center"` |
-| `sideOffset` | `number` | `4` |
-| `animationDuration` | `number` | `150` |
-| `aria-label` | `string` | - |
-| `class` | `string` | - |
+| Prop                | Type                                     | Default    |
+|---------------------|------------------------------------------|------------|
+| `side`              | `"top" \| "bottom" \| "left" \| "right"` | `"bottom"` |
+| `align`             | `"start" \| "center" \| "end"`           | `"center"` |
+| `sideOffset`        | `number`                                 | `4`        |
+| `animationDuration` | `number`                                 | `150`      |
+| `aria-label`        | `string`                                 | -          |
+| `class`             | `string`                                 | -          |
 
 ```astro
 <PopoverContent side="bottom" align="start" sideOffset={8} animationDuration={180}>
@@ -317,6 +319,7 @@ The positioned floating panel rendered when popover is open.
 ```
 
 **Additional Notes:**
+
 - `side`: Preferred side for content placement relative to the trigger
 - `align`: Alignment of the popover relative to the trigger along the chosen side
 - `sideOffset`: Gap in pixels between trigger and content
@@ -327,9 +330,9 @@ The positioned floating panel rendered when popover is open.
 
 A layout wrapper for popover heading content.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <PopoverHeader>
@@ -342,9 +345,9 @@ A layout wrapper for popover heading content.
 
 The title element for popover content.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <PopoverTitle>Popover title</PopoverTitle>
@@ -354,9 +357,9 @@ The title element for popover content.
 
 Supporting descriptive text displayed under the title.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <PopoverDescription>

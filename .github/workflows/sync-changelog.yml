@@ -3,7 +3,7 @@ name: Sync Changelog to Notion
 on:
   push:
     branches:
-      - main
+      - base
     paths:
       - "changelog.json"
 

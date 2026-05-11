@@ -5,6 +5,7 @@ import Header from '../components/header/Header.astro';
 
 
 const { title, description } = Astro.props;
+const user = Astro.locals.user;
 
 import '@/styles/global.css';
 import '@/styles/starwind.css';
@@ -18,14 +19,14 @@ import '@/styles/starwind.css';
 
 	<body class="layout-body">
     <header class="layout-header">
-      <Header />
+      <Header user={user} />
       <slot name="header" />
     </header>
     
     <main class="layout-main">
-      <div class="layout-main-content">
+      <!-- <div class="layout-main-content"> -->
         <slot />
-      </div>
+      <!-- </div> -->
     </main>
 
     <footer class="layout-footer">

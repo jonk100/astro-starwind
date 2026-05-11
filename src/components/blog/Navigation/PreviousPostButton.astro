@@ -37,17 +37,17 @@ const previousPostButton = tv({
     variant={variant}
     size={size}
     href={`/blog/${previousPost.slug}`}
-    class="w-full justify-between"
+    class="w-full justify-start"
   >
-    <div class="flex items-center gap-3">
+    <div class="flex flex-col items-start gap-2 w-full">
       <div class="flex items-center gap-2 text-muted-foreground">
         <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
         <span>Previous</span>
       </div>
-      <div class="text-left">
-        <div class="font-medium">{previousPost.title}</div>
+      <div class="text-left w-full">
+        <div class="font-medium truncate">{previousPost.title}</div>
         {showDate && previousPost.date && (
           <div class="text-sm text-muted-foreground">
             {previousPost.date instanceof Date ? previousPost.date.toLocaleDateString() : previousPost.date}

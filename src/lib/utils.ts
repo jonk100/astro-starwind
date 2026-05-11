@@ -18,12 +18,52 @@ export function getNavItems() {
   ];
 }
 
-export function getBlogPages() {
-  return [
+export async function getBlogPages() {
+  // Always include the main blog pages
+  const pages = [
     { label: 'All Posts', href: '/blog/' },
     { label: 'Categories', href: '/blog/categories/' },
     { label: 'Tags', href: '/blog/tags/' },
   ];
+
+  try {
+    // Import getCollection to check if we have actual content
+    const { getCollection } = await import('astro:content');
+    
+    // Check if we have blog posts
+    const blogPosts = await getCollection('blog');
+    if (blogPosts && blogPosts.length > 0) {
+      // Extract unique categories and tags from actual content
+      const categories = new Set<string>();
+      const tags = new Set<string>();
+      
+      blogPosts.forEach((post: { data: { categories?: string[]; tags?: string[] } }) => {
+        if (post.data.categories) {
+          post.data.categories.forEach((cat: string) => categories.add(cat));
+        }
+        if (post.data.tags) {
+          post.data.tags.forEach((tag: string) => tags.add(tag));
+        }
+      });
+
+      // Only show Categories and Tags if we have actual content
+      if (categories.size === 0) {
+        pages.splice(pages.findIndex(p => p.href === '/blog/categories/'), 1);
+      }
+      if (tags.size === 0) {
+        pages.splice(pages.findIndex(p => p.href === '/blog/tags/'), 1);
+      }
+    } else {
+      // No blog posts found, remove categories and tags
+      pages.splice(pages.findIndex(p => p.href === '/blog/categories/'), 1);
+      pages.splice(pages.findIndex(p => p.href === '/blog/tags/'), 1);
+    }
+  } catch (error) {
+    // If we can't access collections, fall back to basic navigation
+    console.warn('Could not load blog collections for dynamic navigation:', error);
+  }
+
+  return pages;
 }
 
 /**

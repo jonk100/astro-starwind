@@ -83,6 +83,24 @@
         "Improved user experience with cleaner interface and better visual hierarchy",
         "testingggggg"
       ]
+    },
+    {
+      "Version": "1.5.0",
+      "Date": "2026-05-10",
+      "Type": "feat",
+      "Name": "Test",
+      "Notes": [
+        "Enhanced blog search component with improved card layout and styling",
+        "Added tag animation to dissipate when search results appear",
+        "Improved search result cards with darker backgrounds and better typography",
+        "Implemented breadcrumb positioning and reduced whitespace throughout layout",
+        "Enhanced image display with proper aspect ratio handling and growth effects",
+        "Increased search results limit from 10 to 14 for better coverage",
+        "Added responsive design improvements and hover effects for search cards",
+        "Optimized card layout with better text truncation and metadata organization",
+        "Improved user experience with cleaner interface and better visual hierarchy",
+        "testingggggg"
+      ]
     }
   ],
   "unreleased": []

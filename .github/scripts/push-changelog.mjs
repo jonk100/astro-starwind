@@ -10,14 +10,6 @@ const HEADERS = {
   "Notion-Version": "2022-06-28",
 };
 
-/**
- * Reads changelog.json from the repo root.
- * @returns {Array<{version: string, date: string, type: string, name: string, notes: string}>}
- */
-function readChangelog() {
-  const raw = readFileSync("changelog.json", "utf-8");
-  return JSON.parse(raw);
-}
 
 /**
  * Queries Notion for all version strings already in the database.

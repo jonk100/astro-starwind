@@ -17,7 +17,7 @@ const { class: className, src, alt = "", inferSize = true, ...rest } = Astro.pro
       src={src}
       alt={alt}
       inferSize={inferSize}
-      {...(rest as any)}
+      {...rest}
       data-slot="image"
     />
   )

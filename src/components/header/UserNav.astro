@@ -1,0 +1,304 @@
+---
+import { Button } from "@/components/starwind/button";
+import User from "@tabler/icons/outline/user.svg";
+import Settings from "@tabler/icons/outline/settings.svg";
+import LogOut from "@tabler/icons/outline/logout.svg";
+
+interface Props {
+  user?: {
+    email?: string;
+    name?: string;
+  } | null;
+}
+
+const { user } = Astro.props;
+---
+
+{user ? (
+  <nav class="user-nav" role="navigation" aria-label="User menu">
+    <div class="user-nav-trigger">
+      <Button variant="ghost" size="sm" class="user-nav-button">
+        <User class="user-nav-icon" />
+        <span class="user-nav-name">{user.email?.split('@')[0] || 'User'}</span>
+      </Button>
+    </div>
+    
+    <div class="user-nav-dropdown" hidden>
+      <div class="user-nav-header">
+        <div class="user-nav-info">
+          <span class="user-nav-email">{user.email}</span>
+          {user.name && <span class="user-nav-fullname">{user.name}</span>}
+        </div>
+      </div>
+      
+      <div class="user-nav-menu">
+        <a href="/settings" class="user-nav-item">
+          <Settings class="user-nav-item-icon" />
+          <span>Settings</span>
+        </a>
+        <form method="POST" action="/api/auth/logout" class="user-nav-logout-form">
+          <button type="submit" class="user-nav-item user-nav-logout-button">
+            <LogOut class="user-nav-item-icon" />
+            <span>Sign out</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </nav>
+) : (
+  <nav class="user-nav" role="navigation" aria-label="Authentication">
+    <a href="/auth/login" class="user-nav-login">
+      <User class="user-nav-icon" />
+      <span>Sign in</span>
+    </a>
+  </nav>
+)}
+
+<script>
+  class UserNavHandler {
+    private trigger: HTMLElement | null;
+    private dropdown: HTMLElement | null;
+    private isOpen: boolean = false;
+
+    constructor(trigger: HTMLElement, dropdown: HTMLElement) {
+      this.trigger = trigger;
+      this.dropdown = dropdown;
+      this.setupEventListeners();
+    }
+
+    private setupEventListeners(): void {
+      this.trigger?.addEventListener('click', () => this.toggle());
+      this.trigger?.addEventListener('keydown', (e) => this.handleKeydown(e));
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => this.handleClickOutside(e));
+      
+      // Close dropdown on escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isOpen) {
+          this.close();
+        }
+      });
+    }
+
+    private handleKeydown(e: KeyboardEvent): void {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.toggle();
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.toggle();
+      }
+    }
+
+    private handleClickOutside(e: Event): void {
+      const target = e.target as HTMLElement;
+      if (!this.trigger?.contains(target) && !this.dropdown?.contains(target)) {
+        this.close();
+      }
+    }
+
+    public toggle(): void {
+      if (this.isOpen) {
+        this.close();
+      } else {
+        this.open();
+      }
+    }
+
+    public open(): void {
+      if (this.dropdown && this.trigger) {
+        this.dropdown.hidden = false;
+        this.trigger.setAttribute('aria-expanded', 'true');
+        this.isOpen = true;
+      }
+    }
+
+    public close(): void {
+      if (this.dropdown && this.trigger) {
+        this.dropdown.hidden = true;
+        this.trigger.setAttribute('aria-expanded', 'false');
+        this.isOpen = false;
+      }
+    }
+  }
+
+  // Initialize dropdown functionality
+  document.addEventListener('astro:after-swap', () => {
+    const trigger = document.querySelector('.user-nav-trigger');
+    const dropdown = document.querySelector('.user-nav-dropdown');
+    
+    if (trigger && dropdown) {
+      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
+    }
+  });
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const trigger = document.querySelector('.user-nav-trigger');
+    const dropdown = document.querySelector('.user-nav-dropdown');
+    
+    if (trigger && dropdown) {
+      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
+    }
+  });
+</script>
+
+<style>
+  .user-nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .user-nav-trigger {
+    position: relative;
+  }
+
+  .user-nav-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+  }
+
+  .user-nav-button:hover {
+    background-color: var(--muted);
+  }
+
+  .user-nav-icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+
+  .user-nav-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+
+  .user-nav-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 16rem;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow);
+    z-index: 50;
+    overflow: hidden;
+  }
+
+  .user-nav-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .user-nav-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .user-nav-email {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+
+  .user-nav-fullname {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+
+  .user-nav-menu {
+    padding: 0.5rem;
+  }
+
+  .user-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--foreground);
+    transition: all 0.15s ease;
+    border-radius: 0.25rem;
+  margin: 0.25rem 0;
+  }
+
+  .user-nav-item:hover {
+    background-color: var(--muted);
+    color: var(--foreground);
+  }
+
+  .user-nav-item-icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+
+  .user-nav-login {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: var(--foreground);
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+  }
+
+  .user-nav-login:hover {
+    background-color: var(--muted);
+    color: var(--foreground);
+  }
+
+  .user-nav-logout-form {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  .user-nav-logout-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--foreground);
+    transition: all 0.15s ease;
+    border-radius: 0.25rem;
+    margin: 0.25rem 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .user-nav-logout-button:hover {
+    background-color: var(--muted);
+    color: var(--foreground);
+  }
+
+  @media (max-width: 768px) {
+    .user-nav-dropdown {
+      right: 0;
+      left: 0;
+      min-width: 100%;
+    }
+    
+    .user-nav-item {
+      margin: 0.125rem 0;
+    }
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+import BaseHead from './BaseHead.astro';
+import Footer from './Footer.astro';
+import Header from '../components/header/Header.astro';
+
+const { title, description } = Astro.props;
+
+import '@/styles/global.css';
+import '@/styles/starwind.css';
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+    <slot name="head" />
+	</head>
+
+	<body class="app-body">
+    <header class="app-header">
+      <Header />
+      <slot name="header" />
+    </header>
+    
+    <main class="app-main">
+      <div class="app-main-content">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <slot name="footer" />
+      <Footer />
+    </footer>
+	</body>
+
+</html>

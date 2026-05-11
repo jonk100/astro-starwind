@@ -10,44 +10,45 @@ The Dropzone component provides a drag-and-drop file upload interface with visua
 
 The main Dropzone component that wraps the entire file upload interface.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `id` | `string` | Auto-generated | Unique identifier for the element. Assigns ID to the `<label>` element, and `<input>` element gets the same ID with `-input` suffix |
-| `accept` | `string` | - | File types the input should accept (e.g., `"image/*"`, `".pdf"`) |
-| `multiple` | `boolean` | `false` | Whether users can select multiple files |
-| `disabled` | `boolean` | `false` | Whether the dropzone is disabled |
-| `required` | `boolean` | `false` | Whether file selection is required |
-| `name` | `string` | - | Name for the form element |
-| `isUploading` | `boolean` | `false` | Whether to show the loading indicator |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop          | Type      | Default        | Description                                                                                                                         |
+|---------------|-----------|----------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `id`          | `string`  | Auto-generated | Unique identifier for the element. Assigns ID to the `<label>` element, and `<input>` element gets the same ID with `-input` suffix |
+| `accept`      | `string`  | -              | File types the input should accept (e.g., `"image/*"`, `".pdf"`)                                                                    |
+| `multiple`    | `boolean` | `false`        | Whether users can select multiple files                                                                                             |
+| `disabled`    | `boolean` | `false`        | Whether the dropzone is disabled                                                                                                    |
+| `required`    | `boolean` | `false`        | Whether file selection is required                                                                                                  |
+| `name`        | `string`  | -              | Name for the form element                                                                                                           |
+| `isUploading` | `boolean` | `false`        | Whether to show the loading indicator                                                                                               |
+| `class`       | `string`  | -              | Additional CSS classes for styling                                                                                                  |
 
 ### DropzoneFilesList
 
 Displays a list of uploaded files.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ### DropzoneUploadIndicator
 
 Displays the upload icon and text shown when no files are being uploaded.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ### DropzoneLoadingIndicator
 
 Displays a loading spinner and text for use when files are being uploaded.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ## Usage Examples
 
 ### Basic Dropzone
+
 ```astro
 ---
 import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIndicator } from "@/components/starwind/dropzone";
@@ -59,6 +60,7 @@ import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIn
 ```
 
 ### Custom Content
+
 ```astro
 ---
 import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIndicator } from "@/components/starwind/dropzone";
@@ -74,6 +76,7 @@ import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIn
 ```
 
 ### File Type Restrictions
+
 ```astro
 ---
 import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIndicator } from "@/components/starwind/dropzone";
@@ -83,6 +86,7 @@ import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIn
 ```
 
 ### Multiple Files
+
 ```astro
 ---
 import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIndicator } from "@/components/starwind/dropzone";
@@ -92,6 +96,7 @@ import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIn
 ```
 
 ### Loading State
+
 ```astro
 ---
 import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIndicator } from "@/components/starwind/dropzone";
@@ -101,6 +106,7 @@ import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIn
 ```
 
 ### Form Integration
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";

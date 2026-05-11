@@ -1,0 +1,20 @@
+---
+import Layout from '../../../layouts/AppLayout.astro';
+import HabitGrid from '@/components/app/tracker/HabitGrid.astro';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.SUPABASE_URL,
+  import.meta.env.SUPABASE_ANON_KEY
+);
+
+// Fetch your habits and the logs for the current month
+const { data: habits } = await supabase.from('habits').select('*');
+const { data: logs } = await supabase.from('habit_logs').select('*').gte('entry_date', '2026-05-01').lte('entry_date', '2026-05-31');
+
+const currentMonth = new Date();
+---
+<Layout>
+    {/* Pass the real data into the grid */}
+    <HabitGrid slot="header" habits={habits || []} logs={logs || []} currentMonth={currentMonth} />
+</Layout>

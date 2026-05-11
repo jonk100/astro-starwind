@@ -86,26 +86,27 @@ import { Dropzone, DropzoneFilesList, DropzoneLoadingIndicator, DropzoneUploadIn
 
 ## API Reference
 
-### Dropzone
+### Dropzone API
 
 The main Dropzone component wraps the entire file upload interface.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `id` | `string` | Auto-generated |
-| `accept` | `string` | - |
-| `multiple` | `boolean` | `false` |
-| `disabled` | `boolean` | `false` |
-| `required` | `boolean` | `false` |
-| `name` | `string` | - |
-| `isUploading` | `boolean` | `false` |
-| `class` | `string` | - |
+| Prop          | Type      | Default        |
+|---------------|-----------|----------------|
+| `id`          | `string`  | Auto-generated |
+| `accept`      | `string`  | -              |
+| `multiple`    | `boolean` | `false`        |
+| `disabled`    | `boolean` | `false`        |
+| `required`    | `boolean` | `false`        |
+| `name`        | `string`  | -              |
+| `isUploading` | `boolean` | `false`        |
+| `class`       | `string`  | -              |
 
 ```astro
 <Dropzone accept="image/*" multiple />
 ```
 
 **Additional Notes:**
+
 - `id`: Unique identifier for the element. Assigns the ID to the `<label>` element, and the `<input>` element gets the same ID with `-input` suffix
 - `accept`: File types the input should accept (e.g., `"image/*"`, `".pdf"`)
 - `isUploading`: Whether to show the loading indicator
@@ -115,9 +116,9 @@ The main Dropzone component wraps the entire file upload interface.
 
 Displays the list of uploaded files.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <DropzoneFilesList />
@@ -127,9 +128,9 @@ Displays the list of uploaded files.
 
 Displays the upload icon and text that are shown when no files are being uploaded.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <DropzoneUploadIndicator>
@@ -141,9 +142,9 @@ Displays the upload icon and text that are shown when no files are being uploade
 
 Displays a loading spinner and text for use when files are being uploaded.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <DropzoneLoadingIndicator>
@@ -152,5 +153,6 @@ Displays a loading spinner and text for use when files are being uploaded.
 ```
 
 **Additional Notes:**
+
 - The component provides a default slot to customize content. By default includes `DropzoneUploadIndicator`, `DropzoneLoadingIndicator`, and `DropzoneFilesList`
 - Use `data-is-uploading` attribute to show or hide a loading indicator at any time. This is useful if you want to show a loading indicator while a file is actually being uploaded (like on form submission).

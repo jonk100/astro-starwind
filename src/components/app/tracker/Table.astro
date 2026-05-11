@@ -1,0 +1,102 @@
+---
+import { Table as StarwindTable, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/starwind/table';
+
+/**
+ * MonthTracker Component
+ * 
+ * This component renders a table for tracking habits with columns for each day of the monnth and rows for each habit..
+ * It uses the Starwind table component for consistent styling.
+ */
+
+const days = Array.from({ length: 30 }, (_, i) => i + 1);
+const currentMonthYear = new Date().toISOString().slice(0, 7); // YYYY-MM format
+
+const habits = [
+  {
+    id: '1',
+    name: 'Drink Water',
+    description: 'Drink 8 glasses of water per day',
+    color: 'blue'
+  },
+  
+  {
+    id: '2',
+    name: 'Exercise',
+    description: 'Exercise for 30 minutes per day',
+    color: 'green'
+  }
+];
+
+---
+
+<StarwindTable>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Habit</TableHead>
+      {days.map(day => (
+        <TableHead class="text-center">{day}</TableHead>
+      ))}
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {habits.map(habit => (
+      <TableRow>
+        <TableCell><strong>{habit.name}</strong></TableCell>
+        
+        {days.map(day => {
+          // Format date as YYYY-MM-DD for the database
+          const dateString = `${currentMonthYear}-${day.toString().padStart(2, '0')}`;
+          
+          return (
+            <TableCell 
+              class="habit-cell border cursor-pointer hover:bg-slate-100 transition-colors"
+              data-habit-id={habit.id}
+              data-date={dateString}
+            >
+              {/* This is the visual 'crossroad' */}
+              <div class="h-8 w-8 mx-auto flex items-center justify-center rounded">
+                <span class="check-icon hidden">✓</span>
+              </div>
+            </TableCell>
+          );
+        })}
+      </TableRow>
+    ))}
+  </TableBody>
+</StarwindTable>
+  
+<style>
+  /* Simple state styling */
+  .habit-cell.is-completed {
+    background-color: #dcfce7; /* Light green */
+  }
+  .habit-cell.is-completed .check-icon {
+    display: block;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions';
+
+    // 1. Find all your habit "cells"
+    const cells = document.querySelectorAll('.habit-cell');
+
+    cells.forEach(cell => {
+      cell.addEventListener('click', async () => {
+        // 2. Grab data from the HTML (data-habit-id="...")
+        const habitId = cell.getAttribute('data-habit-id');
+        const date = cell.getAttribute('data-date');
+        
+        // 3. Call the Action like a normal function!
+        const { data, error } = await actions.updateHabit({
+          habitId: habitId!,
+          date: date!,
+          val: 1 // Or whatever number they chose
+        });
+
+        if (!error) {
+          cell.classList.toggle('is-completed'); // Visual feedback
+        }
+      });
+    });
+</script>

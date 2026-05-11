@@ -6,7 +6,7 @@ description: Fetch documentation and install a Starwind UI component
 
 ## Usage
 
-/fetch-component <component-name>
+`/fetch-component <component-name>`
 
 ## Prerequisites
 

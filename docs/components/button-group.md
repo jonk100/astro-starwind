@@ -253,10 +253,10 @@ import IconChevronDown from "@tabler/icons/outline/chevron-down.svg";
 
 The container component that groups related buttons together.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop          | Type                         | Default        |
+|---------------|------------------------------|----------------|
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` |
-| `class` | `string` | - |
+| `class`       | `string`                     | -              |
 
 ```astro
 <ButtonGroup orientation="horizontal">
@@ -268,10 +268,10 @@ The container component that groups related buttons together.
 
 A visual separator component for dividing buttons within a group.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop          | Type                         | Default      |
+|---------------|------------------------------|--------------|
 | `orientation` | `"horizontal" \| "vertical"` | `"vertical"` |
-| `class` | `string` | - |
+| `class`       | `string`                     | -            |
 
 ```astro
 <ButtonGroupSeparator orientation="vertical" />
@@ -281,9 +281,9 @@ A visual separator component for dividing buttons within a group.
 
 A text label component for adding descriptive text within a button group.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <ButtonGroupText>

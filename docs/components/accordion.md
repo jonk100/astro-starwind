@@ -102,15 +102,15 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 ## API Reference
 
-### Accordion
+### Accordion API
 
 The root component that contains all accordion items. It manages the state of the accordion items and handles keyboard interactions.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `type` | `"single" \| "multiple"` | `"single"` |
-| `defaultValue` | `string` | - |
-| `class` | `string` | - |
+| Prop           | Type                     | Default    |
+|----------------|--------------------------|------------|
+| `type`         | `"single" \| "multiple"` | `"single"` |
+| `defaultValue` | `string`                 | -          |
+| `class`        | `string`                 | -          |
 
 ```astro
 <Accordion type="single" defaultValue="item-1">
@@ -119,6 +119,7 @@ The root component that contains all accordion items. It manages the state of th
 ```
 
 **Additional Notes:**
+
 - `type`: Determines whether only one or multiple accordion items can be open at once
 - `defaultValue`: The value of the item that should be open by default
 
@@ -126,10 +127,10 @@ The root component that contains all accordion items. It manages the state of th
 
 The container for each individual accordion item.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop    | Type     | Default  |
+|---------|----------|----------|
 | `value` | `string` | Required |
-| `class` | `string` | - |
+| `class` | `string` | -        |
 
 ```astro
 <AccordionItem value="item-1">
@@ -138,15 +139,16 @@ The container for each individual accordion item.
 ```
 
 **Additional Notes:**
+
 - `value`: A unique identifier for the accordion item
 
 ### AccordionTrigger
 
 The button that toggles the accordion item. Clicking this component will expand or collapse the associated content.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <AccordionTrigger>What is Astro?</AccordionTrigger>
@@ -156,9 +158,9 @@ The button that toggles the accordion item. Clicking this component will expand 
 
 The content to be revealed when the accordion item is expanded.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <AccordionContent>

@@ -10,14 +10,15 @@ The Textarea component provides a versatile text input area with multiple sizes 
 
 A versatile textarea component with multiple sizes and states.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Determines the textarea size |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type      | Default                 | Description                        |
+|---------|-----------|-------------------------|------------------------------------|
+| `size`  | `string`  | `"md"`                  | Determines the textarea size       |
+| `class` | `string`  | -                       | Additional CSS classes for styling |
 
 ## Usage Examples
 
 ### Basic Textarea
+
 ```astro
 ---
 import { Textarea } from "@/components/starwind/textarea";
@@ -27,6 +28,7 @@ import { Textarea } from "@/components/starwind/textarea";
 ```
 
 ### Different Sizes
+
 ```astro
 ---
 import { Textarea } from "@/components/starwind/textarea";
@@ -38,6 +40,7 @@ import { Textarea } from "@/components/starwind/textarea";
 ```
 
 ### Disabled State
+
 ```astro
 ---
 import { Textarea } from "@/components/starwind/textarea";
@@ -47,6 +50,7 @@ import { Textarea } from "@/components/starwind/textarea";
 ```
 
 ### Form Integration
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";

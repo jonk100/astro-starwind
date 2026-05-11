@@ -96,22 +96,23 @@ const {
   class ThemeToggleHandler {
     private toggle: HTMLButtonElement;
     private isInitializing = true;
+    private initializationPromise: Promise<void>;
 
     constructor(toggle: HTMLButtonElement) {
       this.toggle = toggle;
 
-      this.initializeState();
-      this.setupEventListeners();
+      this.initializationPromise = this.initializeAsync();
+    }
 
-      // Mark initialization complete after a microtask with proper error handling
-      queueMicrotask(() => {
-        try {
-          this.isInitializing = false;
-        } catch (error) {
-          console.warn('Theme toggle initialization error:', error);
-          this.isInitializing = false;
-        }
-      });
+    private async initializeAsync(): Promise<void> {
+      try {
+        this.initializeState();
+        this.setupEventListeners();
+      } catch (error) {
+        console.warn('Theme toggle initialization error:', error);
+      } finally {
+        this.isInitializing = false;
+      }
     }
 
     private initializeState(): void {
@@ -134,10 +135,10 @@ const {
       );
     }
 
-    private handleToggleChange(event: Event): void {
-      // Don't dispatch theme:change during initialization
+    private async handleToggleChange(event: Event): Promise<void> {
+      // Wait for initialization to complete before handling changes
       if (this.isInitializing) {
-        return;
+        await this.initializationPromise;
       }
 
       const { pressed } = (event as ToggleChangeEvent).detail;
@@ -190,6 +191,15 @@ const {
         themeToggleInstances.set(toggle, new ThemeToggleHandler(toggle));
       }
       activeToggles.add(toggle);
+    });
+
+    // Also clean up any toggles that are no longer in the DOM
+    const currentToggles = new Set(document.querySelectorAll<HTMLButtonElement>(".starwind-theme-toggle"));
+    activeToggles.forEach((toggle) => {
+      if (!currentToggles.has(toggle)) {
+        activeToggles.delete(toggle);
+        themeToggleInstances.delete(toggle);
+      }
     });
   };
 

@@ -61,20 +61,21 @@ import Mail from "@tabler/icons/outline/mail.svg";
 
 ## API Reference
 
-### Badge
+### Badge API
 
 A versatile badge component with multiple variants and sizes.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop      | Type                                                                                                           | Default     |
+|-----------|----------------------------------------------------------------------------------------------------------------|-------------|
 | `variant` | `"default" \| "primary" \| "secondary" \| "outline" \| "ghost" \| "info" \| "success" \| "warning" \| "error"` | `"default"` |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `href` | `string` | - |
-| `class` | `string` | - |
+| `size`    | `"sm" \| "md" \| "lg"`                                                                                         | `"md"`      |
+| `href`    | `string`                                                                                                       | -           |
+| `class`   | `string`                                                                                                       | -           |
 
 ```astro
 <Badge variant="default" size="md">Badge</Badge>
 ```
 
 **Additional Notes:**
+
 - `href`: When provided, renders the badge as a link (`<a>` tag) instead of a `<div>`

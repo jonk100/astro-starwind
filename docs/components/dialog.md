@@ -280,14 +280,14 @@ import {
 
 ## API Reference
 
-### Dialog
+### Dialog API
 
 The root component that serves as a container for all dialog-related components. It manages the state of the dialog and handles keyboard interactions.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `id` | `string` | - |
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `id`    | `string` | -       |
+| `class` | `string` | -       |
 
 ```astro
 <Dialog>
@@ -296,17 +296,18 @@ The root component that serves as a container for all dialog-related components.
 ```
 
 **Additional Notes:**
+
 - `id`: Optional identifier for the dialog. Required when using external triggers with the `for` prop
 
 ### DialogTrigger
 
 The button that opens the dialog. When clicked, it shows the dialog content.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop      | Type      | Default |
+|-----------|-----------|---------|
 | `asChild` | `boolean` | `false` |
-| `for` | `string` | - |
-| `class` | `string` | - |
+| `for`     | `string`  | -       |
+| `class`   | `string`  | -       |
 
 ```astro
 <DialogTrigger asChild>
@@ -315,6 +316,7 @@ The button that opens the dialog. When clicked, it shows the dialog content.
 ```
 
 **Additional Notes:**
+
 - `asChild`: When enabled, renders the child element instead of a button
 - `for`: ID of the dialog to trigger. Used for external triggers outside the Dialog component
 
@@ -322,10 +324,10 @@ The button that opens the dialog. When clicked, it shows the dialog content.
 
 The container for dialog content. This component renders the actual modal dialog with animation effects.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `animationDuration` | `number` | `200` |
-| `class` | `string` | - |
+| Prop                | Type     | Default |
+|---------------------|----------|---------|
+| `animationDuration` | `number` | `200`   |
+| `class`             | `string` | -       |
 
 ```astro
 <DialogContent animationDuration={300}>
@@ -334,15 +336,16 @@ The container for dialog content. This component renders the actual modal dialog
 ```
 
 **Additional Notes:**
+
 - `animationDuration`: Open and close animation duration in milliseconds
 
 ### DialogHeader
 
 A container for dialog header content, typically containing a title and description.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <DialogHeader>
@@ -355,9 +358,9 @@ A container for dialog header content, typically containing a title and descript
 
 A container for dialog footer content, typically containing action buttons.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <DialogFooter>
@@ -372,9 +375,9 @@ A container for dialog footer content, typically containing action buttons.
 
 A component for rendering the dialog title with appropriate styling.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <DialogTitle>Dialog Title</DialogTitle>
@@ -384,9 +387,9 @@ A component for rendering the dialog title with appropriate styling.
 
 A component for rendering the dialog description with appropriate styling.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <DialogDescription>Dialog description text.</DialogDescription>
@@ -396,10 +399,10 @@ A component for rendering the dialog description with appropriate styling.
 
 A button that closes the dialog when clicked.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop      | Type      | Default |
+|-----------|-----------|---------|
 | `asChild` | `boolean` | `false` |
-| `class` | `string` | - |
+| `class`   | `string`  | -       |
 
 ```astro
 <DialogClose asChild>
@@ -408,4 +411,5 @@ A button that closes the dialog when clicked.
 ```
 
 **Additional Notes:**
+
 - `asChild`: When enabled, renders the child element instead of a button

@@ -1,0 +1,588 @@
+---
+/**
+ * @file src/pages/login.astro
+ * @description Sign-in page for Writty.
+ *
+ * Auth flow (email/password):
+ *   1. User submits the form — JS intercepts the submit event.
+ *   2. Client calls actions.signIn(formData) from astro:actions.
+ *   3. The Action validates with Zod, calls Supabase, returns { success, message }.
+ *   4. On success: redirect to / (or the `next` param if present).
+ *   5. On failure: display the inline error message without a page reload.
+ *
+ * Auth flow (GitHub OAuth):
+ *   The GitHub button is a plain <a> to /api/auth/login?provider=github,
+ *   which is an API route (not an Action) because OAuth requires a
+ *   server-side redirect to the provider — Actions can't do that.
+ *
+ * If the user already has a valid session they're redirected immediately
+ * before the page renders.
+ */
+
+import BaseLayout from "@/layouts/Layout.astro";
+import { createClient } from "@/lib/supabase";
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupButton } from "@/components/starwind/input-group";
+import { Button } from "@/components/starwind/button";
+import Mail from "@tabler/icons/outline/mail.svg";
+
+/** Redirect away if already signed in. */
+const supabase = createClient(Astro);
+
+const { data: { user } } = await supabase.auth.getUser();
+if (user) return Astro.redirect("/");
+
+/**
+ * Optional `next` param — where to send the user after login.
+ * Middleware sets this when redirecting an unauthenticated request.
+ * e.g. /login?next=/songs/my-song
+ */
+const next = Astro.url.searchParams.get("next") ?? "/";
+---
+
+<BaseLayout title="Sign in — Writty">
+  <main class="auth-root">
+    <div class="auth-shell">
+
+      <header class="auth-header">
+        <!-- <span class="wordmark">Writty</span> -->
+        <p class="tagline">Sign in to your account.</p>
+      </header>
+
+      <!--
+        Error banner — hidden by default, shown by JS on failed sign-in.
+        aria-live="assertive" announces it to screen readers immediately.
+      -->
+      <div
+        class="error-banner"
+        id="error-banner"
+        role="alert"
+        aria-live="assertive"
+        hidden
+      >
+        <span class="error-icon" aria-hidden="true">!</span>
+        <span id="error-message"></span>
+      </div>
+
+      <!--
+        Success banner — shown after a successful signUp redirect here,
+        or after any other non-error status message.
+      -->
+      <div
+        class="success-banner"
+        id="success-banner"
+        role="status"
+        aria-live="polite"
+        hidden
+      >
+        <span id="success-message"></span>
+      </div>
+
+      <form class="auth-form" id="login-form" novalidate>
+        <!--
+          Hidden field carries the post-login destination through the
+          Action response back to the client redirect.
+        -->
+        <input type="hidden" name="next" value={next} />
+
+        <div class="field" id="field-email">
+          <label for="email">Email</label>
+          <InputGroup>
+            <InputGroupInput
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              required
+              placeholder="you@example.com"
+              spellcheck="false"
+            />
+            <InputGroupAddon>
+              <Mail />
+            </InputGroupAddon>
+          </InputGroup>
+          <span class="field-error" id="error-email" aria-live="polite"></span>
+        </div>
+
+        <div class="field" id="field-password">
+          <label for="password">
+            Password
+            <a href="/forgot-password" class="forgot-link" tabindex="0">Forgot?</a>
+          </label>
+          <div class="password-wrap">
+            <InputGroup>
+              <InputGroupInput
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                placeholder="•••••••"
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  type="button"
+                  class="reveal-btn"
+                  aria-label="Show password"
+                  data-reveal="password"
+                  size="icon-sm"
+                >
+                  <svg class="icon icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M2 12s3.636-7 10-7 10 7 10 7-3.636 7-10 7S2 12 2 12Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg class="icon icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="display:none">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-6.364 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.364 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+          </div>
+        </div>
+
+        <Button type="submit" variant="primary" id="submit-btn" class="w-full">
+          <span class="btn-label">Sign in</span>
+          <span class="btn-spinner" aria-hidden="true" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner-icon">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </span>
+        </Button>
+      </form>
+
+      <div class="divider" aria-hidden="true"><span>or</span></div>
+
+      <a href="/api/auth/login?provider=github" class="btn-oauth">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="oauth-icon">
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 4.419 2.865 8.17 6.839 9.49.5.09.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.605-3.37-1.34-3.37-1.34-.454-1.154-1.11-1.46-1.11-1.46-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.647.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.841-2.337 4.687-4.565 4.935.359.31.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.165 22 16.418 22 12c0-5.523-4.477-10-10-10Z"/>
+        </svg>
+        Continue with GitHub
+      </a>
+
+      <p class="auth-nudge">
+        No account? <a href="/signup">Create one</a>
+      </p>
+
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { actions, isInputError } from "astro:actions";
+
+  // ─── Element refs ───────────────────────────────────────────────────────────
+
+  const form        = document.getElementById("login-form")   as HTMLFormElement;
+  const emailInput   = document.getElementById("email")        as HTMLInputElement;
+  const passInput    = document.getElementById("password")     as HTMLInputElement;
+  const submitBtn   = document.getElementById("submit-btn")   as HTMLButtonElement;
+  const btnLabel    = submitBtn.querySelector(".btn-label")    as HTMLSpanElement;
+  const btnSpinner  = submitBtn.querySelector(".btn-spinner")  as HTMLSpanElement;
+  const errorBanner = document.getElementById("error-banner") as HTMLDivElement;
+  const errorMsg    = document.getElementById("error-message") as HTMLSpanElement;
+  const emailError  = document.getElementById("error-email")  as HTMLSpanElement;
+
+  // ─── Utilities ──────────────────────────────────────────────────────────────
+
+  /**
+   * @description Sets the submit button into a loading state.
+   * Disables the button, hides the label, shows the spinner.
+   * Pass false to restore normal state.
+   *
+   * @param loading - Whether to enter or exit the loading state.
+   */
+  function setLoading(loading: boolean): void {
+    submitBtn.disabled   = loading;
+    btnLabel.hidden      = loading;
+    btnSpinner.hidden    = !loading;
+    submitBtn.setAttribute("aria-busy", String(loading));
+  }
+
+  /**
+   * @description Shows the error banner with a given message.
+   * Clears any previous field-level errors.
+   *
+   * @param message - The error string to display.
+   */
+  function showError(message: string): void {
+    errorMsg.textContent     = message;
+    errorBanner.hidden       = false;
+    emailError.textContent   = "";
+    document.getElementById("field-email")?.classList.remove("field--error");
+    document.getElementById("field-password")?.classList.remove("field--error");
+  }
+
+  /**
+   * @description Clears all error state from the form.
+   */
+  function clearErrors(): void {
+    errorBanner.hidden     = true;
+    errorMsg.textContent   = "";
+    emailError.textContent = "";
+    document.getElementById("field-email")?.classList.remove("field--error");
+    document.getElementById("field-password")?.classList.remove("field--error");
+  }
+
+  /**
+   * @description Shows a Zod field-level validation error inline
+   * beneath the relevant input, rather than in the banner.
+   *
+   * @param field  - The field name ("email" | "password").
+   * @param message - The validation error string.
+   */
+  function showFieldError(field: string, message: string): void {
+    const fieldEl = document.getElementById(`field-${field}`);
+    const errorEl = document.getElementById(`error-${field}`);
+    fieldEl?.classList.add("field--error");
+    if (errorEl) errorEl.textContent = message;
+
+    const input = document.getElementById(field) as HTMLInputElement | null;
+    input?.setAttribute("aria-invalid", "true");
+    input?.focus();
+  }
+
+  // ─── Password reveal ────────────────────────────────────────────────────────
+
+  /**
+   * @description Wires password visibility toggle buttons.
+   * Finds all [data-reveal] buttons and toggles the target input
+   * between type="password" and type="text".
+   */
+  document.querySelectorAll<HTMLButtonElement>("[data-reveal]").forEach((btn) => {
+    const targetId   = btn.dataset.reveal!;
+    const input      = document.getElementById(targetId) as HTMLInputElement | null;
+    const iconEye    = btn.querySelector<SVGElement>(".icon-eye");
+    const iconEyeOff = btn.querySelector<SVGElement>(".icon-eye-off");
+    if (!input) return;
+
+    btn.addEventListener("click", () => {
+      const isHidden   = input.type === "password";
+      input.type       = isHidden ? "text" : "password";
+      btn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+      if (iconEye)    iconEye.style.display    = isHidden ? "none" : "";
+      if (iconEyeOff) iconEyeOff.style.display = isHidden ? ""     : "none";
+    });
+  });
+
+  // ─── Form submit ────────────────────────────────────────────────────────────
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearErrors();
+    setLoading(true);
+
+    const formData = new FormData(form);
+    const next     = (formData.get("next") as string) || "/";
+
+    try {
+      const result = await actions.signIn(formData);
+
+      // isInputError() narrows to Zod validation failures — these get
+      // rendered inline on the relevant field rather than in the banner.
+      if (isInputError(result.error)) {
+        setLoading(false);
+        const fields = result.error.fields;
+
+        if (fields.email?.[0])    showFieldError("email",    fields.email[0]);
+        if (fields.password?.[0]) showFieldError("password", fields.password[0]);
+        return;
+      }
+
+      // Non-input ActionErrors (e.g. network, unexpected) surface in the banner.
+      if (result.error) {
+        setLoading(false);
+        showError(result.error.message ?? "Sign in failed. Please try again.");
+        return;
+      }
+
+      // Handler returned { success: false } — Supabase auth error.
+      if (!result.data?.success) {
+        setLoading(false);
+        showError(result.data?.message ?? "Sign in failed. Please try again.");
+        return;
+      }
+
+      // Success — navigate. Keep spinner visible during the redirect.
+      window.location.href = next;
+
+    } catch (err) {
+      // Unexpected client-side error (e.g. network completely down).
+      setLoading(false);
+      showError("A network error occurred. Please check your connection.");
+      console.error("[login] unexpected error:", err);
+    }
+  });
+
+  // ─── Validation Logic ───────────────────────────────────────────────────────
+
+  /**
+   * Real-time validation check.
+   * Updates UI hints and enables/disables the submit button.
+   */
+  function validateForm() {
+    const email = emailInput.value.trim();
+    const password = passInput.value;
+
+    // 1. Email Check (Immediate regex feedback)
+    // Only show error if they've typed something (dirty) and it's invalid
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const showEmailError = email !== "" && !isEmailValid;
+    updateFieldState("email", !showEmailError, showEmailError ? "Please enter a valid email." : "");
+
+    // 2. Password Length Check
+    // Zod handles the 6-72 char range, but we want immediate <6 feedback.
+    const isPassValidLength = password.length >= 6;
+    const showPassLengthError = password !== "" && !isPassValidLength;
+    updateFieldState("password", !showPassLengthError, showPassLengthError ? "Password must be at least 6 characters." : "");
+
+    // 3. Final Button State
+    const isFormValid = isEmailValid && isPassValidLength;
+    submitBtn.disabled = !isFormValid;
+  }
+
+  /** Helper to toggle error classes and text messages */
+  function updateFieldState(fieldId: string, isValid: boolean, message: string) {
+    const fieldEl = document.getElementById(`field-${fieldId}`);
+    const errorEl = document.getElementById(`error-${fieldId}`);
+    
+    if (fieldEl) fieldEl.classList.toggle("field--error", !isValid);
+    if (errorEl) errorEl.textContent = isValid ? "" : message;
+  }
+
+  // ─── Event Listeners ────────────────────────────────────────────────────────
+
+  // Validate on every keystroke
+  [emailInput, passInput].forEach(input => {
+    input.addEventListener("input", validateForm);
+  });
+
+  // Run once on load in case browser autofills
+  validateForm();
+
+  </script>
+
+<style>
+  /* ─── Layout ────────────────────────────────────────────────── */
+
+  .layout-main {
+    margin: 0;
+    padding: 0;
+  }
+
+  .auth-root {
+    min-height: 100dvh;
+    display: grid;
+    place-items: start center;
+    /* padding: 2rem 1rem; */
+    /* background-color: var(--popover); */
+  }
+
+  .auth-shell {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 3rem;
+    border-radius: 0.75rem;
+    background-color: var(--color-teal-500);
+    box-shadow: var(--box-shadow);
+  }
+
+  /* ─── Header ─────────────────────────────────────────────────── */
+
+  .tagline {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+    text-align: center;
+    color: var(--muted-foreground);
+    margin: 0 auto;
+    letter-spacing: 0.01em;
+  }
+
+  /* ─── Banners ────────────────────────────────────────────────── */
+
+  .error-banner,
+  .success-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  .error-banner {
+    border: 1px solid var(--color-border-danger, #6b2626);
+    background: color-mix(in srgb, var(--color-background-danger, #3d1a1a) 60%, transparent);
+    color: var(--color-text-danger);
+  }
+
+  .success-banner {
+    border: 1px solid var(--color-border-success, #1a4a1a);
+    background: color-mix(in srgb, var(--color-background-success, #1a3d1a) 60%, transparent);
+    color: var(--color-text-success);
+  }
+
+  .error-icon {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: grid;
+    place-items: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* ─── Form ───────────────────────────────────────────────────── */
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .field label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .forgot-link {
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .forgot-link:hover { color: var(--color-text-primary); }
+
+  /* Input styles now handled by Starwind InputGroup components */
+
+  .input-group {
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background-color: var(--background);
+  }
+  
+  .input-group input {
+    background-color: var(--background);
+  }
+
+  input:focus {
+    border-color: var(--primary);
+  }
+
+  .field-error {
+    font-size: 0.75rem;
+    color: var(--color-text-danger);
+    min-height: 1em; /* prevent layout shift when message appears */
+    line-height: 1.3;
+  }
+
+  /* Password reveal styles now handled by Starwind InputGroup components */
+  .icon { width: 1rem; height: 1rem; }
+
+  /* Submit button styles now handled by Starwind Button component */
+  
+  /* Restore not-allowed cursor for disabled submit button */
+  #submit-btn:disabled {
+    cursor: not-allowed !important;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .spinner-icon {
+    width: 1rem;
+    height: 1rem;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* ─── Divider ────────────────────────────────────────────────── */
+
+  .divider {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .divider::before,
+  .divider::after {
+    content: "";
+    height: 1px;
+    background: var(--color-border-tertiary);
+  }
+  .divider span {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+  }
+
+  /* ─── OAuth button ───────────────────────────────────────────── */
+
+  .btn-oauth {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--color-text-primary);
+    background: transparent;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: 4px;
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    box-sizing: border-box;
+  }
+  .btn-oauth:hover {
+    border-color: var(--color-border-primary);
+    background: var(--color-background-secondary);
+  }
+
+  .oauth-icon { width: 1rem; height: 1rem; flex-shrink: 0; }
+
+  /* ─── Nudge link ─────────────────────────────────────────────── */
+
+  .auth-nudge {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--color-text-tertiary);
+    margin: 0;
+  }
+  .auth-nudge a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-tertiary);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .auth-nudge a:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-secondary);
+  }
+</style>

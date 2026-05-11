@@ -2,12 +2,30 @@
 import HeaderMenu from './HeaderMenu.astro';
 import HeaderLogo from './HeaderLogo.astro';
 import HeaderIcons from './HeaderIcons.astro';
+import UserNav from './UserNav.astro';
+import { GitHubIcon } from '../icons';
+
+interface Props {
+  user?: {
+    email?: string;
+    name?: string;
+  } | null;
+}
+
+const { user } = Astro.props;
 ---
 
-<header class="bg-teal-400">
+<header class="bg-teal-400 sticky top-0 z-50">
   <HeaderLogo />
   <HeaderMenu />
-  <HeaderIcons />
+  <div class="header-right">
+    <UserNav user={user} />
+    <!-- GitHub icon next to sign-in menu -->
+    <a href="https://github.com/jonk100/astro-starwind" target="_blank" class="icon-link github-nav">
+      <span class="sr-only">Go to your GitHub repo</span>
+      <GitHubIcon size="xl" color="" />
+    </a>
+  </div>
 </header>
 
 <style>
@@ -21,12 +39,38 @@ import HeaderIcons from './HeaderIcons.astro';
     box-shadow: var(--shadow-sm);
     border-bottom: 1px solid var(--border);
   }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .github-nav {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    color: var(--color-primary-300);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  
+  .github-nav:hover {
+    color: var(--primary-accent);
+    background-color: transparent;
+    transform: scale(1.125);
+  }
   
   @media (max-width: 768px) {
     header {
       flex-direction: column;
       gap: 1rem;
       padding: 1rem;
+    }
+
+    .header-right {
+      width: 100%;
+      justify-content: center;
     }
   }
 </style>

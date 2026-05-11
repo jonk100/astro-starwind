@@ -4,6 +4,8 @@ import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
 import { ThreeColumnGrid, BlogSearch } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
   

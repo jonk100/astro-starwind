@@ -82,21 +82,22 @@ import { Button } from "@/components/starwind/button";
 
 ## API Reference
 
-### Button
+### Button API
 
 A versatile button component with multiple variants and sizes.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop      | Type                                                                                                           | Default     |
+|-----------|----------------------------------------------------------------------------------------------------------------|-------------|
 | `variant` | `"default" \| "primary" \| "secondary" \| "outline" \| "ghost" \| "info" \| "success" \| "warning" \| "error"` | `"default"` |
-| `size` | `"sm" \| "md" \| "lg" \| "icon" \| "icon-sm" \| "icon-lg"` | `"md"` |
-| `href` | `string` | - |
-| `class` | `string` | - |
+| `size`    | `"sm" \| "md" \| "lg" \| "icon" \| "icon-sm" \| "icon-lg"`                                                     | `"md"`      |
+| `href`    | `string`                                                                                                       | -           |
+| `class`   | `string`                                                                                                       | -           |
 
 ```astro
 <Button variant="default" size="md">Button</Button>
 ```
 
 **Additional Notes:**
+
 - `size`: Determines the button size. Use `"icon"`, `"icon-sm"`, or `"icon-lg"` for icon-only buttons
 - `href`: When provided, renders the button as a link (`<a>` tag) instead of a `<button>`

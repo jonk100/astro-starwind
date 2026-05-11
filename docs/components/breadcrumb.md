@@ -104,9 +104,9 @@ import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from "@/comp
 
 The root navigation component that contains all breadcrumb elements.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <Breadcrumb>
@@ -120,9 +120,9 @@ The root navigation component that contains all breadcrumb elements.
 
 A container component that renders an ordered list for breadcrumb items.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <BreadcrumbList>
@@ -134,9 +134,9 @@ A container component that renders an ordered list for breadcrumb items.
 
 A component that represents each item in the breadcrumb navigation.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <BreadcrumbItem>
@@ -148,26 +148,27 @@ A component that represents each item in the breadcrumb navigation.
 
 A component for clickable breadcrumb links that navigate to previous levels in the hierarchy.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `href` | `string` | Required |
-| `asChild` | `boolean` | `false` |
-| `class` | `string` | - |
+| Prop      | Type      | Default  |
+|-----------|-----------|----------|
+| `href`    | `string`  | Required |
+| `asChild` | `boolean` | `false`  |
+| `class`   | `string`  | -        |
 
 ```astro
 <BreadcrumbLink href="/path">Link Text</BreadcrumbLink>
 ```
 
 **Additional Notes:**
+
 - `asChild`: When enabled, renders the child element instead of an anchor tag
 
 ### BreadcrumbPage
 
 A component that represents the current page in the breadcrumb trail (the last item).
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <BreadcrumbPage>Current Page</BreadcrumbPage>
@@ -177,9 +178,9 @@ A component that represents the current page in the breadcrumb trail (the last i
 
 A component for visual separation between breadcrumb items.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <BreadcrumbSeparator />
@@ -189,9 +190,9 @@ A component for visual separation between breadcrumb items.
 
 A component used to indicate truncated breadcrumb items, typically used when there are many levels in the breadcrumb trail.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <BreadcrumbEllipsis />

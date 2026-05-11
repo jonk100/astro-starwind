@@ -57,22 +57,23 @@ import { Checkbox } from "@/components/starwind/checkbox";
 
 ## API Reference
 
-### Checkbox
+### Checkbox API
 
 An accessible checkbox component with multiple variants and sizes.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `id` | `string` | Required |
-| `label` | `string` | - |
+| Prop      | Type                                                                                   | Default     |
+|-----------|----------------------------------------------------------------------------------------|-------------|
+| `id`      | `string`                                                                               | Required    |
+| `label`   | `string`                                                                               | -           |
 | `variant` | `"default" \| "primary" \| "secondary" \| "info" \| "success" \| "warning" \| "error"` | `"default"` |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `class` | `string` | - |
+| `size`    | `"sm" \| "md" \| "lg"`                                                                 | `"md"`      |
+| `class`   | `string`                                                                               | -           |
 
 ```astro
 <Checkbox id="terms" label="Accept terms" variant="default" size="md" />
 ```
 
 **Additional Notes:**
+
 - `id`: Unique identifier for the checkbox, used for label association
 - `label`: Text label displayed next to the checkbox

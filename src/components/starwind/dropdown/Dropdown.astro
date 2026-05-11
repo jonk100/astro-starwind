@@ -12,7 +12,7 @@ type Props = HTMLAttributes<"div"> & {
    */
   closeDelay?: number;
 
-  children: any;
+  children: string;
 };
 
 const { class: className, openOnHover = false, closeDelay = 200, ...rest } = Astro.props;
@@ -35,20 +35,22 @@ const { class: className, openOnHover = false, closeDelay = 200, ...rest } = Ast
     private content: HTMLElement | null;
     private items: HTMLElement[] = [];
     private currentFocusIndex: number = -1;
-    private isOpen: boolean = false;
     private isClosing: boolean = false;
-    private animationDuration = 150;
-    private openOnHover: boolean;
-    private closeDelay: number;
     private closeTimerRef: number | null = null;
-    private lastOpenSource: "keyboard" | "mouse" = "keyboard";
-    private lastCloseSource: "keyboard" | "mouse" = "keyboard";
+    private animationDuration: number = 150;
+    private lastOpenSource: "keyboard" | "mouse" = "mouse";
+    private lastCloseSource: "keyboard" | "mouse" = "mouse";
+    private openChildCount: number = 0;
+    private parentHandler: DropdownHandler | null = null;
+    private cachedItems: HTMLElement[] = [];
+    private itemsCacheVersion: number = 0;
     private isSubmenu: boolean;
     private rootDropdown: HTMLElement;
     private contentPlaceholder: Comment | null = null;
     private cleanupAutoUpdate: (() => void) | null = null;
-    private openChildCount: number = 0;
-    private parentHandler: DropdownHandler | null = null;
+    private openOnHover: boolean;
+    private closeDelay: number;
+    private isOpen: boolean = false;
 
     constructor(dropdown: HTMLElement, dropdownIdx: number) {
       this.dropdown = dropdown;
@@ -122,7 +124,8 @@ const { class: className, openOnHover = false, closeDelay = 200, ...rest } = Ast
       // Handle trigger click
       this.trigger.addEventListener("click", (e) => {
         e.preventDefault();
-        this.lastOpenSource = e.detail === 0 ? "keyboard" : "mouse";
+        // Use proper event detection for keyboard vs mouse input
+        this.lastOpenSource = (e instanceof MouseEvent && e.clientX === 0 && e.clientY === 0) ? "keyboard" : "mouse";
         this.toggleDropdown();
       });
 
@@ -344,12 +347,24 @@ const { class: className, openOnHover = false, closeDelay = 200, ...rest } = Ast
 
     private updateDropdownItems() {
       if (!this.content) return;
+      
+      // Check if we need to update the cache
+      const currentCacheVersion = this.content.children.length;
+      if (this.cachedItems.length > 0 && this.itemsCacheVersion === currentCacheVersion) {
+        this.items = this.cachedItems;
+        return;
+      }
+      
       // Get all interactive menuitem elements belonging to this menu level only
       this.items = (
         Array.from(
           this.content.querySelectorAll('[role="menuitem"]:not([data-disabled="true"])'),
         ) as HTMLElement[]
       ).filter((item) => item.closest('[role="menu"]') === this.content);
+      
+      // Update cache
+      this.cachedItems = [...this.items];
+      this.itemsCacheVersion = currentCacheVersion;
     }
 
     private focusItem(idx: number) {

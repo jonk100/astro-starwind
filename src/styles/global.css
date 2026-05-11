@@ -49,7 +49,7 @@ main {
 	width: clamp(60vw, calc(60vw + 1vw), 70vw);
 	max-width: calc(100vw - 2em);
 	margin: auto;
-	padding: 3em 1em;
+	padding: 1em;
 }
 
 .layout-main-content {

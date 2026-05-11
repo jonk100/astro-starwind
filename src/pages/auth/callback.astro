@@ -1,0 +1,87 @@
+---
+/**
+ * @file src/pages/auth/callback.astro
+ * @description Email confirmation callback page.
+ *
+ * Supabase sends users here after they click the confirmation link in
+ * their sign-up email. The link contains a `token_hash` and `type` query
+ * param. We exchange that token for a session via verifyOtp(), then
+ * redirect into the app.
+ *
+ * This page also handles password reset links — the `type` param will
+ * be "recovery" in that case, and we redirect to /reset-password.
+ *
+ * The URL for this page must be set in two places:
+ *   1. Supabase dashboard → Auth → Email Templates → Confirm signup:
+ *      Change {{ .ConfirmationURL }} to:
+ *      {{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email
+ *   2. Supabase dashboard → Auth → URL Configuration → Site URL:
+ *      Set to http://localhost:4321 for dev.
+ *
+ * If the token is missing or invalid, we redirect to /login with an
+ * error param so the user sees a clear message rather than a blank page.
+ */
+
+import { createClient } from "../../lib/supabase";
+import type { EmailOtpType } from "@supabase/supabase-js";
+
+const supabase = createClient(Astro);
+
+const url        = new URL(Astro.request.url);
+const tokenHash  = url.searchParams.get("token_hash");
+const type       = url.searchParams.get("type") as EmailOtpType | null;
+
+if (!tokenHash || !type) {
+  return Astro.redirect(
+    "/login?error=" + encodeURIComponent("Invalid confirmation link. Please request a new one.")
+  );
+}
+
+const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+
+if (error) {
+  return Astro.redirect(
+    "/login?error=" + encodeURIComponent(
+      error.message.includes("expired")
+        ? "This confirmation link has expired. Please sign up again."
+        : "Email confirmation failed. Please try again."
+    )
+  );
+}
+
+// Password reset links should go to the reset page, not the dashboard.
+if (type === "recovery") {
+  return Astro.redirect("/reset-password");
+}
+
+return Astro.redirect("/");
+---
+<!--
+  This markup is a fallback — in practice the server-side frontmatter
+  always redirects before the browser renders it. It's here in case
+  of a very slow redirect or a JS-disabled environment.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirming — Writty</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: #0d0d0d;
+        font-family: Georgia, serif;
+        color: rgba(255,255,255,0.5);
+        font-size: 0.9rem;
+        letter-spacing: 0.01em;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Confirming your account&hellip;</p>
+  </body>
+</html>

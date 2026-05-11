@@ -220,10 +220,10 @@ import {
 
 The root component that serves as a container for card content.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `size` | `"default" \| "sm"` | `"default"` |
-| `class` | `string` | - |
+| Prop    | Type                | Default     |
+|---------|---------------------|-------------|
+| `size`  | `"default" \| "sm"` | `"default"` |
+| `class` | `string`            | -           |
 
 ```astro
 <Card size="default">
@@ -239,9 +239,9 @@ The root component that serves as a container for card content.
 
 A container for card header content, typically containing the title and description.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <CardHeader>
@@ -254,9 +254,9 @@ A container for card header content, typically containing the title and descript
 
 A component for rendering the card title with appropriate font styling.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <CardTitle>Create project</CardTitle>
@@ -266,9 +266,9 @@ A component for rendering the card title with appropriate font styling.
 
 A component for rendering the card description with muted colors and appropriate text styling.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <CardDescription>Deploy your new project in one-click.</CardDescription>
@@ -278,9 +278,9 @@ A component for rendering the card description with muted colors and appropriate
 
 A container for the main content of the card.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <CardContent>
@@ -292,9 +292,9 @@ A container for the main content of the card.
 
 A container for card footer content, typically containing action buttons.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <CardFooter>
@@ -306,9 +306,9 @@ A container for card footer content, typically containing action buttons.
 
 A component for positioning actions (like badges or buttons) in the card header. Designed to be placed inside `CardHeader`.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <CardHeader>

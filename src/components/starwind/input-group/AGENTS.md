@@ -10,60 +10,61 @@ The Input Group component provides a way to group input fields with labels, icon
 
 The root wrapper that handles group-level border, focus ring, and invalid state styling.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ### InputGroupAddon
 
 A flexible container for icons, text, buttons, and status indicators.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
+| Prop    | Type                                                             | Default          | Description                                                 |
+|---------|------------------------------------------------------------------|------------------|-------------------------------------------------------------|
 | `align` | `"inline-start" \| "inline-end" \| "block-start" \| "block-end"` | `"inline-start"` | Controls placement of addon content relative to input field |
-| `class` | `string` | - | Additional CSS classes for styling |
+| `class` | `string`                                                         | -                | Additional CSS classes for styling                          |
 
 ### InputGroupButton
 
 An input-group-tuned button with compact sizing and no shadow.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `size` | `"sm" \| "icon-sm"` | `"sm"` | Determines the button size |
-| `variant` | `"default" \| "primary" \| "secondary" \| "outline" \| "ghost" \| "info" \| "success" \| "warning" \| "error"` | `"ghost"` | Visual style variant for the button |
-| `type` | `string` | `"button"` | HTML button type |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop      | Type                                                                                                           | Default    | Description                         |
+|-----------|----------------------------------------------------------------------------------------------------------------|------------|-------------------------------------|
+| `size`    | `"sm" \| "icon-sm"`                                                                                            | `"sm"`     | Determines the button size          |
+| `variant` | `"default" \| "primary" \| "secondary" \| "outline" \| "ghost" \| "info" \| "success" \| "warning" \| "error"` | `"ghost"`  | Visual style variant for the button |
+| `type`    | `string`                                                                                                       | `"button"` | HTML button type                    |
+| `class`   | `string`                                                                                                       | -          | Additional CSS classes for styling  |
 
 ### InputGroupInput
 
 Input replacement with input-group styles and focus-slot behavior pre-applied.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Determines the input size |
-| `type` | `string` | `"text"` | HTML input type (text, email, password, number, file, etc.) |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type                   | Default  | Description                                                 |
+|---------|------------------------|----------|-------------------------------------------------------------|
+| `size`  | `"sm" \| "md" \| "lg"` | `"md"`   | Determines the input size                                   |
+| `type`  | `string`               | `"text"` | HTML input type (text, email, password, number, file, etc.) |
+| `class` | `string`               | -        | Additional CSS classes for styling                          |
 
 ### InputGroupText
 
 A helper text wrapper for prefixes, suffixes, and metadata labels.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ### InputGroupTextarea
 
 Textarea replacement with input-group styles and focus-slot behavior pre-applied.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Determines the textarea size |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type                   | Default | Description                        |
+|---------|------------------------|---------|------------------------------------|
+| `size`  | `"sm" \| "md" \| "lg"` | `"md"`  | Determines the textarea size       |
+| `class` | `string`               | -       | Additional CSS classes for styling |
 
 ## Usage Examples
 
 ### Basic Input Group
+
 ```astro
 ---
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/starwind/input-group";
@@ -79,6 +80,7 @@ import Search from "@tabler/icons/outline/search.svg";
 ```
 
 ### With Label and Icon
+
 ```astro
 ---
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/starwind/input-group";
@@ -94,6 +96,7 @@ import Mail from "@tabler/icons/outline/mail.svg";
 ```
 
 ### With Prefix and Suffix
+
 ```astro
 ---
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/starwind/input-group";
@@ -111,6 +114,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/
 ```
 
 ### With URL Input
+
 ```astro
 ---
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/starwind/input-group";
@@ -128,6 +132,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/
 ```
 
 ### With Textarea
+
 ```astro
 ---
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/starwind/input-group";
@@ -142,6 +147,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/
 ```
 
 ### With Action Button
+
 ```astro
 ---
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/starwind/input-group";
@@ -159,6 +165,7 @@ import Copy from "@tabler/icons/outline/copy.svg";
 ```
 
 ### Complex Form Layout
+
 ```astro
 ---
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText } from "@/components/starwind/input-group";

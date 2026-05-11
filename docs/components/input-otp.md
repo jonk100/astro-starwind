@@ -228,17 +228,17 @@ import { Label } from "@/components/starwind/label";
 
 The root container that manages OTP input state and keyboard interactions.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `maxLength` | `number` | `6` |
-| `value` | `string` | - |
-| `defaultValue` | `string` | - |
-| `disabled` | `boolean` | `false` |
-| `pattern` | `RegExp \| string` | `\d` |
-| `name` | `string` | - |
-| `id` | `string` | - |
-| `required` | `boolean` | - |
-| `class` | `string` | - |
+| Prop           | Type               | Default |
+|----------------|--------------------|---------|
+| `maxLength`    | `number`           | `6`     |
+| `value`        | `string`           | -       |
+| `defaultValue` | `string`           | -       |
+| `disabled`     | `boolean`          | `false` |
+| `pattern`      | `RegExp \| string` | `\d`    |
+| `name`         | `string`           | -       |
+| `id`           | `string`           | -       |
+| `required`     | `boolean`          | -       |
+| `class`        | `string`           | -       |
 
 ```astro
 <InputOtp maxLength={6} name="otp" pattern={REGEXP_ONLY_DIGITS_AND_CHARS}>
@@ -249,6 +249,7 @@ The root container that manages OTP input state and keyboard interactions.
 ```
 
 **Additional Notes:**
+
 - `maxLength`: The total number of characters allowed in the OTP
 - `pattern`: A regex pattern to validate each character. Use `REGEXP_ONLY_DIGITS_AND_CHARS` for alphanumeric or `REGEXP_ONLY_DIGITS` for numbers only
 - `name`: Required for form submission, the value is stored in a hidden input
@@ -258,9 +259,9 @@ The root container that manages OTP input state and keyboard interactions.
 
 A container for grouping slots together visually.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <InputOtpGroup>
@@ -274,17 +275,18 @@ A container for grouping slots together visually.
 
 An individual input slot that displays a single character.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `index` | `number` | - |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `class` | `string` | - |
+| Prop    | Type                   | Default |
+|---------|------------------------|---------|
+| `index` | `number`               | -       |
+| `size`  | `"sm" \| "md" \| "lg"` | `"md"`  |
+| `class` | `string`               | -       |
 
 ```astro
 <InputOtpSlot index={0} size="lg" />
 ```
 
 **Additional Notes:**
+
 - `index`: The position of this slot in the OTP sequence (0-indexed)
 - `size`: Controls the slot dimensions. Use `"sm"` for compact layouts or `"lg"` for emphasis
 
@@ -292,9 +294,9 @@ An individual input slot that displays a single character.
 
 A visual separator between groups of slots.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <InputOtpSeparator />
@@ -310,9 +312,9 @@ The separator renders a dash icon by default. Use the `icon` slot to customize:
 
 ### Exported Constants
 
-| Name | Description |
-|------|-------------|
-| `REGEXP_ONLY_DIGITS` | Pattern that allows only digits (0-9) |
+| Name                           | Description                                                 |
+|--------------------------------|-------------------------------------------------------------|
+| `REGEXP_ONLY_DIGITS`           | Pattern that allows only digits (0-9)                       |
 | `REGEXP_ONLY_DIGITS_AND_CHARS` | Pattern that allows alphanumeric characters (A-Z, a-z, 0-9) |
 
 ### Events

@@ -64,13 +64,13 @@ const breadcrumbItems = breadcrumbs || generateFromUrl();
         <>
           <BreadcrumbItem>
             {crumb.current ? (
-              <BreadcrumbPage class="text-[rgb(var(--purple))] font-medium">
+              <BreadcrumbPage class="text-[rgb(var(--foreground))] font-bold">
                 {crumb.label}
               </BreadcrumbPage>
             ) : (
               <BreadcrumbLink 
                 href={crumb.href}
-                class="hover:text-[rgb(var(--purple))] transition-colors"
+                class="hover:text-[rgb(var(--blue))] hover:font-semibold transition-all duration-300"
               >
                 {crumb.label}
               </BreadcrumbLink>

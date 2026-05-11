@@ -22,7 +22,7 @@ export function getRelatedPosts(
     excludeCurrent = true
   } = options;
 
-  let related: BlogPost[] = [];
+  const related: BlogPost[] = [];
   const currentTags = currentPost.tags || [];
   const currentCategories = currentPost.categories || [];
   const currentAuthor = currentPost.author || currentPost.authors;

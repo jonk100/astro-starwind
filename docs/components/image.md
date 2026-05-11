@@ -43,16 +43,16 @@ import { Image } from "@/components/starwind/image";
 
 ## API Reference
 
-### Image
+### Image API
 
 A wrapper around Astro's Image component with sensible defaults and responsive styling.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `src` | `ImageMetadata \| string` | - |
-| `alt` | `string` | `""` |
-| `inferSize` | `boolean` | `true` |
-| `class` | `string` | - |
+| Prop        | Type                      | Default |
+|-------------|---------------------------|---------|
+| `src`       | `ImageMetadata \| string` | -       |
+| `alt`       | `string`                  | `""`    |
+| `inferSize` | `boolean`                 | `true`  |
+| `class`     | `string`                  | -       |
 
 ```astro
 <Image
@@ -63,6 +63,7 @@ A wrapper around Astro's Image component with sensible defaults and responsive s
 ```
 
 **Additional Notes:**
+
 - `src`: Image source. Accepts imported image assets or remote URLs
 - `alt`: Alternative text for accessibility. Always provide meaningful alt text
 - `inferSize`: When `true`, automatically infers width and height for remote images. Disable if you want to specify dimensions manually

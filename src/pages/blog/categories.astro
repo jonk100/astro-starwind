@@ -22,15 +22,15 @@ posts.forEach(post => {
 
 // Sort categories alphabetically and by post count
 const sortedCategories = Array.from(categoryMap.entries())
-  .sort(([a, b]: [string, any]) => a.localeCompare(b))
-  .map(([category, categoryPosts]: [string, any]) => ({
+  .sort(([a, b]: [string, unknown]) => a.localeCompare(b as string))
+  .map(([category, categoryPosts]: [string, unknown[]]) => ({
     name: category,
-    posts: categoryPosts.sort((a: any, b: any) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()),
+    posts: categoryPosts.sort((a: unknown, b: unknown) => new Date((a as { data: { date: string | Date } }).data.date).valueOf() - new Date((b as { data: { date: string | Date } }).data.date).valueOf()),
     count: categoryPosts.length
   }));
 
 // Sort by post count (descending) for display
-const categoriesByCount = [...sortedCategories].sort((a: any, b: any) => b.count - a.count);
+const categoriesByCount = [...sortedCategories].sort((a: { count: number }, b: { count: number }) => b.count - a.count);
 
 // Convert posts to blog component format
 const allPostsData = posts.map(post => ({
@@ -102,9 +102,9 @@ const allPostsData = posts.map(post => ({
                   Recent Posts
                 </h4>
                 <ul class="space-y-1 text-sm text-muted-foreground">
-                  {categoryData.posts.slice(0, 3).map((post: any) => (
+                  {categoryData.posts.slice(0, 3).map((post) => (
                     <li class="truncate hover:text-[rgb(var(--accent))] transition-colors">
-                      {post.data.title}
+                      {(post as { data: { title: string } }).data.title}
                     </li>
                   ))}
                 </ul>

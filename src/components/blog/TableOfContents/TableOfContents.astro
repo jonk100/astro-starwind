@@ -1,5 +1,4 @@
 ---
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/starwind/card";
 import { tv } from "tailwind-variants";
 import type { TableOfContentsItem } from "../types";
 import { extractTableOfContents } from "../utils";
@@ -26,7 +25,7 @@ const tableOfContents = tv({
       sidebar: "border-l-4 border-[rgb(var(--accent))]"
     },
     sticky: {
-      true: "sticky top-4",
+      true: "fixed top-16 right-0 h-[calc(100vh-4rem)] overflow-y-auto",
       false: ""
     }
   }
@@ -40,42 +39,38 @@ const filteredItems = items.filter((item: TableOfContentsItem) => item.level <= 
 
 ---
 
-<div class={tableOfContents({ variant, sticky, class: className })} {...rest}>
+<div class={tableOfContents({ variant, sticky, class: className })} {...rest} data-toc-container>
   {filteredItems.length > 0 ? (
-    <Card>
-      <CardHeader class="pb-3">
-        <CardTitle class="text-lg font-semibold text-[rgb(var(--purple))]">
-          {title}
-          {showCounts && (
-            <span class="text-sm font-normal text-muted-foreground ml-2">
-              ({filteredItems.length} items)
-            </span>
-          )}
-        </CardTitle>
-      </CardHeader>
+    <div class="p-4 bg-background border-l border-[rgb(var(--accent))] w-64">
+      <h3 class="text-lg font-semibold text-[rgb(var(--purple))] mb-4">
+        {title}
+        {showCounts && (
+          <span class="text-sm font-normal text-muted-foreground ml-2">
+            ({filteredItems.length} items)
+          </span>
+        )}
+      </h3>
       
-      <CardContent class="pt-0">
-        <nav class="space-y-1">
-          {filteredItems.map((item: TableOfContentsItem) => (
-            <a
-              href={`#${item.id}`}
-              class={`block py-1 px-2 text-sm rounded transition-colors hover:bg-[rgba(var(--accent),0.1)] hover:text-[rgb(var(--accent))] ${
-                item.level === 1 ? "font-semibold" :
-                item.level === 2 ? "font-medium pl-4" :
-                item.level === 3 ? "pl-8" :
-                item.level === 4 ? "pl-12" :
-                item.level === 5 ? "pl-16" :
-                "pl-20"
-              }`}
-              data-toc-link
-              data-target={item.id}
-            >
-              {item.title}
-            </a>
-          ))}
-        </nav>
-      </CardContent>
-    </Card>
+      <nav class="space-y-1">
+        {filteredItems.map((item: TableOfContentsItem) => (
+          <a
+            href={`#${item.id}`}
+            class={`block py-1 px-2 text-sm rounded transition-colors hover:bg-[rgba(var(--accent),0.1)] hover:text-[rgb(var(--accent))] ${
+              item.level === 1 ? "font-semibold" :
+              item.level === 2 ? "font-medium pl-4" :
+              item.level === 3 ? "pl-8" :
+              item.level === 4 ? "pl-12" :
+              item.level === 5 ? "pl-16" :
+              "pl-20"
+            }`}
+            data-toc-link
+            data-target={item.id}
+          >
+            {item.title}
+          </a>
+        ))}
+      </nav>
+    </div>
   ) : (
     <div class="text-center py-4 text-muted-foreground text-sm">
       No table of contents available
@@ -93,7 +88,7 @@ const filteredItems = items.filter((item: TableOfContentsItem) => item.level <= 
     constructor(element: HTMLElement) {
       this.container = element;
       this.links = Array.from(element.querySelectorAll('[data-toc-link]')) as HTMLElement[];
-      this.activeClass = 'bg-[rgba(var(--accent),0.1)] text-[rgb(var(--accent))]';
+      this.activeClass = '!font-bold !text-[rgb(var(--purple))]';
       this.init();
     }
 

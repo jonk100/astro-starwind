@@ -379,16 +379,16 @@ The select component emits a `starwind-select:change` event when a selection is 
 
 ## API Reference
 
-### Select
+### Select API
 
 The root component that manages the select state.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `id` | `string` | - |
-| `name` | `string` | - |
-| `defaultValue` | `string` | - |
-| `class` | `string` | - |
+| Prop           | Type     | Default |
+|----------------|----------|---------|
+| `id`           | `string` | -       |
+| `name`         | `string` | -       |
+| `defaultValue` | `string` | -       |
+| `class`        | `string` | -       |
 
 ```astro
 <Select name="framework">
@@ -397,18 +397,19 @@ The root component that manages the select state.
 ```
 
 **Additional Notes:**
+
 - `name`: Name attribute for form handling
 
 ### SelectTrigger
 
 The button that toggles the select dropdown.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `required` | `boolean` | `false` |
-| `disabled` | `boolean` | `false` |
-| `class` | `string` | - |
+| Prop       | Type                   | Default |
+|------------|------------------------|---------|
+| `size`     | `"sm" \| "md" \| "lg"` | `"md"`  |
+| `required` | `boolean`              | `false` |
+| `disabled` | `boolean`              | `false` |
+| `class`    | `string`               | -       |
 
 ```astro
 <SelectTrigger class="w-[180px]">
@@ -420,14 +421,14 @@ The button that toggles the select dropdown.
 
 The dropdown content that appears when the select is open.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `side` | `"top" \| "bottom"` | `"bottom"` |
-| `align` | `"start" \| "center" \| "end"` | `"start"` |
-| `sideOffset` | `number` | `4` |
-| `animationDuration` | `number` | `150` |
-| `class` | `string` | - |
+| Prop                | Type                           | Default    |
+|---------------------|--------------------------------|------------|
+| `size`              | `"sm" \| "md" \| "lg"`         | `"md"`     |
+| `side`              | `"top" \| "bottom"`            | `"bottom"` |
+| `align`             | `"start" \| "center" \| "end"` | `"start"`  |
+| `sideOffset`        | `number`                       | `4`        |
+| `animationDuration` | `number`                       | `150`      |
+| `class`             | `string`                       | -          |
 
 ```astro
 <SelectContent>
@@ -436,6 +437,7 @@ The dropdown content that appears when the select is open.
 ```
 
 **Additional Notes:**
+
 - `side`: Side of the dropdown relative to the trigger
 - `align`: Alignment of the dropdown relative to the trigger
 - `sideOffset`: Offset distance in pixels from the trigger
@@ -445,11 +447,11 @@ The dropdown content that appears when the select is open.
 
 An item that can be selected. Requires a `value` prop.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `value` | `string` | Required |
-| `disabled` | `boolean` | `false` |
-| `class` | `string` | - |
+| Prop       | Type      | Default  |
+|------------|-----------|----------|
+| `value`    | `string`  | Required |
+| `disabled` | `boolean` | `false`  |
+| `class`    | `string`  | -        |
 
 ```astro
 <SelectItem value="astro">Astro</SelectItem>
@@ -459,10 +461,10 @@ An item that can be selected. Requires a `value` prop.
 
 The component that displays the selected value or placeholder text in the trigger.
 
-| Prop | Type | Default |
-|------|------|---------|
+| Prop          | Type     | Default    |
+|---------------|----------|------------|
 | `placeholder` | `string` | `"select"` |
-| `class` | `string` | - |
+| `class`       | `string` | -          |
 
 ```astro
 <SelectValue placeholder="Select a framework" />
@@ -472,9 +474,9 @@ The component that displays the selected value or placeholder text in the trigge
 
 A component used to group related select items together.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <SelectGroup>
@@ -487,9 +489,9 @@ A component used to group related select items together.
 
 A label component used to give a title to a group of items.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <SelectLabel>Frameworks</SelectLabel>
@@ -499,9 +501,9 @@ A label component used to give a title to a group of items.
 
 A visual separator that can be used between select items.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `class` | `string` | - |
+| Prop    | Type     | Default |
+|---------|----------|---------|
+| `class` | `string` | -       |
 
 ```astro
 <SelectSeparator />
@@ -511,16 +513,17 @@ A visual separator that can be used between select items.
 
 A search input component that filters select items in real-time, creating a combobox pattern.
 
-| Prop | Type | Default |
-|------|------|---------|
-| `placeholder` | `string` | `"Search..."` |
-| `emptyText` | `string` | `"No results found."` |
-| `class` | `string` | - |
+| Prop          | Type     | Default               |
+|---------------|----------|-----------------------|
+| `placeholder` | `string` | `"Search..."`         |
+| `emptyText`   | `string` | `"No results found."` |
+| `class`       | `string` | -                     |
 
 ```astro
 <SelectSearch placeholder="Search frameworks..." />
 ```
 
 **Additional Notes:**
+
 - Place inside `SelectContent` before the items you want to filter
 - `emptyText`: Text to display when no items match the search
