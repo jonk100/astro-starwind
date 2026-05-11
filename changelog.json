@@ -101,9 +101,7 @@
         "Improved user experience with cleaner interface and better visual hierarchy",
         "testingggggg"
       ]
-    }
-  ],
-  "unreleased": [
+    },
     {
       "Version": "1.6.0",
       "Date": "2026-05-11",
@@ -121,5 +119,6 @@
         "Cleaned up component props interfaces and type definitions"
       ]
     }
-  ]
+  ],
+  "unreleased": []
 }
