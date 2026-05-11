@@ -466,7 +466,7 @@ Modify CSS custom properties in global styles:
 
 ---
 
-## Accessibility Features
+## Accessibility Features (Additional)
 
 - Semantic HTML5 header element
 - Proper ARIA labels for dropdown triggers

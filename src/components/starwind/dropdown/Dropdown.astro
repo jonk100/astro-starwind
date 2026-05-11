@@ -12,7 +12,7 @@ type Props = HTMLAttributes<"div"> & {
    */
   closeDelay?: number;
 
-  children: string;
+  children?: unknown;
 };
 
 const { class: className, openOnHover = false, closeDelay = 200, ...rest } = Astro.props;

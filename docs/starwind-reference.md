@@ -22,13 +22,13 @@
   lockfile=true
   ```
 
-3. Run the CLI to initialize:
+1. Run the CLI to initialize:
 
 ```bash
 pnpm dlx starwind@latest init
 ```
 
-4. Add components as needed:
+1. Add components as needed:
 
 ```bash
 pnpm dlx starwind@latest add button
@@ -46,7 +46,7 @@ import { ComponentName } from "@/components/starwind/component-name";
 ---
 ```
 
-2. **Use the components in your templates**:
+1. **Use the components in your templates**:
 
 ```astro
 <ComponentName prop="value"> Content </ComponentName>
