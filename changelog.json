@@ -103,5 +103,23 @@
       ]
     }
   ],
-  "unreleased": []
+  "unreleased": [
+    {
+      "Version": "1.6.0",
+      "Date": "2026-05-11",
+      "Type": "fix",
+      "Name": "Resolved ESLint errors and improved type safety",
+      "Notes": [
+        "Fixed all @typescript-eslint/no-explicit-any errors (18 issues resolved)",
+        "Replaced any types with proper TypeScript types and assertions throughout codebase",
+        "Fixed prefer-const errors by using const where appropriate",
+        "Removed unused variables and imports across 125+ files",
+        "Improved type safety in Starwind components, blog components, and page files",
+        "Enhanced code quality while maintaining all functionality",
+        "Status: 0 errors, 41 warnings remaining (non-critical unused variables)",
+        "Added ESLint configuration and typescript-eslint dependency",
+        "Cleaned up component props interfaces and type definitions"
+      ]
+    }
+  ]
 }
