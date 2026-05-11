@@ -1,6 +1,5 @@
 allowBuilds:
-  astro-meta-engine: false
-  esbuild: false
-  sharp: false
-  supabase: false
-  workerd: false
+  astro-meta-engine: true
+  esbuild: true
+  supabase: true
+  workerd: true

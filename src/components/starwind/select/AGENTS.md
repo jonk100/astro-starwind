@@ -10,93 +10,94 @@ The Select component provides a styled dropdown with rich features like search, 
 
 The root component that manages the select state.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `id` | `string` | - | Unique identifier for the element |
-| `name` | `string` | - | Name attribute for form handling |
-| `defaultValue` | `string` | - | The initial selected value |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop           | Type     | Default | Description                        |
+|----------------|----------|---------|------------------------------------|
+| `id`           | `string` | -       | Unique identifier for the element  |
+| `name`         | `string` | -       | Name attribute for form handling   |
+| `defaultValue` | `string` | -       | The initial selected value         |
+| `class`        | `string` | -       | Additional CSS classes for styling |
 
 ### SelectTrigger
 
 The button that toggles the select dropdown.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Determines the button size |
-| `required` | `boolean` | `false` | Whether the select is required |
-| `disabled` | `boolean` | `false` | When true, prevents all user interaction |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop       | Type                   | Default | Description                              |
+|------------|------------------------|---------|------------------------------------------|
+| `size`     | `"sm" \| "md" \| "lg"` | `"md"`  | Determines the button size               |
+| `required` | `boolean`              | `false` | Whether the select is required           |
+| `disabled` | `boolean`              | `false` | When true, prevents all user interaction |
+| `class`    | `string`               | -       | Additional CSS classes for styling       |
 
 ### SelectContent
 
 The dropdown content that appears when the select is open.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Determines the content size |
-| `side` | `"top" \| "bottom"` | `"bottom"` | Side of the dropdown relative to the trigger |
-| `align` | `"start" \| "center" \| "end"` | `"start"` | Alignment of the dropdown relative to the trigger |
-| `sideOffset` | `number` | `4` | Offset distance in pixels from the trigger |
-| `animationDuration` | `number` | `150` | Open and close animation duration in milliseconds |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop                | Type                           | Default    | Description                                       |
+|---------------------|--------------------------------|------------|---------------------------------------------------|
+| `size`              | `"sm" \| "md" \| "lg"`         | `"md"`     | Determines the content size                       |
+| `side`              | `"top" \| "bottom"`            | `"bottom"` | Side of the dropdown relative to the trigger      |
+| `align`             | `"start" \| "center" \| "end"` | `"start"`  | Alignment of the dropdown relative to the trigger |
+| `sideOffset`        | `number`                       | `4`        | Offset distance in pixels from the trigger        |
+| `animationDuration` | `number`                       | `150`      | Open and close animation duration in milliseconds |
+| `class`             | `string`                       | -          | Additional CSS classes for styling                |
 
 ### SelectItem
 
 An item that can be selected. Requires a `value` prop.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `value` | `string` | Required | The value for this select option |
-| `disabled` | `boolean` | `false` | When true, this option cannot be selected |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop       | Type      | Default  | Description                               |
+|------------|-----------|----------|-------------------------------------------|
+| `value`    | `string`  | Required | The value for this select option          |
+| `disabled` | `boolean` | `false`  | When true, this option cannot be selected |
+| `class`    | `string`  | -        | Additional CSS classes for styling        |
 
 ### SelectValue
 
 The component that displays the selected value or placeholder text in the trigger.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
+| Prop          | Type     | Default    | Description                                |
+|---------------|----------|------------|--------------------------------------------|
 | `placeholder` | `string` | `"select"` | Text to display when no option is selected |
-| `class` | `string` | - | Additional CSS classes for styling |
+| `class`       | `string` | -          | Additional CSS classes for styling         |
 
 ### SelectGroup
 
 A component used to group related select items together.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ### SelectLabel
 
 A label component used to give a title to a group of items.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ### SelectSeparator
 
 A visual separator that can be used between select items.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop    | Type     | Default | Description                        |
+|---------|----------|---------|------------------------------------|
+| `class` | `string` | -       | Additional CSS classes for styling |
 
 ### SelectSearch
 
 A search input component that filters select items in real-time, creating a combobox pattern.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `placeholder` | `string` | `"Search..."` | Placeholder text for the search input |
-| `emptyText` | `string` | `"No results found."` | Text to display when no items match the search |
-| `class` | `string` | - | Additional CSS classes for styling |
+| Prop          | Type     | Default               | Description                                    |
+|---------------|----------|-----------------------|------------------------------------------------|
+| `placeholder` | `string` | `"Search..."`         | Placeholder text for the search input          |
+| `emptyText`   | `string` | `"No results found."` | Text to display when no items match the search |
+| `class`       | `string` | -                     | Additional CSS classes for styling             |
 
 ## Usage Examples
 
 ### Basic Select
+
 ```astro
 ---
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/starwind/select";
@@ -119,6 +120,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 ```
 
 ### Different Sizes
+
 ```astro
 ---
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/starwind/select";
@@ -159,6 +161,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 ```
 
 ### With Position Control
+
 ```astro
 ---
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/starwind/select";
@@ -188,6 +191,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 ```
 
 ### Disabled State
+
 ```astro
 ---
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/starwind/select";
@@ -218,6 +222,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 ```
 
 ### With Search (Combobox)
+
 ```astro
 ---
 import { Select, SelectContent, SelectGroup, SelectItem, SelectSearch, SelectTrigger, SelectValue } from "@/components/starwind/select";
@@ -242,6 +247,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectSearch, SelectTri
 ```
 
 ### With Groups and Labels
+
 ```astro
 ---
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/starwind/select";
@@ -269,6 +275,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSepa
 ```
 
 ### Programmatic Control
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";
@@ -333,6 +340,7 @@ import {
 ```
 
 ### Form Integration
+
 ```astro
 ---
 import { Button } from "@/components/starwind/button";

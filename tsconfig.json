@@ -8,11 +8,12 @@
     "dist"
   ],
   "compilerOptions": {
+    "moduleResolution": "bundler",
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*",
+        "src/*"
       ],
       "!svg/*": [
         "src/assets/svg/*"

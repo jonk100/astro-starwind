@@ -10,7 +10,6 @@ const HEADERS = {
   "Notion-Version": "2022-06-28",
 };
 
-
 /**
  * Queries Notion for all version strings already in the database.
  * Handles pagination so large changelogs don't miss anything.
@@ -47,10 +46,15 @@ async function fetchExistingVersions() {
 
 /**
  * Creates a single Notion page row for one changelog entry.
- * @param {{ version: string, date: string, type: string, name: string, notes: string }} entry
+ * @param {{ Version: string, Date: string, Type: string, Name: string, Notes: string[] }} entry
  * @returns {Promise<void>}
  */
 async function createNotionPage(entry) {
+  // Notes is an array in changelog.json — join into a single string for Notion.
+  const notesText = Array.isArray(entry.Notes)
+    ? entry.Notes.map((note) => `• ${note}`).join("\n")
+    : (entry.Notes ?? "");
+
   const res = await fetch("https://api.notion.com/v1/pages", {
     method: "POST",
     headers: HEADERS,
@@ -58,25 +62,25 @@ async function createNotionPage(entry) {
       parent: { database_id: DATABASE_ID },
       properties: {
         Name: {
-          title: [{ text: { content: entry.name } }],
+          title: [{ text: { content: entry.Name } }],
         },
         Version: {
-          rich_text: [{ text: { content: entry.version } }],
+          rich_text: [{ text: { content: entry.Version } }],
         },
         Date: {
-          date: { start: entry.date },
+          date: { start: entry.Date },
         },
         Type: {
-          select: { name: entry.type },
+          select: { name: entry.Type },
         },
         Notes: {
-          rich_text: [{ text: { content: entry.notes ?? "" } }],
+          rich_text: [{ text: { content: notesText } }],
         },
       },
     }),
   });
 
-  if (!res.ok) throw new Error(`Failed to create page for ${entry.version}: ${res.status} ${await res.text()}`);
+  if (!res.ok) throw new Error(`Failed to create page for ${entry.Version}: ${res.status} ${await res.text()}`);
 }
 
 /**
@@ -85,10 +89,22 @@ async function createNotionPage(entry) {
  */
 async function main() {
   const raw = readFileSync("changelog.json", "utf-8");
-  const changelog = JSON.parse(raw);
+  const parsed = JSON.parse(raw);
 
+  // changelog.json is shaped as { versions: [...], unreleased: [] }
+  // so we pull the versions array rather than treating the whole object as an array.
+  if (!parsed.versions || !Array.isArray(parsed.versions)) {
+    throw new Error(
+      `changelog.json must have a "versions" array at the top level. Keys found: ${Object.keys(parsed).join(", ")}`
+    );
+  }
+
+  const changelog = parsed.versions;
   const existing = await fetchExistingVersions();
-  const toCreate = changelog.filter((entry) => !existing.has(entry.version));
+
+  // Property names in changelog.json are PascalCase (Version, Date, Type, Name)
+  // so we match against entry.Version here.
+  const toCreate = changelog.filter((entry) => !existing.has(entry.Version));
 
   if (toCreate.length === 0) {
     console.log("No new changelog entries to sync.");
@@ -99,7 +115,7 @@ async function main() {
 
   for (const entry of toCreate) {
     await createNotionPage(entry);
-    console.log(`  ✓ ${entry.version} — ${entry.name}`);
+    console.log(`  ✓ ${entry.Version} — ${entry.Name}`);
   }
 
   console.log("Done.");
