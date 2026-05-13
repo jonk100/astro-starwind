@@ -19,7 +19,7 @@ const { class: className, user } = Astro.props;
     <DropdownTrigger class="menu-item">
       Blog
     </DropdownTrigger>
-    <DropdownContent class="w-100 flex flex-row">
+    <DropdownContent class="min-w-[12rem] flex flex-col">
       <DropdownItem class="menu-item">
         <a href="/blog">All Posts</a>
       </DropdownItem>
@@ -35,7 +35,7 @@ const { class: className, user } = Astro.props;
     <DropdownTrigger class="menu-item">
       Site
     </DropdownTrigger>
-    <DropdownContent class="w-100 flex flex-row">
+    <DropdownContent class="min-w-[12rem] flex flex-col">
       <DropdownItem as="a" href="/" class="menu-item">Home</DropdownItem>
       <DropdownItem as="a" href="/about" class="menu-item" >About</DropdownItem>
       <DropdownItem as="a" href="/contact" class="menu-item">Contact</DropdownItem>
@@ -45,14 +45,13 @@ const { class: className, user } = Astro.props;
     <DropdownTrigger class="menu-item">
       Tools
     </DropdownTrigger>
-    <DropdownContent class="w-100 flex flex-row">
+    <DropdownContent class="min-w-[12rem] flex flex-col">
       <DropdownItem as="a" href="/habits" class="menu-item">Habit Tracker</DropdownItem>
       <DropdownItem as="a" href="/journal" class="menu-item">Journal</DropdownItem>
       <DropdownItem as="a" href="/meditation" class="menu-item">Meditation Guide</DropdownItem>
     </DropdownContent>
   </Dropdown>
-    <UserNav user={user} class="menu-item" />
-  </Dropdown>
+  <UserNav user={user} class="menu-item" />
 
 
 <script>
@@ -152,8 +151,6 @@ const { class: className, user } = Astro.props;
   .menu-item, .menu-item * {
     @apply w-full my-auto px-4 text-[var(--foreground)] hover:text-[var(--primary-accent)] font-black;
   }
-
-
 
   @keyframes pulse-scale {
     0% { transform: scale(1); }
