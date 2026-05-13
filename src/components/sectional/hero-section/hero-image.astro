@@ -13,12 +13,12 @@ interface Props {
 const { as: Element = 'div', src, alt, width, height, class: className } = Astro.props;
 ---
 
-<Element class={`absolute inset-0 z-0 opacity-40 ${className}`}>
+<Element class={`absolute inset-0 z-0 opacity-20 ${className}`}>
   <Image
     src={src}
     alt={alt}
     width={width}
     height={height}
-    class="h-full w-full object-cover"
+    class="h-full w-full object-cover hero-image"
   />
 </Element>
