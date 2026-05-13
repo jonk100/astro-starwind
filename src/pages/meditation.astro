@@ -1,0 +1,21 @@
+---
+import Layout from '@/layouts/Site.astro';
+
+export const prerender = false;
+
+const title = 'Meditation guide';
+const description = 'Take a short pause and return to your body with a simple guided space.';
+---
+
+<Layout {title} {description}>
+  <section class="mx-auto max-w-prose px-4 py-12">
+    <h1 class="mb-4 text-3xl font-bold text-[var(--foreground)]">{title}</h1>
+    <p class="mb-8 text-lg text-[var(--foreground)]/90">{description}</p>
+    <a
+      href="/app/relax/happy-place"
+      class="inline-flex rounded-md bg-[var(--primary-accent)] px-4 py-2 font-semibold text-white no-underline transition-opacity hover:opacity-90"
+    >
+      Go to Happy Place
+    </a>
+  </section>
+</Layout>

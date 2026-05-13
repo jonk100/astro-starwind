@@ -1,0 +1,25 @@
+---
+import Layout from '@/layouts/Site.astro';
+
+export const prerender = false;
+
+const title = 'Journal';
+const description =
+  'Reflect in writing—small notes add up to clearer thinking and steadier moods.';
+---
+
+<Layout {title} {description}>
+  <section class="mx-auto max-w-prose px-4 py-12">
+    <h1 class="mb-4 text-3xl font-bold text-[var(--foreground)]">{title}</h1>
+    <p class="mb-6 text-lg text-[var(--foreground)]/90">{description}</p>
+    <p class="mb-8 text-[var(--foreground)]/80">
+      A dedicated journal app is on the way. In the meantime, explore ideas and prompts on the blog.
+    </p>
+    <a
+      href="/blog"
+      class="inline-flex rounded-md border border-[var(--border)] px-4 py-2 font-semibold text-[var(--foreground)] no-underline transition-colors hover:bg-[var(--accent)]"
+    >
+      Browse the blog
+    </a>
+  </section>
+</Layout>
