@@ -1,0 +1,67 @@
+---
+import Center from '@/components/layout/Center.astro';
+import PricingCard from './PricingCard.astro';
+import ScrollReveal from '@/components/layout/ScrollReveal.astro';
+
+interface Props {
+  heading: string;
+  subheading: string;
+  plans: Array<{
+    title: string;
+    price: string;
+    period?: string;
+    features: string[];
+    highlighted?: boolean;
+    ctaText?: string;
+  }>;
+  class?: string;
+}
+
+const { heading, subheading, plans, class: className = '' } = Astro.props;
+
+const schemes = ['light', 'dark', 'primary'] as const;
+---
+
+<section class={`py-10 w-full bg-amber-200 h-100vh h-full ${className}`}>
+  <div class="mx-0">
+    <div class="text-center my-6 py-6">
+      <h2 class="text-4xl md:text-5xl font-bold my-4 text-stone-900 dark:text-stone-50">
+        {heading}
+      </h2>
+      <p class="text-3xl font-medium text-red-500 dark:text-stone-400 m-auto max-w-3xl my-4">
+        {subheading}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:gap-16 md:gap-4 padding">
+      {plans.map((plan, i) => (
+        <ScrollReveal>
+          <PricingCard
+            title={plan.title}
+            price={plan.price}
+            period={plan.period}
+            features={plan.features}
+            highlighted={plan.highlighted}
+            ctaText={plan.ctaText}
+            scheme={schemes[i % schemes.length]}
+            class="min-w-[280px] max-w-[320px]"
+          />
+        </ScrollReveal>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .scroll-reveal:nth-child(1) {
+    transition-delay: 50ms;
+  }
+
+  .scroll-reveal:nth-child(2) {
+    transition-delay: 150ms;
+  }
+
+  .scroll-reveal:nth-child(3) {
+    transition-delay: 250ms;
+  }
+</style>

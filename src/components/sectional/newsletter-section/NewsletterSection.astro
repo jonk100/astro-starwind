@@ -1,0 +1,84 @@
+---
+import ScrollReveal from '@/components/layout/ScrollReveal.astro';
+
+interface Props {
+  heading: string;
+  subheading?: string;
+  buttonText?: string;
+  disclaimer?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  scheme?: 'light' | 'dark';
+  class?: string;
+}
+
+const { 
+  heading, 
+  subheading = '', 
+  buttonText = 'Sign up',
+  disclaimer = 'By signing up, you agree to our Terms and Conditions.',
+  imageUrl,
+  imageAlt = 'Newsletter image',
+  scheme = 'light',
+  class: className = '' 
+} = Astro.props;
+
+const schemeClasses: Record<string, string> = {
+  light: 'bg-white text-stone-900',
+  dark: 'bg-stone-800 text-stone-100',
+};
+
+const schemeClass = schemeClasses[scheme] ?? schemeClasses.light;
+const inputScheme = scheme === 'dark' ? 'bg-stone-700 text-stone-100 border-stone-600' : 'bg-stone-100 text-stone-900 border-stone-300';
+const buttonScheme = scheme === 'dark' ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-stone-900 text-white hover:bg-stone-800';
+---
+
+<section class={`py-20 ${schemeClass} ${className}`}>
+  <div class="max-w-6xl mx-auto px-6">
+    <div class={`flex flex-col md:flex-row items-center gap-8 ${imageUrl ? 'md:gap-12' : ''}`}>
+      <ScrollReveal axis="x" distance="-40px">
+        <div class={`flex-1 ${imageUrl ? 'md:w-1/2' : 'w-full text-center'}`}>
+          <h2 class="text-4xl md:text-5xl font-bold mb-4">
+            {heading}
+          </h2>
+          {subheading && (
+            <p class="text-lg opacity-75 mb-8">
+              {subheading}
+            </p>
+          )}
+          
+          <form class={`flex flex-col sm:flex-row gap-4 ${imageUrl ? '' : 'max-w-md mx-auto'}`}>
+            <input 
+              type="email" 
+              placeholder="Enter your email"
+              class={`flex-1 px-4 py-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-red-500 ${inputScheme}`}
+              required
+            />
+            <button 
+              type="submit"
+              class={`px-6 py-3 rounded-lg font-bold transition-all duration-300 hover:scale-105 ${buttonScheme}`}
+            >
+              {buttonText}
+            </button>
+          </form>
+          
+          <p class="text-sm opacity-60 mt-4">
+            {disclaimer}
+          </p>
+        </div>
+      </ScrollReveal>
+      
+      {imageUrl && (
+        <ScrollReveal axis="x" distance="40px" class="md:w-1/2">
+          <div class="relative">
+            <img 
+              src={imageUrl} 
+              alt={imageAlt}
+              class="rounded-2xl shadow-lg w-full h-auto max-w-md"
+            />
+          </div>
+        </ScrollReveal>
+      )}
+    </div>
+  </div>
+</section>

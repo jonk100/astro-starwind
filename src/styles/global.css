@@ -5,6 +5,7 @@
  */
 
  @import "./starwind.css";
+ @import "./animation.css";
  
 
 :root {
@@ -102,7 +103,7 @@ body {
 	margin: 0;
 	padding: 0;
 	text-align: left;
-	min-height: 100vh;
+	min-height: 95vh;
 	display: flex;
 	flex-direction: column;
 	background: linear-gradient(to bottom, var(--purple-5), var(--purple3)) no-repeat;

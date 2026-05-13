@@ -2,7 +2,13 @@
 import Layout from '@/layouts/Site.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { HeroSection } from '@/components/sectional/hero-section';
-import Stack from '@/components/layout/Stack.astro';
+import FeaturesSection from '@/components/sectional/features-section/FeaturesSection.astro';
+// import BlogSectionWide from '@/components/sectional/BlogSectionWide.astro';
+import BlogSectionWider from '@/components/sectional/blog-section-wide/BlogSectionWider.astro';
+import TestimonialsSection from '@/components/sectional/testimonial-section/TestimonialsSection.astro';
+import PricingSection from '@/components/sectional/pricing-section/PricingSection.astro';
+import NewsletterSection from '@/components/sectional/newsletter-section/NewsletterSection.astro';
+
 export const prerender = false;
 
 ---
@@ -19,8 +25,99 @@ export const prerender = false;
 		height={1920}
 		slot="hero"
 	/>
+	<hr style="box-shadow: 2em;"/>
+	<FeaturesSection
+		heading="Three ways to grow"
+		subheading="Build better habits with our simple, powerful tools"
+		features={[
+			{
+				title: "Focus",
+				phrase: "Watch your habits take shape",
+				description: "Monitor your daily progress with intuitive visualizations that help you stay motivated and on track.",
+				link: "/app/habit/track"
+			},
+			{
+				title: "Growth",
+				phrase: "Write your way to clarity",
+				description: "Journal your thoughts and experiences to gain deeper insights into your patterns and behaviors.",
+				link: "/app/journal/write"
+			},
+			{
+				title: "Breathework",
+				phrase: "Find stillness when you need it",
+				description: "Take mindful breaks with guided breathing exercises designed to reduce stress and improve focus.",
+				link: "/app/relax/happy-place"
+			}
+		]}
+	/>
 
-	<Stack>
-		Hello World!
-	</Stack>
+	<BlogSectionWider />
+	<TestimonialsSection 
+	  heading="Real stories"
+	  subheading="People who have changed their lives with Mindful Habits Studio."
+				testimonials={[
+					{
+						name: "Sarah M.",
+						title: "Product Manager",
+						quote: "I finally understand what's driving my behavior. The journal app helped me see patterns I'd been missing for years."
+					},
+					{
+						name: "John D.",
+						title: "Software Engineer",
+						quote: "The habit tracker made me see what I was actually doing, not what I thought I was doing."
+					},
+					{
+						name: "Emily R.",
+						title: "Marketing Specialist",
+						quote: "Writing in the journal became the thing I looked forward to each night. It settled me."
+					}
+				]}
+	/>
+	<PricingSection 
+	  heading="Simple pricing"
+	  subheading="Choose the plan that fits your journey"
+	  plans={[
+			{
+				title: "Starter",
+				price: "Free",
+				features: [
+					"Basic habit tracking",
+					"Daily journal entries",
+					"5 meditation sessions",
+					"Community access"
+				],
+				ctaText: "Get started"
+			},
+			{
+				title: "Professional",
+				price: "$12",
+				period: "/mo",
+				features: [
+					"Unlimited habit tracking",
+					"Unlimited journal entries",
+					"All meditation sessions",
+					"Advanced analytics",
+					"Priority support"
+				],
+				highlighted: true,
+				ctaText: "Get started"
+			},
+			{
+				title: "Premium",
+				price: "$24",
+				period: "/mo",
+				features: [
+					"Everything in Professional",
+					"1-on-1 coaching session",
+					"Custom habit plans",
+					"API access",
+					"White-label options"
+				],
+				ctaText: "Get started"
+			}
+		]}
+	/>
+
+	<NewsletterSection slot="newsletter" variant="dark" />
+
 </Layout>

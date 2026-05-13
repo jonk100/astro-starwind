@@ -1,0 +1,20 @@
+---
+import { Grid, ScrollReveal } from '@/components/layout';
+import BlogCard from './blog-card.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[]
+  
+}
+
+const { posts } = Astro.props;
+---
+
+<Grid min="20rem" gap="lg">
+  {posts.map((post) => (
+    <ScrollReveal axis="y" distance="60px">
+      <BlogCard post={post} variant="standard" />
+    </ScrollReveal>
+  ))}
+</Grid>

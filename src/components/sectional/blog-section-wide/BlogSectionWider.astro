@@ -1,0 +1,40 @@
+---
+// src/components/sectional/blog-section/BlogSection.astro
+import BlogCard from './blog-card.astro';
+import FeaturedPost from './FeaturedPost.astro';
+import { getCollection } from 'astro:content';
+import { Section, Container, Stack, Grid, Center, ScrollReveal } from '@/components/layout';
+import FullscreenGrid from './FullscreenGrid.astro';
+import { HeroText } from '../hero-section';
+
+
+// Fetch and sort posts by date descending
+const allPosts = (await getCollection('blog'))
+.filter(post => !post.data.draft)
+.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const featuredPost = allPosts[0];
+// Slice from index 1 to 6 to get up to 5 remaining posts
+const remainingPosts = allPosts.slice(1, 9);
+---
+<Center axis="x" class="bg-linear-to-r from-emerald-950 to-gray-950">
+    <Stack gap="lg">
+      <Stack gap="sm" class="text-bigger text-red-200">
+        <HeroText
+          h="Latest Insights"
+          p=""
+          class="bg-linear-to-b from-bg-foreground to-bg-red-950/20 my-0 p-32 w-full h-full text-red-200"
+        />
+        </Stack>
+        {featuredPost && (
+          <ScrollReveal axis="y" distance="40px">
+            <FeaturedPost featuredPost={featuredPost} />
+          </ScrollReveal>
+        )}
+
+        <FullscreenGrid posts={remainingPosts} />
+        <a href="/blog" class="inline-block px-10 py-4 border-2 border-stone-900 dark:border-white text-lg font-black hover:bg-accent hover:border-accent hover:text-white transition-all rounded-2xl transform hover:scale-105">
+          Browse the Archives
+        </a>
+    </Stack>
+  </Center>

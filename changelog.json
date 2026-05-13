@@ -119,6 +119,29 @@
         "Cleaned up component props interfaces and type definitions",
         "testing.........."
       ]
+    },
+    {
+      "Version": "1.7.0",
+      "Date": "2026-05-13",
+      "Type": "feat",
+      "Name": "Enhanced dropdown menu, authentication routes, and UI components",
+      "Notes": [
+        "Refactored dropdown menu component for enhanced accessibility and performance improvements",
+        "Enhanced dropdown menu functionality and styling for better user experience",
+        "Refactored dropdown menu layout for improved styling and usability",
+        "Refactored user navigation component for enhanced usability and styling",
+        "Update header background color for improved visibility",
+        "Update authentication routes for consistency and enhance user navigation",
+        "Refactor authentication routes and improve user navigation",
+        "Fix TypeScript errors in Select, Dropdown, and Image components",
+        "Disable astro-meta-engine builds and update changelog",
+        "Fix tailwind-variants module resolution issue",
+        "Added new layout components: FeaturesSection, ScrollReveal, XList",
+        "Added new sectional components: BlogSectionWide, features-section, newsletter-section, pricing-section, testimonial-section",
+        "Updated habit tracker page structure",
+        "Added animation.css for enhanced UI animations",
+        "Added .prettierrc for consistent code formatting"
+      ]
     }
   ],
   "unreleased": []

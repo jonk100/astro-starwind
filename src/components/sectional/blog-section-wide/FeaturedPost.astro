@@ -1,0 +1,102 @@
+---
+import Image from '@/components/starwind/image'; // Adjusted to match your hero-image pattern
+import { Cluster, Stack, ScrollReveal } from '@/components/layout';
+import { HeroText } from '../hero-section';
+import { Button } from '@/components/starwind/button';
+import type { CollectionEntry } from 'astro:content';
+import type { HTMLTag, Polymorphic } from 'astro/types';
+import { getTagColor } from '@/lib/utils';
+
+interface Props extends Polymorphic<{ as: HTMLTag }> {
+  featuredPost: CollectionEntry<'blog'>;
+  class?: string;
+}
+
+const { as: Element = 'div', featuredPost, class: classList = '', ...rest } = Astro.props;
+
+const tags = featuredPost.data.tags?.slice(0, 8) || [];
+const tagColors = tags.map((tag) => getTagColor(tag));
+const categories = featuredPost.data.categories?.slice(0, 3) || [];
+const formattedDate = new Date(featuredPost.data.date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<Element
+  class:list={['relative min-h-[70vh] flex items-center justify-center overflow-hidden mx-4 my-8', classList]}
+  {...rest}
+>
+  {featuredPost.data.image && (
+    <div class="absolute inset-0 z-0">
+      <Cluster gap="lg" align="center" class="text-secondary/80 uppercase tracking-widest text-xs font-bold my-0 align-center p-0 top-o relative">
+          {categories.map((cat: string) => <span class="text-rose-300 border-bottom border-white">{cat}</span><span>.</span>)}
+          <span class="opacity-80"></span>
+          <span>{formattedDate}</span>
+        </Cluster>
+      <Image
+        src={featuredPost.data.image}
+        alt={featuredPost.data.title}
+        width={1920}
+        height={1080}
+        class="h-full w-full object-overhang"
+      />
+    </div>
+  )}
+  <div class="absolute inset-0 z-1" />
+
+  <div class="relative z-10 w-full py-20">
+    <ScrollReveal>
+      <Stack gap="lg" class="text-center">
+        
+        
+        <Stack gap="lg" class="w-full box-shadow-lg box-shadow-color-black/20" style="font-weight: bold;">
+        <HeroText
+          h={featuredPost.data.title}
+          p={featuredPost.data.description || ''}
+          tone="onImage" 
+          large
+        />
+
+        <Cluster gap="md" align="center">
+          {tags.map((tag: string) => (
+            <a href={`/blog?tag=${tag}`} class="no-underline">
+              <Button
+                size="sm"
+                variant="outline"
+                class="hover:scale-105 transition-transform"
+                style={`border-color: ${getTagColor(tag)}; color: white; background: rgba(0,0,0,0.3);`}
+              >
+                #{tag}
+              </Button>
+            </a>
+          ))}
+        </Cluster>
+
+        <div class="pt-8">
+           <Button href={`/blog/${featuredPost.id}`} size="lg">
+            Read Full Story
+          </Button>
+        </div>
+        </Stack>
+      </Stack>
+    </ScrollReveal>
+  </div>
+</Element>
+
+<style>
+  img {
+    opacity: 0.25;
+  }
+  /* Optional: Adds the "floating" vibe from your main HeroSection */
+  section {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  img {
+    background-color: rgba(0, 0, 0, 0.5);
+    
+  }
+
+</style>

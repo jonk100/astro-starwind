@@ -1,0 +1,112 @@
+---
+/**
+ * ScrollReveal
+ * Reveals content when entering the viewport.
+ *
+ * @param {HTMLTag} [as='div']
+ * HTML element to render.
+ *
+ * @param {'x' | 'y'} [axis='y']
+ * Animation axis.
+ *
+ * @param {number} [distance=40]
+ * Distance in pixels the element starts offset from.
+ *
+ * @param {string} [class='']
+ * Additional classes.
+ */
+
+import type { HTMLTag } from 'astro/types';
+
+interface Props {
+  as?: HTMLTag;
+  axis?: 'x' | 'y';
+  distance?: number;
+  class?: string;
+}
+
+const {
+  as: Element = 'div',
+  axis = 'y',
+  distance = 40,
+  class: className = '',
+} = Astro.props;
+
+/**
+ * Build initial transform string.
+ */
+const initialTransform =
+  axis === 'x'
+    ? `translateX(${distance}px) scale(0.98)`
+    : `translateY(${distance}px) scale(0.98)`;
+---
+
+<Element
+  class={`scroll-reveal ${className}`}
+  style={`--scroll-reveal-transform: ${initialTransform};`}
+>
+  <slot />
+</Element>
+
+<script>
+  /**
+   * Observe scroll reveal elements.
+   */
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        } else {
+          entry.target.classList.remove('is-visible');
+        }
+      }
+    },
+    {
+      threshold: 0.15,
+    }
+  );
+
+  /**
+   * Attach observer to all reveal elements.
+   */
+  document
+    .querySelectorAll('.scroll-reveal')
+    .forEach((element) => {
+      observer.observe(element);
+    });
+</script>
+
+<style>
+  .scroll-reveal {
+    opacity: 0;
+
+    transform: var(--scroll-reveal-transform);
+
+    transition:
+      opacity 0.8s ease,
+      transform 0.8s ease;
+
+    will-change:
+      opacity,
+      transform;
+  }
+
+  .scroll-reveal.is-visible {
+    opacity: 1;
+
+    transform:
+      translate3d(0, 0, 0)
+      scale(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-reveal {
+      opacity: 1;
+
+      transform: none;
+
+      transition: none;
+    }
+  }
+</style>

@@ -1,6 +1,5 @@
 ---
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from "@/components/starwind/dropdown";
-import { Button } from "@/components/starwind/button";
 import type { HTMLAttributes } from "astro/types";
 import UserNav from "./UserNav.astro";
 
@@ -8,6 +7,7 @@ type Props = HTMLAttributes<"div"> & {
   user?: {
     email?: string;
     name?: string;
+    class?: string;
   } | null;
 }
 
@@ -19,7 +19,7 @@ const { class: className, user } = Astro.props;
     <DropdownTrigger class="menu-item">
       Blog
     </DropdownTrigger>
-    <DropdownContent class="min-w-[12rem] flex flex-col">
+    <DropdownContent class="min-w-48 flex flex-col">
       <DropdownItem class="menu-item">
         <a href="/blog">All Posts</a>
       </DropdownItem>
@@ -35,7 +35,7 @@ const { class: className, user } = Astro.props;
     <DropdownTrigger class="menu-item">
       Site
     </DropdownTrigger>
-    <DropdownContent class="min-w-[12rem] flex flex-col">
+    <DropdownContent class="min-w-48 flex flex-col">
       <DropdownItem as="a" href="/" class="menu-item">Home</DropdownItem>
       <DropdownItem as="a" href="/about" class="menu-item" >About</DropdownItem>
       <DropdownItem as="a" href="/contact" class="menu-item">Contact</DropdownItem>
@@ -45,7 +45,7 @@ const { class: className, user } = Astro.props;
     <DropdownTrigger class="menu-item">
       Tools
     </DropdownTrigger>
-    <DropdownContent class="min-w-[12rem] flex flex-col">
+    <DropdownContent class="min-w-48 flex flex-col">
       <DropdownItem as="a" href="/habits" class="menu-item">Habit Tracker</DropdownItem>
       <DropdownItem as="a" href="/journal" class="menu-item">Journal</DropdownItem>
       <DropdownItem as="a" href="/meditation" class="menu-item">Meditation Guide</DropdownItem>
@@ -149,7 +149,7 @@ const { class: className, user } = Astro.props;
   @reference "@/styles/global.css";
 
   .menu-item, .menu-item * {
-    @apply w-full my-auto px-4 text-[var(--foreground)] hover:text-[var(--primary-accent)] font-black;
+    @apply w-full my-auto px-4 text-foreground hover:text-primary-accent font-black;
   }
 
   @keyframes pulse-scale {

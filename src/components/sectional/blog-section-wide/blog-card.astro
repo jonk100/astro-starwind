@@ -1,0 +1,89 @@
+---
+// src/components/sectional/blog-section/BlogCard.astro
+import { Image } from 'astro:assets';
+import { Stack, Cluster } from '@/components/layout';
+import { Badge } from '@/components/starwind/badge';
+import type { CollectionEntry } from 'astro:content';
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+interface Props extends Polymorphic<{ as: HTMLTag }> {
+  post: CollectionEntry<'blog'>;
+  variant?: 'featured' | 'standard';
+}
+
+const { post, variant = 'standard', as: Element = 'a' } = Astro.props;
+const { title, description, date, categories, image } = post.data;
+
+const formattedDate = new Date(date).toLocaleDateString('en-US', {
+  year: 'numeric', month: 'short', day: 'numeric'
+});
+
+const isFeatured = variant === 'featured';
+---
+
+<Element href={`/blog/${post.id}`} 
+  class:list={[
+    "group bg-secondary dark:bg-stone-900 border-2 border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden hover:border-accent transition-all duration-500",
+    isFeatured ? "md:flex md:flex-row min-h-[400px]" : "flex flex-col h-full"
+  ]}
+>
+  {/* Image Container */}
+  <div 
+    class:list={[
+      "overflow-hidden bg-stone-100 dark:bg-stone-800 shrink-0",
+      isFeatured ? "md:w-1/2 h-72 md:h-auto border-b-2 md:border-b-0 md:border-r-2" : "h-64 border-b-2"
+    ]}
+  >
+    {image && (
+      <Image 
+        src={image} 
+        alt={title} 
+        width={800}
+        height={600}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+      />
+    )}
+  </div>
+
+  {/* Content Body */}
+  <div class="p-8 flex flex-col grow">
+    <Stack gap="lg" class="grow">
+      
+      {/* Meta: Category and Date */}
+      <Cluster gap="sm" align="center">
+        {categories?.[0] && (
+          <Badge variant="outline" class="text-xs font-black uppercase tracking-widest px-2 py-1">
+            {categories[0]}
+          </Badge>
+        )}
+        <span class="text-sm text-stone-500 font-medium">
+          {formattedDate}
+        </span>
+      </Cluster>
+
+      {/* Text Content */}
+      <Stack gap="sm">
+        <h3 class:list={[
+          "font-bold leading-tight group-hover:text-accent transition-colors",
+          isFeatured ? "text-3xl md:text-5xl" : "text-2xl"
+        ]}>
+          {title}
+        </h3>
+        <p class="text-stone-600 dark:text-stone-400 line-clamp-3 text-lg leading-relaxed">
+          {description}
+        </p>
+      </Stack>
+      
+      {/* Footer Action */}
+      <div class="mt-auto pt-4">
+        <div class="inline-flex items-center font-black text-stone-900 dark:text-white group-hover:translate-x-4 transition-all duration-500">
+          Read Story 
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </div>
+      </div>
+
+    </Stack>
+  </div>
+</Element>

@@ -41,13 +41,17 @@ const onImage = tone === 'onImage';
       : 'text-xl lh-1.2 text-slate-100 shadow-lg font-bold',
       !onImage && 'text-muted',
     ]}
-    style="padding: 0 2rem; margin: 2rem auto;"
+    style="padding: 0; margin: 2rem auto;"
   >
     {p}
   </p>
 </Element>
 
 <style>
+  hr {
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+  }
   p {
     animation: fadeIn 2s ease-in;
   }

@@ -3,3 +3,4 @@
 
 export const SITE_TITLE = 're:MindMatters';
 export const SITE_DESCRIPTION = 'We write quality, forward thinking content with strictly postive vibes!';
+
