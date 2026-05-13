@@ -18,12 +18,14 @@
  *   2. Supabase dashboard → Auth → URL Configuration → Site URL:
  *      Set to http://localhost:4321 for dev.
  *
- * If the token is missing or invalid, we redirect to /login with an
+ * If the token is missing or invalid, we redirect to /auth/login with an
  * error param so the user sees a clear message rather than a blank page.
  */
 
 import { createClient } from "../../lib/supabase";
 import type { EmailOtpType } from "@supabase/supabase-js";
+
+export const prerender = false;
 
 const supabase = createClient(Astro);
 
@@ -33,7 +35,7 @@ const type       = url.searchParams.get("type") as EmailOtpType | null;
 
 if (!tokenHash || !type) {
   return Astro.redirect(
-    "/login?error=" + encodeURIComponent("Invalid confirmation link. Please request a new one.")
+    "/auth/login?error=" + encodeURIComponent("Invalid confirmation link. Please request a new one.")
   );
 }
 
@@ -41,7 +43,7 @@ const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
 
 if (error) {
   return Astro.redirect(
-    "/login?error=" + encodeURIComponent(
+    "/auth/login?error=" + encodeURIComponent(
       error.message.includes("expired")
         ? "This confirmation link has expired. Please sign up again."
         : "Email confirmation failed. Please try again."

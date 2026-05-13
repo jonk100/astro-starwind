@@ -1,0 +1,44 @@
+---
+import HeroText from './hero-text.astro';
+import HeroImage from './hero-image.astro';
+import HeroAction from './hero-action.astro';
+import type { HTMLAttributes } from 'astro/types';
+import Center from '@/components/layout/Center.astro';
+
+interface Props extends HTMLAttributes<'section'> {
+  h: string;
+  p: string;
+  style?: string;
+  class?: string;
+  textClass?: string;
+  as?: keyof HTMLElementTagNameMap;
+  imgSrc?: string;
+  imgAlt?: string;
+  width?: number;
+  height?: number;
+  action?: 'button' | 'search' | 'link';
+}
+
+const { h, p, style, class: className = '', textClass = '', as: Element = 'section', imgSrc, imgAlt = '', width = 0, height = 0, action } = Astro.props;
+---
+{imgSrc ? (
+  <Element
+    class={`${className} relative flex w-full min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 py-12 hero-section`}
+    style={style}
+  >
+    <HeroImage src={imgSrc} alt={imgAlt} width={width} height={height} />
+    <div
+      class="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/55 via-black/40 to-black/60"
+      aria-hidden="true"
+    />
+    <HeroText h={h} p={p} class={`relative z-10 w-3/4 max-w-3xl ${textClass}`} tone="onImage" />
+    {action && <HeroAction type={action} />}
+  </Element>
+) : (
+  <Center axis="y" class="h-[90vh] w-full">
+    <Element class={`${className} mx-auto section-container`} style={style}>
+      <HeroText h={h} p={p} class={textClass} large />
+      {action && <HeroAction type={action} />}
+    </Element>
+  </Center>
+)}

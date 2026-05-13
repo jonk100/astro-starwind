@@ -4,18 +4,20 @@ import User from "@tabler/icons/outline/user.svg";
 import Settings from "@tabler/icons/outline/settings.svg";
 import LogOut from "@tabler/icons/outline/logout.svg";
 
-interface Props {
+import type { HTMLAttributes } from "astro/types";
+
+type Props = HTMLAttributes<"div"> & {
   user?: {
     email?: string;
     name?: string;
   } | null;
 }
 
-const { user } = Astro.props;
+const { class: className, user } = Astro.props;
 ---
 
 {user ? (
-  <nav class="user-nav" role="navigation" aria-label="User menu">
+  <nav class:list={["user-nav", className]} role="navigation" aria-label="User menu">
     <div class="user-nav-trigger">
       <Button variant="ghost" size="sm" class="user-nav-button">
         <User class="user-nav-icon" />
@@ -46,15 +48,15 @@ const { user } = Astro.props;
     </div>
   </nav>
 ) : (
-  <nav class="user-nav" role="navigation" aria-label="Authentication">
-    <a href="/auth/login" class="user-nav-login">
+  <nav class:list={["user-nav", className]} role="navigation" aria-label="Authentication">
+    <a href={`/auth/login?next=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`} class="user-nav-login" style="white-space: nowrap;">
       <User class="user-nav-icon" />
       <span>Sign in</span>
     </a>
   </nav>
 )}
 
-<script>
+<!-- <script>
   class UserNavHandler {
     private trigger: HTMLElement | null;
     private dropdown: HTMLElement | null;
@@ -143,7 +145,7 @@ const { user } = Astro.props;
       new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
     }
   });
-</script>
+</script> -->
 
 <style>
   .user-nav {
@@ -161,12 +163,17 @@ const { user } = Astro.props;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
+    text-decoration: none;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
     border-radius: 0.375rem;
     transition: all 0.15s ease;
   }
 
   .user-nav-button:hover {
-    background-color: var(--muted);
+    color: var(--primary-accent);
+    font-weight: 600;
   }
 
   .user-nav-icon {
@@ -175,17 +182,11 @@ const { user } = Astro.props;
     flex-shrink: 0;
   }
 
-  .user-nav-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--foreground);
-  }
-
   .user-nav-dropdown {
     position: absolute;
     top: 100%;
     right: 0;
-    min-width: 16rem;
+    /* min-width: 16rem; */
     background-color: var(--background);
     border: 1px solid var(--border);
     border-radius: 0.5rem;
@@ -206,7 +207,7 @@ const { user } = Astro.props;
   }
 
   .user-nav-email {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--foreground);
   }
@@ -214,6 +215,7 @@ const { user } = Astro.props;
   .user-nav-fullname {
     font-size: 0.75rem;
     color: var(--muted-foreground);
+    font-weight: 400;
   }
 
   .user-nav-menu {
@@ -227,14 +229,16 @@ const { user } = Astro.props;
     padding: 0.75rem 1rem;
     text-decoration: none;
     color: var(--foreground);
+    /* font-size: 0.875rem; */
+    font-weight: 500;
+    border-radius: 0.375rem;
     transition: all 0.15s ease;
-    border-radius: 0.25rem;
-  margin: 0.25rem 0;
+    margin: 0.25rem 0;
   }
 
   .user-nav-item:hover {
-    background-color: var(--muted);
-    color: var(--foreground);
+    color: var(--primary-accent);
+    font-weight: 600;
   }
 
   .user-nav-item-icon {
@@ -250,13 +254,15 @@ const { user } = Astro.props;
     padding: 0.5rem 1rem;
     text-decoration: none;
     color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
     border-radius: 0.375rem;
     transition: all 0.15s ease;
+    white-space: nowrap;
   }
 
   .user-nav-login:hover {
-    background-color: var(--muted);
-    color: var(--foreground);
+    /* color: var(--primary-accent); */
   }
 
   .user-nav-logout-form {
@@ -264,6 +270,7 @@ const { user } = Astro.props;
     padding: 0;
     border: none;
     background: none;
+    font-size: 1rem;
   }
 
   .user-nav-logout-button {
@@ -273,21 +280,22 @@ const { user } = Astro.props;
     padding: 0.75rem 1rem;
     text-decoration: none;
     color: var(--foreground);
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
     transition: all 0.15s ease;
-    border-radius: 0.25rem;
     margin: 0.25rem 0;
     background: none;
     border: none;
     font-family: inherit;
-    font-size: inherit;
     text-align: left;
-    width: 100%;
+    /* width: 100%; */
     cursor: pointer;
   }
 
   .user-nav-logout-button:hover {
-    background-color: var(--muted);
-    color: var(--foreground);
+    color: var(--primary-accent);
+    font-weight: bold;
   }
 
   @media (max-width: 768px) {

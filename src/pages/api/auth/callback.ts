@@ -14,6 +14,14 @@ import { createClient } from "@/lib/supabase";
 
 export const prerender = false;
 
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return "/";
+  }
+}
+
 /**
  * Exchanges the OAuth authorisation code for a Supabase session.
  *
@@ -22,11 +30,12 @@ export const prerender = false;
  */
 export async function GET(context: APIContext): Promise<Response> {
   const code = context.url.searchParams.get("code");
+  const next = safeDecodeURIComponent(context.url.searchParams.get("next") || "/");
 
   if (!code) {
     return Response.redirect(
       new URL(
-        "/login?error=" + encodeURIComponent("OAuth sign-in was cancelled or failed."),
+        "/auth/login?error=" + encodeURIComponent("OAuth sign-in was cancelled or failed."),
         context.url.origin
       ),
       302
@@ -45,8 +54,8 @@ export async function GET(context: APIContext): Promise<Response> {
   headers.set(
     "Location",
     error
-      ? "/login?error=" + encodeURIComponent(error.message)
-      : "/"
+      ? "/auth/login?error=" + encodeURIComponent(error.message)
+      : next
   );
 
   return new Response(null, { status: 302, headers });

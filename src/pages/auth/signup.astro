@@ -24,14 +24,19 @@ import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupButton } from "
 import { Button } from "@/components/starwind/button";
 import Mail from "@tabler/icons/outline/mail.svg";
 
+export const prerender = false;
+
+
 /** Redirect away if already signed in. */
 const supabase = createClient(Astro);
 
 const { data: { user } } = await supabase.auth.getUser();
 if (user) return Astro.redirect("/");
+
+
 ---
 
-<BaseLayout>
+<BaseLayout title="Sign up — Writty">
   <main class="auth-root">
     <div class="auth-shell">
 
@@ -172,7 +177,7 @@ if (user) return Astro.redirect("/");
       </form>
 
       <p class="auth-nudge">
-        Already have an account? <a href="/login">Sign in</a>
+        Already have an account? <a href="/auth/login">Sign in</a>
       </p>
 
     </div>

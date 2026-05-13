@@ -8,6 +8,8 @@
 import type { APIContext } from "astro";
 import { createClient } from "@/lib/supabase";
 
+export const prerender = false;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Valid OAuth providers supported by Supabase. */
@@ -41,7 +43,6 @@ function redirectWithCookies(
 
 // ─── POST /api/auth/login — email + password ──────────────────────────────────
 
-export const prerender = false;
 
 /**
  * Handles form submission from /login.
@@ -60,22 +61,24 @@ export async function POST(context: APIContext): Promise<Response> {
 
   let email: string;
   let password: string;
+  let next: string;
 
   try {
     const body = await context.request.formData();
     email    = (body.get("email")    as string | null)?.trim() ?? "";
     password = (body.get("password") as string | null)?.trim() ?? "";
+    next     = (body.get("next")     as string | null)?.trim() ?? "/";
   } catch {
     return redirectWithCookies(
       context,
-      "/login?error=" + encodeURIComponent("Could not read form data. Please try again.")
+      "/auth/login?error=" + encodeURIComponent("Could not read form data. Please try again.")
     );
   }
 
   if (!email || !password) {
     return redirectWithCookies(
       context,
-      "/login?error=" + encodeURIComponent("Email and password are required.")
+      "/auth/login?error=" + encodeURIComponent("Email and password are required.")
     );
   }
 
@@ -84,11 +87,11 @@ export async function POST(context: APIContext): Promise<Response> {
   if (error) {
     return redirectWithCookies(
       context,
-      "/login?error=" + encodeURIComponent(error.message)
+      "/auth/login?error=" + encodeURIComponent(error.message)
     );
   }
 
-  return redirectWithCookies(context, "/");
+  return redirectWithCookies(context, next);
 }
 
 // ─── GET /api/auth/oauth — OAuth provider initiation ─────────────────────────
@@ -109,11 +112,12 @@ export async function GET(context: APIContext): Promise<Response> {
   if (!provider || !validProviders.includes(provider)) {
     return redirectWithCookies(
       context,
-      "/login?error=" + encodeURIComponent("Unknown OAuth provider.")
+      "/auth/login?error=" + encodeURIComponent("Unknown OAuth provider.")
     );
   }
 
-  const redirectTo = new URL("/api/auth/callback", context.url.origin).toString();
+  const nextParam = context.url.searchParams.get("next") || "/";
+  const redirectTo = new URL(`/api/auth/callback?next=${encodeURIComponent(nextParam)}`, context.url.origin).toString();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
@@ -123,7 +127,7 @@ export async function GET(context: APIContext): Promise<Response> {
   if (error || !data.url) {
     return redirectWithCookies(
       context,
-      "/login?error=" + encodeURIComponent(
+      "/auth/login?error=" + encodeURIComponent(
         error?.message ?? "OAuth initialisation failed. Please try again."
       )
     );

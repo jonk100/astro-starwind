@@ -25,6 +25,8 @@ import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupButton } from "
 import { Button } from "@/components/starwind/button";
 import Mail from "@tabler/icons/outline/mail.svg";
 
+export const prerender = false;
+
 /** Redirect away if already signed in. */
 const supabase = createClient(Astro);
 
@@ -36,7 +38,13 @@ if (user) return Astro.redirect("/");
  * Middleware sets this when redirecting an unauthenticated request.
  * e.g. /login?next=/songs/my-song
  */
-const next = Astro.url.searchParams.get("next") ?? "/";
+const nextParam = Astro.url.searchParams.get("next") ?? "/";
+let next = "/";
+try {
+  next = decodeURIComponent(nextParam);
+} catch {
+  next = "/";
+}
 ---
 
 <BaseLayout title="Sign in — Writty">
@@ -161,7 +169,7 @@ const next = Astro.url.searchParams.get("next") ?? "/";
       </a>
 
       <p class="auth-nudge">
-        No account? <a href="/signup">Create one</a>
+        No account? <a href="/auth/signup">Create one</a>
       </p>
 
     </div>

@@ -1,0 +1,24 @@
+---
+import Image from '@/components/starwind/image';
+
+interface Props {
+  as?: keyof HTMLElementTagNameMap;
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  class?: string;
+}
+
+const { as: Element = 'div', src, alt, width, height, class: className } = Astro.props;
+---
+
+<Element class={`absolute inset-0 z-0 opacity-40 ${className}`}>
+  <Image
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    class="h-full w-full object-cover"
+  />
+</Element>

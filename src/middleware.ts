@@ -17,12 +17,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // 3. Define your protected/public routes
   const isProtectedPath = url.pathname.startsWith("/app");
-  const isAuthPath = ["/login", "/signup"].includes(url.pathname);
+  const isAuthPath = ["/login", "/signup", "/auth/login", "/auth/signup"].includes(
+    url.pathname
+  );
 
   // 4. Guard Logic
   if (isProtectedPath && !user) {
     // Save the intended destination to redirect back after login
-    return redirect(`/login?next=${url.pathname}`);
+    const dest = `${url.pathname}${url.search}`;
+    return redirect(`/auth/login?next=${encodeURIComponent(dest)}`);
   }
 
   if (isAuthPath && user) {

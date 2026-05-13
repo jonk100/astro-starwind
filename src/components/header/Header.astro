@@ -1,9 +1,7 @@
 ---
-import HeaderMenu from './HeaderMenu.astro';
 import HeaderLogo from './HeaderLogo.astro';
-import HeaderIcons from './HeaderIcons.astro';
-import UserNav from './UserNav.astro';
 import { GitHubIcon } from '../icons';
+import Menu from './Menu.astro';
 
 interface Props {
   user?: {
@@ -15,27 +13,28 @@ interface Props {
 const { user } = Astro.props;
 ---
 
-<header class="bg-teal-400 sticky top-0 z-50">
+<header class="sticky top-0 z-50">
   <HeaderLogo />
-  <HeaderMenu />
   <div class="header-right">
-    <UserNav user={user} />
+    <!-- <UserNav user={user} /> -->
     <!-- GitHub icon next to sign-in menu -->
-    <a href="https://github.com/jonk100/astro-starwind" target="_blank" class="icon-link github-nav">
+    <Menu user={user} />
+    <a href="https://github.com/jonk100/astro-starwind" target="_blank" class="nav-link github-nav">
       <span class="sr-only">Go to your GitHub repo</span>
       <GitHubIcon size="xl" color="" />
     </a>
   </div>
 </header>
 
+
 <style>
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .5rem 2rem;
+    padding: 1rem 2rem;
     margin: auto;
-    /* background-color: var(--gray-900); */
+    background-color: lab(56.32% -18.97 7.18 / 0.664);
     box-shadow: var(--shadow-sm);
     border-bottom: 1px solid var(--border);
   }
@@ -46,10 +45,27 @@ const { user } = Astro.props;
     gap: 1rem;
   }
 
+  /* .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: var(--foreground);
+    font-size: 1.25rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+  } */
+
+  /* .nav-link:hover {
+    color: var(--primary-accent);
+    font-weight: 600;
+  } */
+
   .github-nav {
     display: flex;
     align-items: center;
-    padding: 0 1rem;
+    padding: 0 .5rem;
     color: var(--color-primary-300);
     text-decoration: none;
     transition: all 0.2s ease;
@@ -59,7 +75,33 @@ const { user } = Astro.props;
     color: var(--primary-accent);
     background-color: transparent;
     transform: scale(1.125);
+    animation: pulse 3s ease-in-out infinite;
   }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.125); }
+    100% { transform: scale(1); }
+  }
+
+  /* .user-nav .user-nav-button,
+  .user-nav .user-nav-item,
+  .user-nav .user-nav-login,
+  .user-nav .user-nav-logout-button {
+    font-size: 1.25rem !important;
+    padding: 0.5rem 0.75rem !important;
+    margin: 0.25rem 0 !important;
+    border-radius: 0.375rem !important;
+    transition: all 0.15s ease !important;
+  }
+
+  .user-nav .user-nav-button:hover,
+  .user-nav .user-nav-item:hover,
+  .user-nav .user-nav-login:hover,
+  .user-nav .user-nav-logout-button:hover {
+    color: var(--primary-accent) !important;
+    font-weight: 600 !important;
+  } */
   
   @media (max-width: 768px) {
     header {
