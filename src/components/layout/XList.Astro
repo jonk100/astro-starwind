@@ -1,0 +1,28 @@
+---
+/**
+ * HorizontalListSection
+ * Single-row or wrapping horizontal content layout.
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Cluster from './Cluster.astro';
+
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Section size="md">
+  <ContentWidth>
+    <Cluster gap="md" align="center">
+
+      {title && <h2>{title}</h2>}
+
+      <slot />
+
+    </Cluster>
+  </ContentWidth>
+</Section>

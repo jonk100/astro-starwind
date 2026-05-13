@@ -1,0 +1,70 @@
+---
+/**
+ * Section
+ * Vertical rhythm wrapper for page-level spacing.
+ *
+ * Features:
+ * - Semantic element rendering via `as`
+ * - Tokenized spacing system
+ * - CSS variable-driven spacing
+ * - Attribute passthrough
+ */
+
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * Section spacing tokens.
+ */
+type SectionSize = 'sm' | 'md' | 'lg';
+
+/**
+ * Props for Section.
+ */
+interface Props extends HTMLAttributes<'section'> {
+  /**
+   * HTML element to render.
+   * @default 'section'
+   */
+  as?: keyof HTMLElementTagNameMap;
+
+  /**
+   * Vertical padding size.
+   * @default 'md'
+   */
+  size?: SectionSize;
+}
+
+const {
+  as: Element = 'section',
+  size = 'md',
+  class: className = '',
+  style = '',
+  ...attrs
+} = Astro.props;
+
+/**
+ * Spacing scale.
+ */
+const sizes: Record<SectionSize, string> = {
+  sm: '2rem',
+  md: '4rem',
+  lg: '8rem'
+};
+---
+
+<Element
+  class={`section ${className}`}
+  style={`
+    --section-padding: ${sizes[size]};
+    ${style}
+  `}
+  {...attrs}
+>
+  <slot />
+</Element>
+
+<style>
+  .section {
+    padding-block: var(--section-padding);
+  }
+</style>

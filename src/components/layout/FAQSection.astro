@@ -1,0 +1,53 @@
+---
+/**
+ * FAQSection
+ * Standard FAQ layout block with structured question/answer flow.
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Stack from './Stack.astro';
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  title?: string;
+  items: FAQItem[];
+}
+
+const { title = 'FAQ', items } = Astro.props;
+---
+
+<Section size="lg">
+  <ContentWidth width="md">
+    <Stack gap="lg">
+
+      <h2>{title}</h2>
+
+      <Stack gap="md">
+        {items.map((item) => (
+          <details class="faq-item">
+            <summary>{item.question}</summary>
+            <p>{item.answer}</p>
+          </details>
+        ))}
+      </Stack>
+
+    </Stack>
+  </ContentWidth>
+</Section>
+
+<style>
+  .faq-item summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .faq-item p {
+    margin-top: 0.5rem;
+    opacity: 0.8;
+  }
+</style>

@@ -1,0 +1,198 @@
+---
+import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from "@/components/starwind/dropdown";
+import type { HTMLAttributes } from "astro/types";
+import UserNav from "./UserNav.astro";
+
+type Props = HTMLAttributes<"div"> & {
+  user?: {
+    email?: string;
+    name?: string;
+  } | null;
+}
+
+const { class: className, user } = Astro.props;
+---
+
+<container>
+  <Dropdown class="group flex flex-row w-full">
+    <a href="/" class="menu-item">Home</a>
+    <a href="/about" class="menu-item">About</a>
+    <DropdownTrigger class="menu-item">
+      Blog
+    </DropdownTrigger>
+    <DropdownContent class="w-100 flex flex-row">
+      <DropdownItem class="menu-item">
+        <a href="/blog">All Posts</a>
+      </DropdownItem>
+      <DropdownItem class="menu-item">
+        <a href="/blog/categories">Category</a>
+      </DropdownItem>
+      <DropdownItem class="menu-item">
+        <a href="/blog/tags">Tag</a>
+      </DropdownItem>
+    </DropdownContent>
+    <UserNav user={user} class="menu-item" />
+  </Dropdown>
+</container>
+
+<script>
+  class UserNavHandler {
+    private trigger: HTMLElement | null;
+    private dropdown: HTMLElement | null;
+    private isOpen: boolean = false;
+
+    constructor(trigger: HTMLElement, dropdown: HTMLElement) {
+      this.trigger = trigger;
+      this.dropdown = dropdown;
+      this.setupEventListeners();
+    }
+
+    private setupEventListeners(): void {
+      this.trigger?.addEventListener('click', () => this.toggle());
+      this.trigger?.addEventListener('keydown', (e) => this.handleKeydown(e));
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => this.handleClickOutside(e));
+      
+      // Close dropdown on escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isOpen) {
+          this.close();
+        }
+      });
+    }
+
+    private handleKeydown(e: KeyboardEvent): void {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.toggle();
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.toggle();
+      }
+    }
+
+    private handleClickOutside(e: Event): void {
+      const target = e.target as HTMLElement;
+      if (!this.trigger?.contains(target) && !this.dropdown?.contains(target)) {
+        this.close();
+      }
+    }
+
+    public toggle(): void {
+      if (this.isOpen) {
+        this.close();
+      } else {
+        this.open();
+      }
+    }
+
+    public open(): void {
+      if (this.dropdown && this.trigger) {
+        this.dropdown.hidden = false;
+        this.trigger.setAttribute('aria-expanded', 'true');
+        this.isOpen = true;
+      }
+    }
+
+    public close(): void {
+      if (this.dropdown && this.trigger) {
+        this.dropdown.hidden = true;
+        this.trigger.setAttribute('aria-expanded', 'false');
+        this.isOpen = false;
+      }
+    }
+  }
+
+  // Initialize dropdown functionality
+  document.addEventListener('astro:after-swap', () => {
+    const trigger = document.querySelector('.user-nav-trigger');
+    const dropdown = document.querySelector('.user-nav-dropdown');
+    
+    if (trigger && dropdown) {
+      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
+    }
+  });
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const trigger = document.querySelector('.user-nav-trigger');
+    const dropdown = document.querySelector('.user-nav-dropdown');
+    
+    if (trigger && dropdown) {
+      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
+    }
+  });
+</script>
+
+<style>
+  @reference "@/styles/global.css";
+
+  .menu-item, .menu-item * {
+    @apply w-full my-auto px-4 text-[var(--foreground)] hover:text-[var(--primary-accent)] font-black;
+  }
+
+
+
+  @keyframes pulse-scale {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.125); }
+    100% { transform: scale(1); }
+  }
+
+  .menu-item:hover {
+    animation: pulse-scale 1s ease-in-out infinite;
+  }
+
+  .starwind-dropdown-content a {
+    font-size: 1.125em;
+    font-weight: 500;
+    padding: 0.5rem 0.5rem;
+    text-align: center;
+  }
+
+  .starwind-dropdown-content {
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow);
+    z-index: 50;
+    overflow: hidden;
+    font-size: smaller;
+  }
+
+  .user-nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .user-nav-trigger {
+    position: relative;
+  }
+
+  .user-nav-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    /* min-width: 16rem; */
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow);
+    z-index: 50;
+    overflow: hidden;
+  }
+
+  .user-nav-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .user-nav-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+</style>

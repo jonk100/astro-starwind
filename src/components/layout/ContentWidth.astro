@@ -1,0 +1,59 @@
+---
+/**
+ * ContentWidth
+ * Controls readable line length and content constraint width.
+ *
+ * Features:
+ * - Semantic element rendering
+ * - Max-width system
+ * - Centering logic
+ * - CSS variable driven sizing
+ */
+
+import type { HTMLAttributes } from 'astro/types';
+
+type Width = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
+interface Props extends HTMLAttributes<'div'> {
+  as?: keyof HTMLElementTagNameMap;
+  width?: Width;
+  padded?: boolean;
+}
+
+const {
+  as: Element = 'div',
+  width = 'lg',
+  padded = false,
+  class: className = '',
+  style = '',
+  ...attrs
+} = Astro.props;
+
+const widths: Record<Width, string> = {
+  sm: '40rem',
+  md: '60rem',
+  lg: '80rem',
+  xl: '100rem',
+  full: '100%'
+};
+---
+
+<Element
+  class={`content-width ${className}`}
+  style={`
+    --content-width: ${widths[width]};
+    --content-padding: ${padded ? '2rem' : '0'};
+    ${style}
+  `}
+  {...attrs}
+>
+  <slot />
+</Element>
+
+<style>
+  .content-width {
+    width: min(100%, var(--content-width));
+    margin-inline: auto;
+    padding-inline: var(--content-padding);
+  }
+</style>

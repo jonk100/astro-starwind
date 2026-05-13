@@ -13,10 +13,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ],
       "!svg/*": [
-        "src/assets/svg/*"
+        "./src/assets/svg/*"
       ]
     }
   }

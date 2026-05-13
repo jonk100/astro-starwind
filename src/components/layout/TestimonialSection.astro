@@ -1,0 +1,59 @@
+---
+/**
+ * TestimonialSection
+ * Displays user feedback in stacked layout.
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Stack from './Stack.astro';
+
+interface Testimonial {
+  quote: string;
+  author: string;
+  role?: string;
+}
+
+interface Props {
+  title?: string;
+  testimonials: Testimonial[];
+}
+
+const { title = 'What people are saying', testimonials } = Astro.props;
+---
+
+<Section size="lg">
+  <ContentWidth>
+    <Stack gap="lg">
+
+      <h2>{title}</h2>
+
+      <Stack gap="lg">
+        {testimonials.map((t) => (
+          <blockquote class="testimonial">
+            <p>"{t.quote}"</p>
+            <footer>
+              — {t.author}
+              {t.role && <span> · {t.role}</span>}
+            </footer>
+          </blockquote>
+        ))}
+      </Stack>
+
+    </Stack>
+  </ContentWidth>
+</Section>
+
+<style>
+  .testimonial {
+    padding: 1rem;
+    border-left: 2px solid currentColor;
+    opacity: 0.9;
+  }
+
+  .testimonial footer {
+    margin-top: 0.5rem;
+    opacity: 0.6;
+    font-size: 0.9em;
+  }
+</style>

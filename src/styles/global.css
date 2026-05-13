@@ -5,26 +5,85 @@
  */
 
  @import "./starwind.css";
+ 
 
 :root {
-	--accent: #2337ff;
-	--accent-dark: #000d8a;
-	--accent-light: #a3b3ff;
-	--yellow: rgb(255, 255, 0);
+	--accent: #d05151;
+	--accent-dark: #a73c2e;
+	--accent-light: #e57a6d;
+	--purple-10: rgb(230, 210, 255);
+	--purple-9: rgb(220, 200, 255);
+	--purple-8: rgb(210, 160, 255);
+	--purple-7: rgb(205, 120, 250);
+	--purple-6: rgb(200, 80, 240);
+	--purple-5: rgb(195, 40, 235);
+	--purple-4: rgb(190, 0, 230);
+	--purple-3: rgb(180, 0, 200);
+	--purple-2: rgb(160, 0, 180);
+	--purple-1: rgb(135, 0, 148);
+	--purple: rgb(128, 0, 128);
+	--purple1: rgb(105, 0, 105);
+	--purple2: rgb(90, 0, 90);
+	--purple3: rgb(75, 0, 75);
+	--purple4: rgb(60, 0, 60);
+	--purple5: rgb(45, 0, 45);
+	--purple-dark: rgb(85, 0, 85);
+	--purple-light: rgb(204, 153, 255);
+	--yellow-5: rgb(245, 245, 220);
+	--yellow-4: rgb(255, 255, 210);
+	--yellow-3: rgb(255, 255, 190);
+	--yellow-2: rgb(255, 255, 160);
+	--yellow-1: rgb(255, 255, 130);
+	--yellow: rgb(255, 255, 100);
+	--yellow1: rgb(255, 255, 50);
+	--yellow2: rgb(225, 225, 25);
+	--yellow3: rgb(200, 200, 0);
+	--yellow4: rgb(185, 200, 75);
+	--yellow5: rgb(178, 185, 80);
 	--yellow-dark: rgb(170, 170, 0);
 	--yellow-light: rgb(255, 255, 136);
-	--green: rgb(0, 207, 86);
+	--green-5: rgb(200, 255, 170);
+	--green-4: rgb(170, 255, 200);
+	--green-3: rgb(140, 255, 160);
+	--green-2: rgb(80, 255, 150);
+	--green-1: rgb(40, 210, 140);
+	--green: rgb(0, 180, 110);
+	--green1: rgb(0, 170, 90);
+	--green2: rgb(0, 145, 60);
+	--green3: rgb(0, 110, 40);
+	--green4: rgb(0, 75, 10);
+	--green5: rgb(0, 30, 15);
 	--green-dark: rgb(0, 170, 71);
 	--green-light: rgb(102, 255, 170);
 	--red: rgb(235, 42, 17);
 	--red-dark: rgb(190, 25, 0);
 	--red-light: rgb(255, 87, 68);
+	--red-5: rgb(240, 75, 75);
+	--red-4: rgb(230, 85, 85);
+	--red-3: rgb(220, 95, 95);
+	--red-2: rgb(210, 105, 105);
+	--red-1: rgb(200, 95, 95);
+	--red1: rgb(200, 47, 68);
+	--red2: rgb(190, 40, 50);
+	--red3: rgb(180, 35, 45);
+	--red4: rgb(170, 30, 40);
+	--red5: rgb(160, 25, 35);
+	--blue-5: rgb(160, 200, 255);
+	--blue-4: rgb(120, 180, 240);
+	--blue-3: rgb(80, 160, 220);
+	--blue-2: rgb(40, 140, 200);
+	--blue-1: rgb(0, 120, 200);
 	--blue: rgb(0, 123, 255);
+	--blue1: rgb(0, 140, 220);
+	--blue2: rgb(0, 110, 190);
+	--blue3: rgb(0, 80, 180);
+	--blue4: rgb(0, 60, 170);
+	--blue5: rgb(0, 40, 160);
+	
+
 	--blue-dark: rgb(0, 82, 170);
 	--blue-light: rgb(162, 204, 255);
-	--purple: rgb(128, 0, 128);
-	--purple-dark: rgb(85, 0, 85);
-	--purple-light: rgb(204, 153, 255);
+
 	--black: 15, 18, 25;
 	--gray: 96, 115, 159;
 	--gray-light: 229, 233, 240;
@@ -34,50 +93,53 @@
 		0 2px 6px rgba(var(--gray), 25%), 0 8px 24px rgba(var(--gray), 33%),
 		0 16px 32px rgba(var(--gray), 33%);
 }
+html, body {
+	height: 100%;
+	margin: 0;
+}
 body {
-	font-family: var(--sans);
+	font-family: var(--alt);
 	margin: 0;
 	padding: 0;
 	text-align: left;
-	background: linear-gradient(var(--gray-gradient)) no-repeat;
-	background-size: 100% 600px;
-	word-wrap: break-word;
-	overflow-wrap: break-word;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background: linear-gradient(to bottom, var(--purple-5), var(--purple3)) no-repeat;
 	color: rgb(var(--gray-dark));
 }
+header {
+	flex-shrink: 0;
+}
+body > main {
+	flex: 1 0 auto;
+}
+body > footer {
+	flex-shrink: 0;
+}
 main {
-	width: clamp(60vw, calc(60vw + 1vw), 70vw);
-	max-width: calc(100vw - 2em);
 	margin: auto;
-	padding: 1em;
+	/* padding: 1em; */
 }
 
-.layout-main-content {
-	font-size: clamp(1.25rem, 1.25rem + 0.125vw, 1.75rem);
-	line-height: 1.5;
-}
-.layout-main-content a {
-	color: var(--purple);
-	font-weight: 500;
+body {
+	font-size: clamp(1.25rem, 1rem + 0.125vw, 1.75rem);
+	line-height: clamp(1.25rem, 1.5rem - 0.125vw, 1.5rem);
 }
 
-.layout-main-content a:hover {
-	color: var(--purple-light);
-	transition: color 0.5s ease;
-}
 ul, ol {
 	margin-bottom: 1.5em;
 	padding-left: 1.5em;
-	margin-top: -1.0em;
+	margin-top: 1rem;
 }
-.layout-main-content ul {
+ul {
 	list-style: disc;
 }
-.layout-main-content ol {
+ol {
 	list-style: decimal;
 }
-.layout-main-content li {
-	margin-bottom: 0.125em;
+.layout-main li {
+	margin-bottom: clamp(1rem, 1.25rem - 0.25vw, 1.25rem);
 }
 
 h1,
@@ -86,9 +148,10 @@ h3,
 h4,
 h5,
 h6 {
-	margin: 0 0 0.5rem 0;
+	font-family: var(--sans);
+	margin: 0 0 1.5rem 0;
 	color: rgb(var(--black));
-	line-height: 1.5;
+	line-height: 1.25;
 }
 h1 {
 	font-size: 3.052em;
@@ -132,7 +195,7 @@ img {
 	border-radius: 8px;
 }
 code {
-	@apply bg-red-200 px-1 py-0.5 text-lg font-mono ;
+	@apply bg-red-200 px-1 py-0.5 text-sm font-mono ;
 }
 pre {
 	padding: 1.5em;
@@ -177,3 +240,5 @@ hr {
 	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
 	white-space: nowrap;
 }
+
+

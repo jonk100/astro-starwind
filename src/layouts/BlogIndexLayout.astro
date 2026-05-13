@@ -3,7 +3,6 @@ import BaseHead from './BaseHead.astro';
 import Footer from './Footer.astro';
 import Header from '../components/header/Header.astro';
 import { BlogBreadcrumbs } from '../components/blog';
-import { ScrollProgress } from '../components/blog';
 
 interface Props {
   title: string;
@@ -16,10 +15,11 @@ interface Props {
 const { 
   title, 
   description, 
-  showProgress = false,
   showBreadcrumbs = true,
   breadcrumbs
 } = Astro.props;
+
+const user = Astro.locals.user;
 
 import '@/styles/global.css';
 import '@/styles/starwind.css';
@@ -32,20 +32,25 @@ import '@/styles/starwind.css';
 	</head>
 
 	<body class="layout-body">
-    
-    
-    <header class="layout-header">
-      {showProgress && <ScrollProgress height={3} color="rgb(var(--accent))" position="top" />}
-      <Header />
+
+    <!-- Header Slot -->
+    <header class="layout-header sticky top-0 z-50">
+      <Header user={user} />
       <slot name="header" />
     </header>
     {showBreadcrumbs && (
-      <div class="relative top-4 left-0 z-10 text-color-foreground font-size-lg mt-0">
+      <div class="relative top-0 left-0 z-10 text-color-foreground font-size-lg m-0 p-0">
         <BlogBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
     )}
     
+    <!-- Hero / Search Slot -->
     <main class="layout-main">
+      <div class="bg-blue-200/50 p-8 rounded-xl text-center" style="h1{color: white}">
+        <h1 class="text-4xl lg:text-6xl mt-0 pt-0 font-bold text-[rgb(var(--purple))]">{title.slice(0, -16)}</h1>
+        <slot name="hero-search" />
+      </div>
+
       <div class="layout-main-content relative">
         <div class="pt-0 mt-0">
           <slot />

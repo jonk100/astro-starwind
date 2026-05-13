@@ -3,28 +3,19 @@ import astroConsent from "astro-consent";
 import tailwindcss from "@tailwindcss/vite";
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import cloudflare from '@astrojs/cloudflare';
+import starlight from '@astrojs/starlight';
+import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'http://localhost:4321',
-  
-  // Required for Astro Actions, Supabase Auth, and dynamic server-side logic
-  output: 'server', 
-
-  adapter: cloudflare({
-    platformProxy: {
-      enabled: true,
-    },
-    runtime: {
-      mode: 'transformed', // Switch from 'directory' to 'transformed'
-      binding: {
-        nodejs_compat: true
-      }
-    }
+  adapter: netlify({
+    cacheOnDemandPages: true,
   }),
-
   integrations: [
+    starlight({
+      title: 'My delightful docs site',
+    }),
     astroConsent({
       siteName: "re:MindMatters",
       headline: "The Cookie Monster Has Come.",
@@ -46,7 +37,6 @@ export default defineConfig({
     }),
     mdx(),
     sitemap(),
-    // aao()
   ],
 
   image: {
@@ -56,38 +46,13 @@ export default defineConfig({
       hostname: 'res.cloudinary.com',
       path: '/**'
     }],
-    // Removed explicit Sharp entrypoint to avoid Node.js binary conflicts on Cloudflare.
-    // Cloudflare will use its own optimized image service automatically.
-    dangerouslyProcessSVG: true
+    
   },
 
-  fonts: [
-    {
-      provider: fontProviders.local(),
-      name: 'Atkinson',
-      cssVariable: '--font-atkinson',
-      fallbacks: ['sans-serif'],
-      options: {
-        variants: [
-          {
-            src: ['./src/assets/fonts/atkinson-regular.woff'],
-            weight: 400,
-            style: 'normal',
-            display: 'swap',
-          },
-          {
-            src: ['./src/assets/fonts/atkinson-bold.woff'],
-            weight: 700,
-            style: 'normal',
-            display: 'swap',
-          },
-        ],  
-      },
-    },
-  ],
-
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+    ],
 
     define: {
       'process.env': {},
@@ -102,42 +67,6 @@ export default defineConfig({
         'import',
       ],
     },
-
-    ssr: {
-      noExternal: [
-        // astro-cloudinary and its dep chain — these need to be bundled
-        // so Vite can transpile their CJS require() calls away
-        'astro-cloudinary',
-        '@unpic/astro',
-        '@unpic/pixels',
-
-        // Keep cloudinary OUT of noExternal — let Vite externalize it
-        // and handle it via the optimizeDeps.include below instead.
-        // 'cloudinary',  ← remove this line
-
-        'astro-consent',
-        'astro-agent-optimised',
-        '@supabase/ssr',
-        '@supabase/supabase-js',
-        'clsx',
-        'tailwind-merge',
-      ],
-
-      // Explicitly externalize the Node SDK — workerd cannot run it at all.
-      // astro-cloudinary should only call cloudinary server-side at build time,
-      // or via fetch-based API calls, not by importing the Node SDK in the worker.
-      external: [
-        'cloudinary',
-      ],
-    },
-
-    optimizeDeps: {
-      // Force Vite to pre-bundle these as ESM during dev
-      include: [
-        'astro-cloudinary',
-        'embla-carousel',
-      ],
-      exclude: ['@cloudflare/workerd-linux-64'],
-    },
+    
   },
 });

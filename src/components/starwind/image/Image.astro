@@ -4,7 +4,7 @@ import { tv } from "tailwind-variants";
 
 export const image = tv({ base: "starwind-image h-auto w-full" });
 
-const { class: className, src, alt = "", width, height, ...rest } = Astro.props;
+const { class: className, src, alt = "", ...rest } = Astro.props;
 ---
 
 {src && (
@@ -12,8 +12,7 @@ const { class: className, src, alt = "", width, height, ...rest } = Astro.props;
     class={image({ class: className })}
     src={src}
     alt={alt}
-    width={width}
-    height={height}
+    inferSize
     {...rest}
     data-slot="image"
   />

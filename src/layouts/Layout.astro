@@ -2,9 +2,15 @@
 import BaseHead from './BaseHead.astro';
 import Footer from './Footer.astro';
 import Header from '../components/header/Header.astro';
+import Navigation from '@/components/header/Navigation.astro';
 
+interface Props {
+  title: string;
+  description?: string;
+  mainWidth?: number | null;
+}
 
-const { title, description } = Astro.props;
+const { title, description = '', mainWidth } = Astro.props;
 const user = Astro.locals.user;
 
 import '@/styles/global.css';
@@ -18,14 +24,15 @@ import '@/styles/starwind.css';
 	</head>
 
 	<body class="layout-body">
-    <header class="layout-header">
-      <Header user={user} />
+    <header class="layout-header sticky top-0 z-50">
+      <!-- <Header user={user} /> -->
+      <Navigation user={user} />
       <slot name="header" />
     </header>
     
-    <main class="layout-main">
+    <main class="layout-main" style={mainWidth != null ? `max-width: ${mainWidth}px` : undefined}>
       <!-- <div class="layout-main-content"> -->
-        <slot />
+      <slot />
       <!-- </div> -->
     </main>
 

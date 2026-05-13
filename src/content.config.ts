@@ -1,5 +1,7 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
+import { docsLoader } from '@astrojs/starlight/loaders';
+import { docsSchema } from '@astrojs/starlight/schema';
 
 const posts = defineCollection({
   loader: glob({ pattern: "**/[^_]*.mdx", base: "./src/content/blog/" }),
@@ -23,5 +25,10 @@ const posts = defineCollection({
   }),
 });
 
+const docs = defineCollection({
+  loader: docsLoader(),
+  schema: docsSchema(),
+});
+
 // Export the collections object
-export const collections = { blog: posts };
+export const collections = { blog: posts, docs };

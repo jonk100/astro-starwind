@@ -1,0 +1,50 @@
+---
+/**
+ * PageHeader
+ * Standard page heading block with optional description.
+ *
+ * Features:
+ * - Composable layout primitives
+ * - Clean separation of structure vs styling
+ */
+
+import ContentWidth from './ContentWidth.astro';
+import Stack from './Stack.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  as?: keyof HTMLElementTagNameMap;
+}
+
+const {
+  title,
+  description,
+  as: Element = 'header'
+} = Astro.props;
+---
+
+<Element class="page-header">
+  <ContentWidth width="md" padded>
+    <Stack gap="md">
+      <h1>{title}</h1>
+
+      {description && <p>{description}</p>}
+    </Stack>
+  </ContentWidth>
+</Element>
+
+<style>
+  .page-header {
+    width: 100%;
+  }
+
+  .page-header h1 {
+    margin: 0;
+  }
+
+  .page-header p {
+    margin: 0;
+    opacity: 0.75;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+/**
+ * Grid
+ * Responsive CSS grid layout system.
+ *
+ * Features:
+ * - Flexible column system
+ * - Gap scale tokens
+ * - Optional semantic element
+ * - Attribute passthrough
+ */
+
+import type { HTMLAttributes } from 'astro/types';
+
+type GridGap = 'sm' | 'md' | 'lg';
+
+interface Props extends HTMLAttributes<'div'> {
+  as?: keyof HTMLElementTagNameMap;
+
+  /**
+   * Minimum column width (auto-fit grid behavior).
+   * @default '16rem'
+   */
+  min?: string;
+
+  /**
+   * Grid gap size.
+   * @default 'md'
+   */
+  gap?: GridGap;
+}
+
+const {
+  as: Element = 'div',
+  min = '16rem',
+  gap = 'md',
+  class: className = '',
+  style = '',
+  ...attrs
+} = Astro.props;
+
+const gaps: Record<GridGap, string> = {
+  sm: '0.5rem',
+  md: '1rem',
+  lg: '2rem'
+};
+---
+
+<Element
+  class={`grid ${className}`}
+  style={`
+    --grid-min: ${min};
+    --grid-gap: ${gaps[gap]};
+    ${style}
+  `}
+  {...attrs}
+>
+  <slot />
+</Element>
+
+<style>
+  .grid {
+    display: grid;
+    gap: var(--grid-gap);
+
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(var(--grid-min), 1fr)
+    );
+  }
+</style>

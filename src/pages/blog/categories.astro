@@ -42,21 +42,18 @@ const allPostsData = posts.map(post => ({
 <BlogIndexLayout 
   title={`Categories - ${SITE_TITLE}`} 
   description={`${SITE_DESCRIPTION} - Browse all blog categories`}
-  showProgress={true}
   breadcrumbs={[
     { label: 'Home', href: '/' }, 
     { label: 'Blog', href: '/blog' }, 
     { label: 'Categories', href: '/blog/categories', current: true }
   ]}
 >
-  <div class="space-y-12">
-    <!-- Header Section -->
-    <div class="text-center space-y-4">
-      <h1 class="text-4xl lg:text-6xl font-bold text-[rgb(var(--purple))]">Categories</h1>
+    <!-- Hero Section -->
+    <Fragment slot="hero-search">
       <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
         Browse all blog categories to find content that interests you. Each category contains related articles on specific topics.
       </p>
-      
+        
       <div class="flex justify-center gap-8 flex-wrap">
         <div class="text-center">
           <div class="text-3xl font-bold text-[rgb(var(--accent))]">{sortedCategories.length}</div>
@@ -67,12 +64,12 @@ const allPostsData = posts.map(post => ({
           <div class="text-sm text-muted-foreground uppercase tracking-wide">Total Posts</div>
         </div>
       </div>
-    </div>
 
-    <!-- Search Section -->
-    <div class="max-w-2xl mx-auto">
-      <BlogSearch posts={allPostsData} placeholder="Search articles by category..." showFilters={true} />
-    </div>
+      <!-- Search Section -->
+      <div class="max-w-2xl mx-auto">
+        <BlogSearch posts={allPostsData} placeholder="Search articles by category..." showFilters={true} />
+      </div>
+    </Fragment>
 
     <!-- Categories Grid -->
     <section class="space-y-8">

@@ -1,0 +1,61 @@
+---
+/**
+ * Center
+ * Alignment utility for centering content horizontally and/or vertically.
+ *
+ * Features:
+ * - Flexible axis control (x/y/both)
+ * - Semantic element rendering
+ * - CSS variable-driven layout
+ * - Attribute passthrough
+ */
+
+import type { HTMLAttributes } from 'astro/types';
+
+type Axis = 'x' | 'y' | 'both';
+
+interface Props extends HTMLAttributes<'div'> {
+  as?: keyof HTMLElementTagNameMap;
+
+  /**
+   * Axis of centering.
+   * @default 'both'
+   */
+  axis?: Axis;
+}
+
+const {
+  as: Element = 'div',
+  axis = 'both',
+  class: className = '',
+  style = '',
+  ...attrs
+} = Astro.props;
+
+const styles: Record<Axis, string> = {
+  x: `
+    display: flex;
+    justify-content: center;
+  `,
+  y: `
+    display: flex;
+    align-items: center;
+  `,
+  both: `
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  `
+};
+---
+
+<Element
+  class={`center ${className}`}
+  style={`
+    ${styles[axis]}
+    ${style}
+  `}
+  {...attrs}
+>
+  <slot />
+</Element>

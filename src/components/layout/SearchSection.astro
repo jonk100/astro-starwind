@@ -1,0 +1,40 @@
+---
+/**
+ * SearchSection
+ * Standardized search wrapper for blog filtering/searching.
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Section size="sm">
+  <ContentWidth width="md">
+    <div class="search">
+
+      {title && <h2>{title}</h2>}
+
+      <slot />
+
+    </div>
+  </ContentWidth>
+</Section>
+
+<style>
+  .search {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  h2 {
+    margin: 0;
+  }
+</style>

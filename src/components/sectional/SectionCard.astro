@@ -1,0 +1,46 @@
+---
+/**
+ * SectionCard.astro
+ * - A card component for sectional content
+ * @param width: full | half | third | quarter
+ * @param path: path to the image
+ * @param alt: alt text for the image
+ * @param title: title
+ * @param description: description of the card
+ * @param link: link (href)
+ */
+
+type Width = "full" | "half" | "third" | "quarter";
+
+interface Props {
+    width?: Width;
+    path: string;
+    alt: string;
+    title: string;
+    description: string;
+    link: string;
+}
+
+const { width = 'half', path, alt, title, description, link } = Astro.props;
+---
+
+<!-- If width is full, horizontal layout -->
+{width === "full" ? (
+  <div class="flex flex-row">
+    <img src={path} alt={alt} />
+    <div>
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <a href={link}>Read More</a>
+    </div>
+  </div>
+) : (
+  <div class="flex flex-col">
+    <img src={path} alt={alt} />
+    <div>
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <a href={link}>Read More</a>
+    </div>
+  </div>
+)}

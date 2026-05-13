@@ -11,6 +11,8 @@
 import type { APIContext } from "astro";
 import { createClient } from "@/lib/supabase";
 
+export const prerender = false;
+
 /**
  * Signs the current user out by calling supabase.auth.signOut(),
  * which triggers setAll() with expired cookie values to clear them

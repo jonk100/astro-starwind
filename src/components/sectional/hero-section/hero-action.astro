@@ -1,0 +1,25 @@
+---
+import { Button } from '@/components/starwind/button';
+import { Select, SelectSearch, SelectTrigger, SelectGroup, SelectItem, SelectContent } from '@/components/starwind/select';
+
+interface Props {
+  type: 'button' | 'search' | 'link';
+  text?: string;
+  href?: string;
+  class?: string;
+  style?: string;
+}
+
+const { type, text, href, class: className, style } = Astro.props;
+---
+
+{
+  type === 'button' && <Button href={href}>{text}</Button>
+}
+{
+  type === 'search' && <input type="search" placeholder="Search" />
+}
+{
+  type === 'link' && <a href={href}>{text}</a>
+}
+

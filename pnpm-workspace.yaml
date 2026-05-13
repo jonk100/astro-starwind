@@ -4,3 +4,5 @@ allowBuilds:
   supabase: true
   workerd: true
   sharp: false
+  '@sentry/cli': true
+  '@parcel/watcher': true

@@ -5,9 +5,11 @@ Individual blog post card components for displaying article previews and metadat
 ## Components
 
 ### VerticalBlogCard
+
 A vertical card layout with image, title, description, and metadata.
 
 **Props:**
+
 - `post: BlogPost` - Blog post data
 - `href?: string` - Link URL (defaults to `/blog/${post.slug}`)
 - `showImage?: boolean` - Show/hide image (default: true)
@@ -19,6 +21,7 @@ A vertical card layout with image, title, description, and metadata.
 - `class?: string` - Additional CSS classes
 
 **Usage:**
+
 ```astro
 <VerticalBlogCard 
   post={blogPost} 
@@ -29,11 +32,13 @@ A vertical card layout with image, title, description, and metadata.
 ```
 
 ### HorizontalBlogCard
+
 A horizontal card layout with side-by-side image and content.
 
 **Props:** Same as VerticalBlogCard
 
 **Usage:**
+
 ```astro
 <HorizontalBlogCard 
   post={blogPost}
@@ -43,9 +48,11 @@ A horizontal card layout with side-by-side image and content.
 ```
 
 ### BlogCardImage
+
 An image-focused card with optional overlay and title.
 
 **Props:**
+
 - `post: BlogPost` - Blog post data
 - `href?: string` - Link URL
 - `aspectRatio?: string` - Image aspect ratio ('16/9', '4/3', '1/1', '3/2')
@@ -55,6 +62,7 @@ An image-focused card with optional overlay and title.
 - `class?: string` - Additional CSS classes
 
 **Usage:**
+
 ```astro
 <BlogCardImage 
   post={blogPost}
@@ -64,9 +72,11 @@ An image-focused card with optional overlay and title.
 ```
 
 ### BlogCardMeta
+
 A metadata-only component for displaying author, date, tags, and reading time.
 
 **Props:**
+
 - `post: BlogPost` - Blog post data
 - `layout?: 'horizontal' | 'vertical' | 'compact'` - Layout style
 - `showAuthor?: boolean` - Show author (default: true)
@@ -77,6 +87,7 @@ A metadata-only component for displaying author, date, tags, and reading time.
 - `class?: string` - Additional CSS classes
 
 **Usage:**
+
 ```astro
 <BlogCardMeta 
   post={blogPost}
@@ -88,6 +99,7 @@ A metadata-only component for displaying author, date, tags, and reading time.
 ## Styling
 
 Components use CSS variables for theming:
+
 - `--accent`: Primary accent color for badges and links
 - `--purple`: Secondary color for special elements
 - `--foreground`: Text color
@@ -97,11 +109,13 @@ Components use CSS variables for theming:
 ## Variants
 
 ### BlogCardVariant
+
 - `'default'`: Standard card styling
 - `'featured'`: Enhanced styling with accent colors
 - `'minimal'`: Clean, minimal design
 
 ### BlogCardSize
+
 - `'sm'`: Compact size for tight layouts
 - `'md'`: Standard size (default)
 - `'lg'`: Large size for featured content
@@ -123,6 +137,7 @@ Components use CSS variables for theming:
 ## Examples
 
 ### Featured Article Card
+
 ```astro
 <VerticalBlogCard 
   post={featuredPost}
@@ -134,6 +149,7 @@ Components use CSS variables for theming:
 ```
 
 ### Minimal Card Grid
+
 ```astro
 <HorizontalBlogCard 
   post={blogPost}
@@ -145,6 +161,7 @@ Components use CSS variables for theming:
 ```
 
 ### Image Gallery Card
+
 ```astro
 <BlogCardImage 
   post={blogPost}

@@ -88,7 +88,7 @@ const filteredItems = items.filter((item: TableOfContentsItem) => item.level <= 
     constructor(element: HTMLElement) {
       this.container = element;
       this.links = Array.from(element.querySelectorAll('[data-toc-link]')) as HTMLElement[];
-      this.activeClass = '!font-bold !text-[rgb(var(--purple))]';
+      this.activeClass = '!font-bold !text-[rgb(var(--purple))] !bg-yellow-200';
       this.init();
     }
 

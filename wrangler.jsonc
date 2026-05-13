@@ -1,6 +1,0 @@
-{
-  "name": "remindmatters",
-  "compatibility_flags": ["nodejs_compat"]
-  // Add your bindings here, e.g.:
-  // "kv_namespaces": [{ "binding": "MY_KV", "id": "<namespace_id>" }]
-}

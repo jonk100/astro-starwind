@@ -1,0 +1,81 @@
+---
+/**
+ * Blog Index Page — /blog
+ *
+ * Fetches and sorts all blog posts, then delegates all layout
+ * concerns to BlogIndexLayout. The page itself only handles data.
+ */
+
+import { getCollection } from 'astro:content';
+import BlogIndexLayout from '@/layouts/TestLayout.astro';
+import { ThreeColumnGrid, BlogSearch } from '@/components/blog';
+import { RecentPostsCarousel } from '@/components/blog/RecentPosts';
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
+
+// ── Data ────────────────────────────────────────────────────────────
+
+/** All posts sorted newest-first. */
+const posts = (await getCollection('blog')).sort(
+  (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
+);
+
+/**
+ * The 2nd–7th most recent posts shown in the carousel.
+ * Post [0] is reserved for a future featured-post slot.
+ */
+const recentPosts = posts.slice(1, 7);
+
+/**
+ * Flattened post data passed to client components that expect
+ * plain objects rather than Astro content collection entries.
+ */
+const allPostsData = posts.map((post) => ({
+  ...post.data,
+  slug: post.id,
+  content: post.body,
+}));
+---
+
+<BlogIndexLayout
+  title={`All Posts — ${SITE_TITLE}`}
+  description={`${SITE_DESCRIPTION} | Blog posts`}
+  heading="Read About It."
+  subheading="Explore our latest articles, insights, and stories on technology, design, and development."
+  showBreadcrumbs={false}
+  breadcrumbs={[
+    { label: 'Home', href: '/' },
+    { label: 'Blog', href: '/blog', current: true },
+  ]}
+>
+
+  <!-- ── Hero: search bar ─────────────────────────────────────────── -->
+  <BlogSearch
+    slot="hero-search"
+    posts={allPostsData}
+    placeholder="Search articles…"
+    showFilters=true
+  />
+
+  <!-- ── Body: recent posts carousel ─────────────────────────────── -->
+  <RecentPostsCarousel recentPosts={recentPosts} />
+
+  <!-- ── Body: full post grid ─────────────────────────────────────── -->
+  <section class="all-articles">
+    <h2>All Articles</h2>
+    <ThreeColumnGrid
+      posts={allPostsData}
+      cardVariant="colorful"
+      showImage={true}
+      showTags={true}
+      showAuthor={true}
+      showReadTime={true}
+    />
+  </section>
+
+</BlogIndexLayout>
+
+<style>
+  .all-articles h2 {
+    margin-block-end: 1.5rem;
+  }
+</style>

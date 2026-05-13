@@ -4,11 +4,12 @@ import LogoAsset from '@/assets/logo-black.png';
 
 interface Props {
   class?: string;
+  height?: number;
 }
 
-const { class: className } = Astro.props;
+const { class: className, height = 40 } = Astro.props;
 ---
 
 <a href="/" class={className}>
-  <Image src={LogoAsset} alt="Logo" class="h-auto w-auto max-h-8" />
+  <Image src={LogoAsset} alt="Logo" class="mx-auto" height={height} />
 </a>

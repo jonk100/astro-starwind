@@ -64,8 +64,11 @@
   --radius-2xl: calc(var(--radius) + 0.5rem);
   --radius-3xl: calc(var(--radius) + 1rem);
 
+  --font-3xl: 3rem;
+  --font-4xl: 3.5rem;
+  --font-5xl: 4rem;
+
   --inter: var(--font-inter);
-  --sans: var(--inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
   --color-sidebar: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -76,12 +79,18 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-outline: var(--sidebar-outline);
 
-  --sans: "/home/Code/Astro/src/assets/fonts/outfit-sans.ttf";
-  --serif: ""
+  --sans: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+  --serif: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+  --alt: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  --font-mono: var(--mono);
+  --font-sans: var(--sans);
+  --font-serif: var(--serif);
+  --font-alt: var(--alt);
 }
 
 :root {
-  --background: var(--color-white);
+  --background: #EAEFE8;
   --foreground: var(--color-stone-950);
   --card: var(--color-stone-50);
   --card-foreground: var(--color-stone-950);

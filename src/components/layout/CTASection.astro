@@ -1,0 +1,16 @@
+---
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Stack from './Stack.astro';
+
+const { title } = Astro.props;
+---
+
+<Section size="lg">
+  <ContentWidth>
+    <Stack gap="lg">
+      <h2>{title}</h2>
+      <slot />
+    </Stack>
+  </ContentWidth>
+</Section>

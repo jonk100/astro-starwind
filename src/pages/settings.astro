@@ -8,6 +8,9 @@ import User from "@tabler/icons/outline/user.svg";
 import Shield from "@tabler/icons/outline/shield.svg";
 import Cookie from "@tabler/icons/outline/cookie.svg";
 
+export const prerender = false;
+
+
 // Get user data
 const supabase = createClient(Astro);
 const { data: { user } } = await supabase.auth.getUser();

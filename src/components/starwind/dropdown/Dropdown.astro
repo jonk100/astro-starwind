@@ -591,11 +591,10 @@ const { class: className, openOnHover = false, closeDelay = 200, ...rest } = Ast
     private positionContent() {
       if (!this.content || !this.trigger || this.isSubmenu) return;
 
-      // Set content width to match trigger width
       this.content.style.width = "var(--starwind-dropdown-trigger-width)";
       this.content.style.setProperty(
         "--starwind-dropdown-trigger-width",
-        `${this.trigger.offsetWidth}px`,
+        `${this.dropdown.offsetWidth}px`,  // <-- was this.trigger.offsetWidth
       );
     }
   }

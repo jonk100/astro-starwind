@@ -1,94 +1,154 @@
 # TODO
 
-## [x] TypeScript Errors & Code Review Fixes
+## Site Wireframe Scaffolding
+
+See [wireframe](./docs/pages/site-wireframe.md) for details.
+
+### Global Architecture
+
+- [ ] Define shared layout structure (`Layout.astro`, page shells, wrappers)
+- [ ] Define reusable section component patterns
+- [ ] Create shared UI component library
+- [ ] Create shared type interfaces
+- [ ] Create shared utility/helper functions
+- [ ] Establish naming conventions for components, styles, and scripts
+- [ ] Define global spacing and layout system
+- [ ] Define typography scale and utility classes
+- [ ] Define color system and CSS custom properties
+- [ ] Define container width strategy
+- [ ] Define responsive breakpoint system
+- [ ] Define animation and transition guidelines
+- [ ] Define icon strategy
+- [ ] Define image optimization strategy
+
+### Global Styling
+
+- [ ] Set up global CSS architecture
+- [ ] Create reset/base styles
+- [ ] Create utility classes
+- [ ] Create reusable section spacing utilities
+- [ ] Create reusable grid/flex layout utilities
+- [ ] Create reusable button variants
+- [ ] Create reusable form styles
+- [ ] Create reusable card styles
+- [ ] Create reusable badge/tag styles
+- [ ] Create reusable typography utilities
+- [ ] Implement theme switching
+- [ ] Add dark mode styles
+- [ ] Add reduced motion support
+
+### Shared Components
+
+- [ ] Navbar
+- [ ] Mobile navigation
+- [ ] Footer
+- [ ] CTA section
+- [ ] FAQ section
+- [ ] Newsletter section
+- [ ] Testimonial section
+- [ ] Pricing cards
+- [ ] Blog cards
+- [ ] Resource cards
+- [ ] Form inputs
+- [ ] Buttons
+- [ ] Modals/dialogs
+- [ ] Toast/alert system
+- [ ] Empty states
+- [ ] Loading states
+- [ ] Pagination
+- [ ] Search/filter UI
+
+### SEO + Metadata
+
+- [ ] Create reusable SEO component
+- [ ] Add page titles and descriptions
+- [ ] Add Open Graph metadata
+- [ ] Add Twitter metadata
+- [ ] Add canonical URLs
+- [ ] Add structured data/schema.org support
+- [ ] Generate sitemap
+- [ ] Generate RSS feed
+- [ ] Add robots.txt
+
+### Accessibility
+
+- [ ] Ensure semantic HTML structure
+- [ ] Add keyboard navigation support
+- [ ] Add visible focus states
+- [ ] Add ARIA labels where needed
+- [ ] Validate color contrast accessibility
+- [ ] Add skip-to-content link
+- [ ] Ensure forms are accessible
+- [ ] Test screen reader compatibility
+
+### Performance
+
+- [ ] Optimize font loading
+- [ ] Optimize image loading
+- [ ] Add lazy loading where appropriate
+- [ ] Reduce layout shift
+- [ ] Minimize unused CSS
+- [ ] Audit Lighthouse performance
+- [ ] Audit accessibility score
+- [ ] Audit SEO score
+
+### Content System
+
+- [ ] Define content collection schemas
+- [ ] Set up blog content collections
+- [ ] Set up resource content collections
+- [ ] Set up category/tag relationships
+- [ ] Create markdown rendering components
+- [ ] Add syntax highlighting strategy
+- [ ] Add reading time calculation
+- [ ] Add related posts logic
+
+### App Features
+
+- [ ] Define authentication flow
+- [ ] Define protected routes
+- [ ] Define user settings structure
+- [ ] Define data persistence strategy
+- [ ] Define analytics/tracking strategy
+- [ ] Define notification/reminder system
+- [ ] Define mood tracking structure
+- [ ] Define habit tracking structure
+- [ ] Define meditation session structure
+- [ ] Define journaling structure
+
+### Page Scaffolding
+
+- [ ] Create basic layout structure using reusable components with flexible props
+- [ ] Add page-specific content and logic
+- [ ] Add navigation components
+- [ ] Set up responsive layouts
+- [ ] Connect shared components
+- [ ] Add loading/error/empty states
+- [ ] Add SEO metadata
+- [ ] Add accessibility support
+
+### Testing
+
+- [ ] Test responsive layouts
+- [ ] Test navigation flows
+- [ ] Test forms and validation
+- [ ] Test theme switching
+- [ ] Test keyboard accessibility
+- [ ] Test performance on mobile
+- [ ] Test across major browsers
+
+### Deployment
+
+- [ ] Configure environment variables
+- [ ] Configure production build settings
+- [ ] Set up CI/CD
+- [ ] Configure domain and DNS
+- [ ] Configure analytics
+- [ ] Configure error logging
+- [ ] Configure backups
+- [ ] Final production QA pass
 
 ---
-
-### High Priority (Critical - Blocking Build)
-
-- [x] **Fix ButtonVariants Export Issue** - Pagination components can't find ButtonVariants export
-  - Location: `src/components/starwind/pagination/PaginationNext.astro:6:10`
-  - Location: `src/components/starwind/pagination/PaginationPrevious.astro:6:10`
-
-- [x] **Fix BlogPost Description Type** - Undefined description prop causing type error
-  - Location: `src/layouts/BlogPost.astro:18:27`
-
-- [x] **Fix Blog Categories Page Types** - Implicit 'any' types in map functions
-  - Location: `src/pages/blog/category/[category].astro:21:37`
-
-- [x] **Fix Blog Tag Pages Types** - Unknown type assignments throughout tag pages
-  - Location: `src/pages/blog/tag/[tag].astro` (multiple lines: 71, 77, 97, 119)
-  - Location: `src/pages/blog/tags.astro` (multiple lines: 29, 137)
-
-- [x] **Fix Theme Toggle Memory Leak** - activeToggles Set never cleared during page transitions
-  - Location: `src/components/starwind/theme-toggle/ThemeToggle.astro:173-175`
-
-- [x] **Fix Theme Toggle Race Condition** - Initialization state synchronization issues
-  - Location: `src/components/starwind/theme-toggle/ThemeToggle.astro:106-109`
-
-### Medium Priority
-
-- [x] **Fix Dropdown Null Reference** - Potential runtime error in focus management
-  - Location: `src/components/starwind/dropdown/Dropdown.astro:421-422`
-
-- [x] **Enhance CI/CD Security** - Add dependency scanning to prevent supply chain attacks
-  - Location: `.github/workflows/ci.yml:26`
-
-### Low Priority (Code Quality)
-
-- [x] **Clean Up Unused Imports** - Remove unused imports across 20+ files
-  - Files affected: BaseHead.astro, BlogIndexLayout.astro, BlogPost.astro, BlogPostLayout.astro, Layout.astro, about.astro, blog pages, etc.
-
-- [x] **Remove Commented CSS** - Clean up redundant styles in HeaderMenu
-  - Location: `src/components/header/HeaderMenu.astro:89-104`
-
-- [x] **Update README.md** - Reflect current project state and features
-  - Updated with Starwind UI, modern tooling, and comprehensive feature list
-
----
-
-## Feature Requests
-
-### [x] Consent to cookies and stuff
-
-[astro-consent](https://github.com/zdenekkurecka/astro-consent#readme) ?
-
-`pnpm astro add @zdenekkurecka/astro-consent`
-
-### [ ] 2. Astro meta engine
-
-[astro-meta-engine](https://github.com/TheElegantCoding/astro-meta-engine#readme)
-
-`pnpm i -D astro-meta-engine`
-
-### [ ] 3. Search plugin
-
-[astro-search-plugin](https://github.com/freshjuice-dev/astro-search-plugin)
-
-```astro
----
-// src/layouts/BaseLayout.astro
-import "@freshjuice/astro-search-plugin/styles.css";
----
-
-<html>
-  <body>
-    <slot />
-
-    <astro-search-palette
-      index-url="/search-index.json"
-      shortcut="mod+k"
-      placeholder="Search…"
-      group-by="type"
-    ></astro-search-palette>
-
-    <script>
-      // Side-effect import: registers <astro-search-palette> globally
-      import "@freshjuice/astro-search-plugin/element";
-    </script>
-  </body>
-</html>
-```
 
 ### [ ] 4. SUPABASE INTEGRATION
 
@@ -201,3 +261,46 @@ Now we need to make the table "talk" to the Action. In your Vanilla TypeScript f
 - Scalable: Because it’s an Upsert, clicking a cell 100 times won’t create 100 rows; it will just update that one single "crossroad" in your table.
 
 Does that flow make sense, or should we zoom in on one of these parts?
+
+## Sections
+
+### Navbar
+
+- [ ] User Menu / Sign Up
+- [ ] Menu -----
+  - [ ] Docs, Home, About, Resources
+  - [ ] Tools Dropdown Menu
+  - [ ] Blog Dropdown Menu
+  - [ ] Mobile Menu Button
+  - [ ] Logo Link
+
+### Hero Section
+
+- [ ] h1 - Build the life you want to live
+- [ ] p - Small habits compound into lasting change. Track your progress, reflect in your journal, and find calm through meditation. Everything you need to care for yourself is here.
+- [ ] Button (Expore)
+- [ ] Button (Learn More)
+
+### Features Section
+
+- h5 Tools
+- h2 Many ways to grow
+- p - Everything you need to build better habits and live your best life.
+- 3-column card grid
+  - [ ] Track your habits
+  - [ ] Reflect in your journal
+  - [ ] Find calm through meditation
+
+### Reading Section
+
+- Full Page hero (Image | Details)
+- Tabs (Recent | Category 1 | Category 2 | etc)
+- 1/2 Page Cards (Image/Details | Image/Details)
+
+### Tools Section
+
+
+
+
+
+

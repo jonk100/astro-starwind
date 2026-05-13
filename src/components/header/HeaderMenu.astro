@@ -16,7 +16,7 @@ const dropdownItems = await getBlogPages();
         <DropdownTrigger asChild>
           <Button variant="ghost">Blog</Button>
         </DropdownTrigger>
-        <DropdownContent align="center" class="bg-teal-300 rounded-lg flex flex-row gap-4 dropdown-full-width submenu">
+        <DropdownContent align="center" class="rounded-lg flex flex-row gap-4 dropdown-full-width submenu">
           {dropdownItems.map((item) => (
             <DropdownItem as="a" href={item.href} class="flex-1 text-center">
               <span class="submenu-item">{item.label}</span>
@@ -54,20 +54,21 @@ const dropdownItems = await getBlogPages();
   
   .internal-links a,
   .internal-links button {
-    font-size: clamp(1.25rem, calc(1.25rem + 1vw), 2rem);
-    padding: 0 1.5rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
     margin: auto 0;
-    color: var(--color-primary-300);
+    color: var(--foreground);
     text-decoration: none;
-    transition: all 0.2s ease;
-    font-weight: 600;
+    transition: all 0.15s ease;
+    font-weight: 500;
+    border-radius: 0.375rem;
   }
   
   .internal-links a:hover,
   .internal-links button:hover {
     color: var(--primary-accent);
-    background-color: transparent;
-    transform: scale(1.125);
+    font-weight: 600;
+    scale: 1.125;
   }
 
   .internal-links button[aria-expanded="true"] {
@@ -92,11 +93,22 @@ const dropdownItems = await getBlogPages();
   }
 
   .submenu a {
-    color: var(--color-primary-300);
-    background-color: transparent;
-    justify-content: center;
-    vertical-align: middle;
-    margin: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+    margin: 0.25rem 0;
+  }
+
+  .submenu a:hover {
+    color: var(--primary-accent);
+    font-weight: 600;
   }
   
   .submenu-item {

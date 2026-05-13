@@ -1,0 +1,64 @@
+---
+/**
+ * FeaturesSection
+ * Displays feature cards or feature list content.
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Stack from './Stack.astro';
+import Grid from './Grid.astro';
+
+interface Feature {
+  title: string;
+  description: string;
+}
+
+interface Props {
+  title?: string;
+  features: Feature[];
+  columns?: string;
+}
+
+const {
+  title = 'Features',
+  features,
+  columns = '16rem'
+} = Astro.props;
+---
+
+<Section size="lg">
+  <ContentWidth>
+    <Stack gap="lg">
+
+      <h2>{title}</h2>
+
+      <Grid min={columns} gap="md">
+        {features.map((f) => (
+          <div class="feature">
+            <h3>{f.title}</h3>
+            <p>{f.description}</p>
+          </div>
+        ))}
+      </Grid>
+
+    </Stack>
+  </ContentWidth>
+</Section>
+
+<style>
+  .feature {
+    padding: 1rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 0.5rem;
+  }
+
+  .feature h3 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .feature p {
+    margin: 0;
+    opacity: 0.75;
+  }
+</style>

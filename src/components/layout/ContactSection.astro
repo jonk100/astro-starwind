@@ -1,0 +1,35 @@
+---
+/**
+ * ContactSection
+ * Contact information + optional form slot.
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Stack from './Stack.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Contact',
+  description
+} = Astro.props;
+---
+
+<Section size="lg">
+  <ContentWidth width="md">
+    <Stack gap="lg">
+
+      <Stack gap="sm">
+        <h2>{title}</h2>
+        {description && <p>{description}</p>}
+      </Stack>
+
+      <slot />
+
+    </Stack>
+  </ContentWidth>
+</Section>

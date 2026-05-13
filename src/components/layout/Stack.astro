@@ -1,0 +1,73 @@
+---
+/**
+ * Stack
+ * Vertical flex layout system with consistent, tokenized spacing.
+ *
+ * Features:
+ * - Semantic element rendering via `as`
+ * - Gap scale system (sm/md/lg)
+ * - CSS variable-driven spacing
+ * - Native attribute passthrough
+ * - Class/style extension support
+ */
+
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * Stack spacing tokens.
+ */
+type StackGap = 'sm' | 'md' | 'lg';
+
+/**
+ * Stack component props.
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * HTML element to render.
+   * @default 'div'
+   */
+  as?: keyof HTMLElementTagNameMap;
+
+  /**
+   * Vertical spacing between children.
+   * @default 'md'
+   */
+  gap?: StackGap;
+}
+
+const {
+  as: Element = 'div',
+  gap = 'md',
+  class: className = '',
+  style = '',
+  ...attrs
+} = Astro.props;
+
+/**
+ * Gap scale map.
+ */
+const gaps: Record<StackGap, string> = {
+  sm: '0.5rem',
+  md: '1rem',
+  lg: '2rem'
+};
+---
+
+<Element
+  class={`stack ${className}`}
+  style={`
+    --stack-gap: ${gaps[gap]};
+    ${style}
+  `}
+  {...attrs}
+>
+  <slot />
+</Element>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-gap);
+  }
+</style>

@@ -1,0 +1,76 @@
+---
+/**
+ * StatsSection
+ * Displays simple metric blocks (KPIs) in a consistent layout.
+ *
+ * Use cases:
+ * - Categories count
+ * - Tags count
+ * - Blog totals
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Cluster from './Cluster.astro';
+
+interface Stat {
+  label: string;
+  value: string | number;
+}
+
+interface Props {
+  title?: string;
+  stats: Stat[];
+}
+
+const {
+  title,
+  stats
+} = Astro.props;
+---
+
+<Section size="md">
+  <ContentWidth width="md">
+    <div class="stats">
+
+      {title && <h2 class="title">{title}</h2>}
+
+      <Cluster gap="lg" align="center">
+        {stats.map((stat) => (
+          <div class="stat">
+            <div class="value">{stat.value}</div>
+            <div class="label">{stat.label}</div>
+          </div>
+        ))}
+      </Cluster>
+
+    </div>
+  </ContentWidth>
+</Section>
+
+<style>
+  .stats {
+    text-align: center;
+  }
+
+  .title {
+    margin-bottom: 1rem;
+  }
+
+  .stat {
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .value {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .label {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+</style>

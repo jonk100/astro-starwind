@@ -87,6 +87,7 @@ const wrapperProps = href ? { href, class: "block" } : { class: "block" };
         <Image 
           src={post.image} 
           alt={post.title}
+          inferSize
           class="w-full aspect-[16/10] object-cover transition-transform duration-300 group-hover:scale-105"
         />
         {variant === "featured" && (
