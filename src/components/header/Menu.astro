@@ -1,5 +1,6 @@
 ---
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from "@/components/starwind/dropdown";
+import { Button } from "@/components/starwind/button";
 import type { HTMLAttributes } from "astro/types";
 import UserNav from "./UserNav.astro";
 
@@ -12,8 +13,6 @@ type Props = HTMLAttributes<"div"> & {
 
 const { class: className, user } = Astro.props;
 ---
-
-<container>
   <Dropdown class="group flex flex-row w-full">
     <a href="/" class="menu-item">Home</a>
     <a href="/about" class="menu-item">About</a>
@@ -31,9 +30,30 @@ const { class: className, user } = Astro.props;
         <a href="/blog/tags">Tag</a>
       </DropdownItem>
     </DropdownContent>
+  </Dropdown>
+  <Dropdown class="group flex flex-row w-full">
+    <DropdownTrigger class="menu-item">
+      Site
+    </DropdownTrigger>
+    <DropdownContent class="w-100 flex flex-row">
+      <DropdownItem as="a" href="/" class="menu-item">Home</DropdownItem>
+      <DropdownItem as="a" href="/about" class="menu-item" >About</DropdownItem>
+      <DropdownItem as="a" href="/contact" class="menu-item">Contact</DropdownItem>
+    </DropdownContent>
+  </Dropdown>
+  <Dropdown class="group flex flex-row w-full">
+    <DropdownTrigger class="menu-item">
+      Tools
+    </DropdownTrigger>
+    <DropdownContent class="w-100 flex flex-row">
+      <DropdownItem as="a" href="/habits" class="menu-item">Habit Tracker</DropdownItem>
+      <DropdownItem as="a" href="/journal" class="menu-item">Journal</DropdownItem>
+      <DropdownItem as="a" href="/meditation" class="menu-item">Meditation Guide</DropdownItem>
+    </DropdownContent>
+  </Dropdown>
     <UserNav user={user} class="menu-item" />
   </Dropdown>
-</container>
+
 
 <script>
   class UserNavHandler {
