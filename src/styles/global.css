@@ -150,7 +150,6 @@ h5,
 h6 {
 	font-family: var(--sans);
 	margin: 0 0 1.5rem 0;
-	color: rgb(var(--black));
 	line-height: 1.25;
 }
 h1 {
