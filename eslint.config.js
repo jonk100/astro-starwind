@@ -23,6 +23,7 @@ export default tseslint.config(
   },
   {
     // Ignore build artifacts and cache
-    ignores: ["dist/", ".astro/", "node_modules/"],
+    ignores: ["dist/", ".astro/", "node_modules/", ".github/**"],
   }
 );
+

@@ -4,9 +4,9 @@
  * Contact information + optional form slot.
  */
 
-import Section from './Section.astro';
-import ContentWidth from './ContentWidth.astro';
-import Stack from './Stack.astro';
+import { Section, ContentWidth, Stack, Cluster } from './';
+import { Image } from '../starwind/image';
+
 
 interface Props {
   title?: string;
@@ -20,6 +20,12 @@ const {
 ---
 
 <Section size="lg">
+  <Cluster>
+    <Stack>
+      {title && <h2>{title}</h2>}
+      {description && <p>{description}</p>}
+      
+    </Stack>
   <ContentWidth width="md">
     <Stack gap="lg">
 

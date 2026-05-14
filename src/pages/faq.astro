@@ -1,0 +1,14 @@
+---
+import Layout from '@/layouts/Site.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
+import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
+
+export const prerender = false;
+
+---
+<Layout 
+	title={`FAQ - ${SITE_TITLE}`} 
+	description={`${SITE_DESCRIPTION} - Frequently asked questions and contact information.`}
+>
+	<FAQSection />
+</Layout>

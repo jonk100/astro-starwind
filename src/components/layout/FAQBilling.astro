@@ -1,0 +1,170 @@
+---
+/**
+ * BillingFAQSection
+ * FAQ grid block focused on billing questions.
+ *
+ * Renders a three-column auto-fit grid of flat question/answer pairs,
+ * followed by a CTA block. Matches the layout style from the FAQ mockup.
+ *
+ * Features:
+ * - Data-driven via `items` prop
+ * - Reuses Section, ContentWidth, Stack, Grid primitives
+ * - Optional section title and description
+ * - Optional CTA label and href
+ */
+
+import Section from './Section.astro';
+import ContentWidth from './ContentWidth.astro';
+import Stack from './Stack.astro';
+import Grid from './Grid.astro';
+
+/**
+ * A single billing FAQ entry.
+ */
+interface FAQItem {
+  /** The question text displayed as a heading. */
+  question: string;
+  /** The answer text displayed as a paragraph. */
+  answer: string;
+}
+
+/**
+ * Props for BillingFAQSection.
+ */
+interface Props {
+  /**
+   * Section heading.
+   * @default 'Billing'
+   */
+  title?: string;
+
+  /**
+   * Optional subtitle below the heading.
+   */
+  description?: string;
+
+  /**
+   * Array of FAQ items to render.
+   */
+  items: FAQItem[];
+
+  /**
+   * Label for the CTA button.
+   * @default 'Contact us'
+   */
+  ctaLabel?: string;
+
+  /**
+   * Href for the CTA button.
+   * @default '/contact'
+   */
+  ctaHref?: string;
+}
+
+const {
+  title = 'Billing',
+  description = 'Understand your plan, charges, and payment options.',
+  items,
+  ctaLabel = 'Contact us',
+  ctaHref = '/contact',
+} = Astro.props;
+---
+
+<Section size="lg">
+  <ContentWidth>
+    <Stack gap="lg">
+
+      <Stack gap="sm">
+        <h2>{title}</h2>
+        {description && <p class="section-description">{description}</p>}
+      </Stack>
+
+      <Grid min="16rem" gap="lg">
+        {items.map((item) => (
+          <div class="faq-item">
+            <h3>{item.question}</h3>
+            <p>{item.answer}</p>
+          </div>
+        ))}
+      </Grid>
+
+      <div class="cta-block">
+        <Stack gap="sm">
+          <h3>Need more help?</h3>
+          <p>We're ready to answer what's on your mind.</p>
+          <div>
+            <a href={ctaHref} class="cta-button">{ctaLabel}</a>
+          </div>
+        </Stack>
+      </div>
+
+    </Stack>
+  </ContentWidth>
+</Section>
+
+<style>
+  .section-description {
+    margin: 0;
+    opacity: 0.75;
+  }
+
+  /**
+   * Individual FAQ card — flat, no elevation.
+   * Border-top provides visual separation from siblings.
+   */
+  .faq-item {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .faq-item h3 {
+    margin: 0 0 0.4rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .faq-item p {
+    margin: 0;
+    font-size: 0.875rem;
+    opacity: 0.75;
+    line-height: 1.6;
+  }
+
+  /**
+   * CTA block sits below the grid with a top rule.
+   */
+  .cta-block {
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .cta-block h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .cta-block p {
+    margin: 0;
+    opacity: 0.75;
+    font-size: 0.9rem;
+  }
+
+  /**
+   * Plain outlined button — matches editorial tone.
+   */
+  .cta-button {
+    display: inline-block;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.15s ease;
+  }
+
+  .cta-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+</style>

@@ -1,0 +1,68 @@
+# .github/workflows/notion-snapshot.yml
+#
+# Runs a daily snapshot of src/ and syncs it to a Notion database.
+# Also supports manual runs via workflow_dispatch.
+#
+# Required repository secrets:
+#   NOTION_API_KEY      — Your Notion integration token
+#   NOTION_DATABASE_ID  — The target database ID
+#
+# Optional tweaks:
+#   Change SNAPSHOT_DIRS below to add more directories (comma-separated).
+#   Change the cron schedule to suit your preferred cadence.
+
+name: Notion Snapshot
+
+on:
+  # Run every day at 06:00 UTC
+  schedule:
+    - cron: "0 6 * * *"
+
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    name: Snapshot src/ → Notion
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repository
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Set up Node (tsx requires Node 18+)
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      # 3. Install dependencies (tsx must be available)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build the snapshot JSON from src/
+      - name: Generate snapshot
+        run: npx tsx scripts/snapshot.ts
+        env:
+          SNAPSHOT_DIRS: "src"
+          SNAPSHOT_OUT: "snapshot.json"
+          # Add or remove extensions as needed:
+          SNAPSHOT_EXTS: ".astro,.ts,.css,.html,.json,.md"
+
+      # 5. Upload the JSON as a workflow artifact (optional but handy for debugging)
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-${{ github.run_id }}
+          path: snapshot.json
+          retention-days: 7
+
+      # 6. Sync to Notion
+      - name: Sync to Notion
+        run: npx tsx scripts/toNotion.ts
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          SNAPSHOT_IN: "snapshot.json"

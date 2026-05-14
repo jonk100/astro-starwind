@@ -1,5 +1,4 @@
 ---
-import Center from '@/components/layout/Center.astro';
 import PricingCard from './PricingCard.astro';
 import ScrollReveal from '@/components/layout/ScrollReveal.astro';
 
@@ -22,7 +21,7 @@ const { heading, subheading, plans, class: className = '' } = Astro.props;
 const schemes = ['light', 'dark', 'primary'] as const;
 ---
 
-<section class={`py-10 w-full bg-amber-200 h-100vh h-full ${className}`}>
+<section class={`py-10 w-full bg-amber-200 ${className}`}>
   <div class="mx-0">
     <div class="text-center my-6 py-6">
       <h2 class="text-4xl md:text-5xl font-bold my-4 text-stone-900 dark:text-stone-50">

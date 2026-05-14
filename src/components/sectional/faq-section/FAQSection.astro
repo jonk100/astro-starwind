@@ -1,0 +1,111 @@
+---
+import { Stack, Cluster } from '@/components/layout';
+import { Button } from '@/components/starwind/button';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+const faqs = [
+  {
+    question: "How do I start?",
+    answer: "Simply create an account and choose your first habit to track. Our guided onboarding will help you set up your first habit in under 2 minutes."
+  },
+  {
+    question: "Is my data private?",
+    answer: "Absolutely. We use end-to-end encryption for all your data. Your journal entries, habit tracking, and personal information are never shared with third parties."
+  },
+  {
+    question: "Can I upgrade later?",
+    answer: "Yes! You can start with our free plan and upgrade to Professional or Premium at any time. Your data will seamlessly transfer with you."
+  },
+  {
+    question: "What if I need help?",
+    answer: "Our support team is available 24/7. You can reach us via email, phone, or live chat. We also have extensive documentation and video tutorials."
+  },
+  {
+    question: "Do the apps work offline?",
+    answer: "Yes, all our apps work offline. Your data syncs automatically when you reconnect, so you never lose your progress."
+  },
+  {
+    question: "Can I export my data?",
+    answer: "Absolutely. You can export all your data at any time in multiple formats including CSV, JSON, and PDF. Your data belongs to you."
+  }
+];
+---
+
+<section class={`py-16 ${className}`}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      
+      <!-- FAQ Section -->
+      <div>
+        <h2 class="text-4xl font-bold mb-8 text-stone-900 dark:text-stone-50">Questions</h2>
+        <Stack gap="md">
+          {faqs.map((faq) => (
+            <div class="border-b border-stone-200 dark:border-stone-800 pb-6">
+              <h3 class="text-xl font-semibold mb-2 text-stone-900 dark:text-stone-50">
+                {faq.question}
+              </h3>
+              <p class="text-stone-600 dark:text-stone-400 leading-relaxed">
+                {faq.answer}
+              </p>
+            </div>
+          ))}
+        </Stack>
+        
+        <div class="mt-8 pt-8 border-t border-stone-200 dark:border-stone-800">
+          <p class="text-lg text-stone-700 dark:text-stone-300 mb-4">Need more help?</p>
+          <Button href="/contact" size="lg">
+            Contact us
+          </Button>
+        </div>
+      </div>
+      
+      <!-- Contact Section -->
+      <div>
+        <h2 class="text-4xl font-bold mb-8 text-stone-900 dark:text-stone-50">Support</h2>
+        
+        <div class="mb-8">
+          <h3 class="text-2xl font-semibold mb-6 text-stone-900 dark:text-stone-50">Get in touch</h3>
+          
+          <Stack gap="lg">
+            <div>
+              <p class="text-sm font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Email</p>
+              <a href="mailto:hello@mindfulhabits.com" class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors">
+                hello@mindfulhabits.com
+              </a>
+            </div>
+            
+            <div>
+              <p class="text-sm font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Phone</p>
+              <a href="tel:+14155550147" class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors">
+                +1 (415) 555-0147
+              </a>
+            </div>
+            
+            <div>
+              <p class="text-sm font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Office</p>
+              <address class="text-lg text-stone-900 dark:text-stone-50 not-italic">
+                456 Mindful Lane<br />
+                San Francisco, CA 94105<br />
+                US
+              </address>
+              <a href="https://maps.google.com/?q=456+Mindful+Lane+San+Francisco+CA+94105" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 text-accent hover:underline">
+                Get directions →
+              </a>
+            </div>
+          </Stack>
+        </div>
+        
+        <!-- Placeholder for contact image -->
+        <div class="bg-stone-100 dark:bg-stone-800 rounded-2xl aspect-video flex items-center justify-center">
+          <p class="text-stone-400 dark:text-stone-600">Contact image placeholder</p>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
