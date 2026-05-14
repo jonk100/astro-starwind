@@ -9,6 +9,7 @@ import type { HTMLTag, Polymorphic } from 'astro/types';
 interface Props extends Polymorphic<{ as: HTMLTag }> {
   post: CollectionEntry<'blog'>;
   variant?: 'featured' | 'standard';
+  as?: HTMLTag;
 }
 
 const { post, variant = 'standard', as: Element = 'a' } = Astro.props;

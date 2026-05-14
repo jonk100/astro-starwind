@@ -3,4 +3,5 @@ allowBuilds:
   esbuild: true
   supabase: true
   sharp: false
-
+  '@parcel/watcher': true
+  workerd: true
