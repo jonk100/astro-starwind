@@ -10,14 +10,14 @@ const description =
 
 <Layout {title} {description}>
   <section class="mx-auto max-w-prose px-4 py-12">
-    <h1 class="mb-4 text-3xl font-bold text-[var(--foreground)]">{title}</h1>
-    <p class="mb-6 text-lg text-[var(--foreground)]/90">{description}</p>
-    <p class="mb-8 text-[var(--foreground)]/80">
+    <h1 class="mb-4 text-3xl font-bold text-foreground">{title}</h1>
+    <p class="mb-6 text-lg text-foreground/90">{description}</p>
+    <p class="mb-8 text-foreground/80">
       A dedicated journal app is on the way. In the meantime, explore ideas and prompts on the blog.
     </p>
     <a
       href="/blog"
-      class="inline-flex rounded-md border border-[var(--border)] px-4 py-2 font-semibold text-[var(--foreground)] no-underline transition-colors hover:bg-[var(--accent)]"
+      class="inline-flex rounded-md border border-border px-4 py-2 font-semibold text-foreground no-underline transition-colors hover:bg-accent"
     >
       Browse the blog
     </a>
