@@ -2,7 +2,7 @@
   "name": "remindmatters",
   "type": "module",
   "version": "0.0.1",
-  "packageManager": "pnpm@11.0.9",
+  "packageManager": "pnpm@11.1.2",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -38,7 +38,7 @@
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.3.0",
     "tw-animate-css": "^1.4.0",
-    "typescript": "^6.0.3",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@nuasite/agent-summary": "^0.38.0",
