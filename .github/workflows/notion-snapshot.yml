@@ -50,7 +50,7 @@ jobs:
 
       # 4. Build the snapshot JSON from src/
       - name: Generate snapshot
-        run: pnpm dlx tsx scripts/snapshot.ts
+        run: pnpm dlx tsx .github/scripts/snapshot.ts
         env:
           SNAPSHOT_DIRS: "src"
           SNAPSHOT_OUT: "snapshot.json"
@@ -67,7 +67,7 @@ jobs:
 
       # 6. Sync to Notion
       - name: Sync to Notion
-        run: pnpm dlx tsx scripts/toNotion.ts
+        run: pnpm dlx tsx .github/scripts/toNotion.ts
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}

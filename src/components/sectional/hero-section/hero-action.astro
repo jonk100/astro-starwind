@@ -10,6 +10,12 @@ interface Props {
   style?: string;
 }
 
+interface ActionButton extends Props {
+  text: string;
+  action?: string;
+  href?: string;
+}
+
 const { type, text, href, class: className, style } = Astro.props;
 ---
 
@@ -17,7 +23,27 @@ const { type, text, href, class: className, style } = Astro.props;
   type === 'button' && <Button href={href}>{text}</Button>
 }
 {
-  type === 'search' && <input type="search" placeholder="Search" />
+  type === 'search' && <Select type="search" placeholder="Search" />
+
+  <Select id="combobox-demo" name="framework">
+    <SelectTrigger class="w-[240px]">
+      <SelectValue placeholder="Select a framework" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectSearch placeholder="Search frameworks..." emptyText="No frameworks found." />
+      <SelectGroup>
+        
+        <SelectItem value="astro">Astro</SelectItem>
+        <SelectItem value="next">Next.js</SelectItem>
+        <SelectItem value="svelte">SvelteKit</SelectItem>
+        <SelectItem value="solid">SolidStart</SelectItem>
+        <SelectItem value="remix">Remix</SelectItem>
+        <SelectItem value="nuxt">Nuxt</SelectItem>
+        <SelectItem value="angular">Angular</SelectItem>
+        <SelectItem value="vue">Vue</SelectItem>
+      </SelectGroup>
+    </SelectContent>
+  </Select>
 }
 {
   type === 'link' && <a href={href}>{text}</a>

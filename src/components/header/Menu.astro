@@ -11,7 +11,7 @@ type Props = HTMLAttributes<"div"> & {
   } | null;
 }
 
-const { class: className, user } = Astro.props;
+const { class: classList, user } = Astro.props;
 ---
   <Dropdown class="group flex flex-row w-full">
     <a href="/" class="menu-item">Home</a>

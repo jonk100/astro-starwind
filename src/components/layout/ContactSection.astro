@@ -11,16 +11,19 @@ import { Image } from '../starwind/image';
 interface Props {
   title?: string;
   description?: string;
+  imgSrc?: string;
 }
 
 const {
   title = 'Contact',
-  description
+  description,
+  imgSrc,
 } = Astro.props;
 ---
 
 <Section size="lg">
   <Cluster>
+    <Image src={imgSrc} inferSize />
     <Stack>
       {title && <h2>{title}</h2>}
       {description && <p>{description}</p>}
