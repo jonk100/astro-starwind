@@ -3,7 +3,7 @@
  */
 
 import { defineAction } from "astro:actions";
-import { z } from "astro:schema";
+import { z } from "astro/zod";
 import { createClient } from "@/lib/supabase"; // Use your new centralized factory
 import { friendlyAuthError } from './auth.ts';
 import type { AuthResult } from './auth.ts';

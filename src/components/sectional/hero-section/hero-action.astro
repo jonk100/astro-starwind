@@ -1,51 +1,59 @@
 ---
 import { Button } from '@/components/starwind/button';
-import { Select, SelectSearch, SelectTrigger, SelectGroup, SelectItem, SelectContent } from '@/components/starwind/select';
+import {
+  Select,
+  SelectSearch,
+  SelectTrigger,
+  SelectGroup,
+  SelectItem,
+  SelectContent,
+  SelectValue,
+} from '@/components/starwind/select';
 
-interface Props {
-  type: 'button' | 'search' | 'link';
-  text?: string;
-  href?: string;
-  class?: string;
-  style?: string;
-}
-
-interface ActionButton extends Props {
+interface ActionButton {
+  type: 'button';
   text: string;
-  action?: string;
   href?: string;
 }
 
-const { type, text, href, class: className, style } = Astro.props;
+interface ActionSearch {
+  type: 'search';
+  placeholder: string;
+  name: string;
+  menuItems: string[];
+}
+
+interface ActionLink {
+  type: 'link';
+  text: string;
+  href: string;
+}
+
+type Props = ActionButton | ActionSearch | ActionLink;
+
+const props = Astro.props;
 ---
 
-{
-  type === 'button' && <Button href={href}>{text}</Button>
-}
-{
-  type === 'search' && <Select type="search" placeholder="Search" />
+{props.type === 'button' && (
+  <Button href={props.href}>{props.text}</Button>
+)}
 
-  <Select id="combobox-demo" name="framework">
+{props.type === 'search' && (
+  <Select id="combobox-demo" name={props.name}>
     <SelectTrigger class="w-[240px]">
-      <SelectValue placeholder="Select a framework" />
+      <SelectValue placeholder={props.placeholder} />
     </SelectTrigger>
     <SelectContent>
-      <SelectSearch placeholder="Search frameworks..." emptyText="No frameworks found." />
+      <SelectSearch placeholder={`Search ${props.name}...`} emptyText="No results found." />
       <SelectGroup>
-        
-        <SelectItem value="astro">Astro</SelectItem>
-        <SelectItem value="next">Next.js</SelectItem>
-        <SelectItem value="svelte">SvelteKit</SelectItem>
-        <SelectItem value="solid">SolidStart</SelectItem>
-        <SelectItem value="remix">Remix</SelectItem>
-        <SelectItem value="nuxt">Nuxt</SelectItem>
-        <SelectItem value="angular">Angular</SelectItem>
-        <SelectItem value="vue">Vue</SelectItem>
+        {props.menuItems.map((item) => (
+          <SelectItem value={item}>{item}</SelectItem>
+        ))}
       </SelectGroup>
     </SelectContent>
   </Select>
-}
-{
-  type === 'link' && <a href={href}>{text}</a>
-}
+)}
 
+{props.type === 'link' && (
+  <a href={props.href}>{props.text}</a>
+)}

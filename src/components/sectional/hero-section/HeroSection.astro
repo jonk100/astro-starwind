@@ -5,6 +5,31 @@ import HeroAction from './hero-action.astro';
 import type { HTMLAttributes } from 'astro/types';
 import Center from '@/components/layout/Center.astro';
 
+/** A button action with an optional link destination. */
+interface ActionButton {
+  type: 'button';
+  text: string;
+  href?: string;
+}
+
+/** A search/select action with a list of menu items. */
+interface ActionSearch {
+  type: 'search';
+  placeholder: string;
+  name: string;
+  menuItems: string[];
+}
+
+/** A plain anchor link action. */
+interface ActionLink {
+  type: 'link';
+  text: string;
+  href: string;
+}
+
+/** Union of all supported hero action shapes. */
+type HeroActionProps = ActionButton | ActionSearch | ActionLink;
+
 interface Props extends HTMLAttributes<'section'> {
   h: string;
   p: string;
@@ -16,11 +41,25 @@ interface Props extends HTMLAttributes<'section'> {
   imgAlt?: string;
   width?: number;
   height?: number;
-  action?: 'button' | 'search' | 'link';
+  /** Pass the full action object so HeroAction receives all required props. */
+  action?: HeroActionProps;
 }
 
-const { h, p, style, class: className = '', textClass = '', as: Element = 'section', imgSrc, imgAlt = '', width = 0, height = 0, action } = Astro.props;
+const {
+  h,
+  p,
+  style,
+  class: className = '',
+  textClass = '',
+  as: Element = 'section',
+  imgSrc,
+  imgAlt = '',
+  width = 0,
+  height = 0,
+  action,
+} = Astro.props;
 ---
+
 {imgSrc ? (
   <Element
     class={`${className} relative flex w-full min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 py-12 hero-section`}
@@ -31,128 +70,100 @@ const { h, p, style, class: className = '', textClass = '', as: Element = 'secti
       class="hero-gradient"
       aria-hidden="true"
     />
-    <div 
+    <div
       class="
-        pointer-events-none 
-        absolute 
-        inset-0 
-        z-2 
-        bg-linear-to-b 
-        from-black/10 
+        pointer-events-none
+        absolute
+        inset-0
+        z-2
+        bg-linear-to-b
+        from-black/10
         via-black/30
         to-black/10
       "
       aria-hidden="true"
     />
-    <HeroText 
-      h={h} 
-      p={p} 
-      class={`relative z-10 w-3/4 max-w-3xl ${textClass}`} 
-      tone="onImage" 
+    <HeroText
+      h={h}
+      p={p}
+      class={`relative z-10 w-3/4 max-w-3xl ${textClass}`}
+      tone="onImage"
     />
-    {action && <HeroAction type={action} />}
+    {action && <HeroAction {...action} />}
   </Element>
 ) : (
   <Center axis="y" class="h-[90vh] w-full">
     <Element class={`${className} mx-auto section-container`} style={style}>
       <HeroText h={h} p={p} class={textClass} large />
-      {action && <HeroAction type={action} />}
+      {action && <HeroAction {...action} />}
     </Element>
   </Center>
 )}
 
 <style>
   .hero-gradient {
-  position: absolute;
-  inset: -30%;
+    position: absolute;
+    inset: -30%;
 
-  z-index: 1;
+    z-index: 1;
 
-  pointer-events: none;
+    pointer-events: none;
 
-  background:
-    radial-gradient(
-      circle at 20% 20%,
-      rgb(255 0 128 / 0.7),
-      transparent 25%
-    ),
-    radial-gradient(
-      circle at 80% 30%,
-      rgb(0 212 255 / 0.6),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 50% 80%,
-      rgb(124 255 0 / 0.5),
-      transparent 30%
-    );
+    background:
+      radial-gradient(
+        circle at 20% 20%,
+        rgb(255 0 128 / 0.7),
+        transparent 25%
+      ),
+      radial-gradient(
+        circle at 80% 30%,
+        rgb(0 212 255 / 0.6),
+        transparent 30%
+      ),
+      radial-gradient(
+        circle at 50% 80%,
+        rgb(124 255 0 / 0.5),
+        transparent 30%
+      );
 
-  background-size: 250% 250%;
+    background-size: 250% 250%;
 
-  filter: blur(120px);
+    filter: blur(120px);
 
-  mix-blend-mode: screen;
+    mix-blend-mode: screen;
 
-  opacity: 0.9;
+    opacity: 0.9;
 
-  will-change:
-    transform,
-    background-position,
-    opacity;
+    will-change:
+      transform,
+      background-position,
+      opacity;
 
-  animation:
-    gradientMove 12s ease infinite,
-    heroGradientFloat 18s ease-in-out infinite alternate;
-}
-
-@keyframes gradientMove {
-  0% {
-    background-position: 0% 50%;
+    animation:
+      gradientMove 12s ease infinite,
+      heroGradientFloat 18s ease-in-out infinite alternate;
   }
 
-  25% {
-    background-position: 100% 20%;
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 100% 20%; }
+    50% { background-position: 50% 100%; }
+    75% { background-position: 20% 30%; }
+    100% { background-position: 0% 50%; }
   }
 
-  50% {
-    background-position: 50% 100%;
+  @keyframes heroGradientFloat {
+    0% {
+      transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg);
+      opacity: 0.75;
+    }
+    50% {
+      transform: translate3d(-8%, 4%, 0) scale(1.15) rotate(8deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(6%, -6%, 0) scale(1.3) rotate(-8deg);
+      opacity: 0.8;
+    }
   }
-
-  75% {
-    background-position: 20% 30%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes heroGradientFloat {
-  0% {
-    transform:
-      translate3d(0%, 0%, 0)
-      scale(1)
-      rotate(0deg);
-
-    opacity: 0.75;
-  }
-
-  50% {
-    transform:
-      translate3d(-8%, 4%, 0)
-      scale(1.15)
-      rotate(8deg);
-
-    opacity: 1;
-  }
-
-  100% {
-    transform:
-      translate3d(6%, -6%, 0)
-      scale(1.3)
-      rotate(-8deg);
-
-    opacity: 0.8;
-  }
-}
 </style>

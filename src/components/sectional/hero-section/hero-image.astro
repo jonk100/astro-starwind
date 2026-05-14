@@ -1,8 +1,8 @@
 ---
 import Image from '@/components/starwind/image';
+import type { HTMLAttributes } from 'astro/types';
 
-interface Props {
-  as?: keyof HTMLElementTagNameMap;
+interface Props extends HTMLAttributes<'div'> {
   src: string;
   alt: string;
   width: number;
@@ -10,10 +10,10 @@ interface Props {
   class?: string;
 }
 
-const { as: Element = 'div', src, alt, width, height, class: className } = Astro.props;
+const { src, alt, width, height, class: className = '' } = Astro.props;
 ---
 
-<Element class={`absolute inset-0 z-0 opacity-20 ${className}`}>
+<div class:list={['absolute inset-0 z-0 opacity-20', className]}>
   <Image
     src={src}
     alt={alt}
@@ -21,4 +21,4 @@ const { as: Element = 'div', src, alt, width, height, class: className } = Astro
     height={height}
     class="h-full w-full object-cover hero-image"
   />
-</Element>
+</div>

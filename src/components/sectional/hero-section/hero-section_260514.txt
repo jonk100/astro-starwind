@@ -1,0 +1,577 @@
+--- File: HeroSection.astro ---
+---
+import HeroText from './hero-text.astro';
+import HeroImage from './hero-image.astro';
+import HeroAction from './hero-action.astro';
+import type { HTMLAttributes } from 'astro/types';
+import Center from '@/components/layout/Center.astro';
+
+/** A button action with an optional link destination. */
+interface ActionButton {
+  type: 'button';
+  text: string;
+  href?: string;
+}
+
+/** A search/select action with a list of menu items. */
+interface ActionSearch {
+  type: 'search';
+  placeholder: string;
+  name: string;
+  menuItems: string[];
+}
+
+/** A plain anchor link action. */
+interface ActionLink {
+  type: 'link';
+  text: string;
+  href: string;
+}
+
+/** Union of all supported hero action shapes. */
+type HeroActionProps = ActionButton | ActionSearch | ActionLink;
+
+interface Props extends HTMLAttributes<'section'> {
+  h: string;
+  p: string;
+  style?: string;
+  class?: string;
+  textClass?: string;
+  as?: keyof HTMLElementTagNameMap;
+  imgSrc?: string;
+  imgAlt?: string;
+  width?: number;
+  height?: number;
+  /** Pass the full action object so HeroAction receives all required props. */
+  action?: HeroActionProps;
+}
+
+const {
+  h,
+  p,
+  style,
+  class: className = '',
+  textClass = '',
+  as: Element = 'section',
+  imgSrc,
+  imgAlt = '',
+  width = 0,
+  height = 0,
+  action,
+} = Astro.props;
+---
+
+{imgSrc ? (
+  <Element
+    class={`${className} relative flex w-full min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 py-12 hero-section`}
+    style={style}
+  >
+    <HeroImage src={imgSrc} alt={imgAlt} width={width} height={height} />
+    <div
+      class="hero-gradient"
+      aria-hidden="true"
+    />
+    <div
+      class="
+        pointer-events-none
+        absolute
+        inset-0
+        z-2
+        bg-linear-to-b
+        from-black/10
+        via-black/30
+        to-black/10
+      "
+      aria-hidden="true"
+    />
+    <HeroText
+      h={h}
+      p={p}
+      class={`relative z-10 w-3/4 max-w-3xl ${textClass}`}
+      tone="onImage"
+    />
+    {action && <HeroAction {...action} />}
+  </Element>
+) : (
+  <Center axis="y" class="h-[90vh] w-full">
+    <Element class={`${className} mx-auto section-container`} style={style}>
+      <HeroText h={h} p={p} class={textClass} large />
+      {action && <HeroAction {...action} />}
+    </Element>
+  </Center>
+)}
+
+<style>
+  .hero-gradient {
+    position: absolute;
+    inset: -30%;
+
+    z-index: 1;
+
+    pointer-events: none;
+
+    background:
+      radial-gradient(
+        circle at 20% 20%,
+        rgb(255 0 128 / 0.7),
+        transparent 25%
+      ),
+      radial-gradient(
+        circle at 80% 30%,
+        rgb(0 212 255 / 0.6),
+        transparent 30%
+      ),
+      radial-gradient(
+        circle at 50% 80%,
+        rgb(124 255 0 / 0.5),
+        transparent 30%
+      );
+
+    background-size: 250% 250%;
+
+    filter: blur(120px);
+
+    mix-blend-mode: screen;
+
+    opacity: 0.9;
+
+    will-change:
+      transform,
+      background-position,
+      opacity;
+
+    animation:
+      gradientMove 12s ease infinite,
+      heroGradientFloat 18s ease-in-out infinite alternate;
+  }
+
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 100% 20%; }
+    50% { background-position: 50% 100%; }
+    75% { background-position: 20% 30%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes heroGradientFloat {
+    0% {
+      transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg);
+      opacity: 0.75;
+    }
+    50% {
+      transform: translate3d(-8%, 4%, 0) scale(1.15) rotate(8deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(6%, -6%, 0) scale(1.3) rotate(-8deg);
+      opacity: 0.8;
+    }
+  }
+</style>
+
+--- File: hero-action.astro ---
+---
+import { Button } from '@/components/starwind/button';
+import {
+  Select,
+  SelectSearch,
+  SelectTrigger,
+  SelectGroup,
+  SelectItem,
+  SelectContent,
+  SelectValue,
+} from '@/components/starwind/select';
+
+interface ActionButton {
+  type: 'button';
+  text: string;
+  href?: string;
+}
+
+interface ActionSearch {
+  type: 'search';
+  placeholder: string;
+  name: string;
+  menuItems: string[];
+}
+
+interface ActionLink {
+  type: 'link';
+  text: string;
+  href: string;
+}
+
+type Props = ActionButton | ActionSearch | ActionLink;
+
+const props = Astro.props;
+---
+
+{props.type === 'button' && (
+  <Button href={props.href}>{props.text}</Button>
+)}
+
+{props.type === 'search' && (
+  <Select id="combobox-demo" name={props.name}>
+    <SelectTrigger class="w-[240px]">
+      <SelectValue placeholder={props.placeholder} />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectSearch placeholder={`Search ${props.name}...`} emptyText="No results found." />
+      <SelectGroup>
+        {props.menuItems.map((item) => (
+          <SelectItem value={item}>{item}</SelectItem>
+        ))}
+      </SelectGroup>
+    </SelectContent>
+  </Select>
+)}
+
+{props.type === 'link' && (
+  <a href={props.href}>{props.text}</a>
+)}
+
+--- File: hero-image.astro ---
+---
+import Image from '@/components/starwind/image';
+import type { Polymorphic } from '@/types/polymorphic';
+
+interface Props extends Polymorphic<{ as: keyof HTMLElementTagNameMap }> {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  class?: string;
+}
+
+const { src, alt, width, height, class: class } = Astro.props as Props;
+---
+
+<Element class:list={[`absolute inset-0 z-0 opacity-20`, className]}>
+  <Image
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    class="h-full w-full object-cover hero-image"
+  />
+</Element>
+
+
+--- File: hero-section_260513.txt ---
+--- File: HeroSection.astro ---
+---
+import HeroText from './hero-text.astro';
+import HeroImage from './hero-image.astro';
+import HeroAction from './hero-action.astro';
+import type { HTMLAttributes } from 'astro/types';
+import Center from '@/components/layout/Center.astro';
+
+interface Props extends HTMLAttributes<'section'> {
+  h: string;
+  p: string;
+  style?: string;
+  class?: string;
+  textClass?: string;
+  as?: keyof HTMLElementTagNameMap;
+  imgSrc?: string;
+  imgAlt?: string;
+  width?: number;
+  height?: number;
+  action?: 'button' | 'search' | 'link';
+}
+
+const { h, p, style, class: className = '', textClass = '', as: Element = 'section', imgSrc, imgAlt = '', width = 0, height = 0, action } = Astro.props;
+---
+<Center axis="y" class="h-[90vh]">
+<!-- If image is provided, use it -->
+{imgSrc ? 
+  <Element class={`${className} mx-auto section-container hero-section`} style={style}>
+    <HeroImage src={imgSrc} alt={imgAlt} width={width} height={height} />
+    <HeroText h={h} p={p} class={textClass} />
+    {/* If action is provided, use it */}
+    {action && <HeroAction type={action} />}
+  </Element>
+: 
+  <Element class={`${className} mx-auto section-container`} style={style}>
+    <HeroText h={h} p={p} class={textClass} large={!imgSrc} />
+    {action && <HeroAction type={action} />}
+  </Element>
+}
+</Center>
+
+--- File: hero-image.astro ---
+---
+import Image from '@/components/starwind/image';
+
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+const { src, alt, width, height } = Astro.props;
+---
+
+<Image src={src} alt={alt} width={width} height={height} />
+
+
+--- File: hero-text.astro ---
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {
+  h: string;
+  p: string;
+  class?: string;
+  style?: string;
+  as?: keyof HTMLElementTagNameMap;
+  large?: boolean;
+}
+
+const { h, p, class: className = '', style, as: Element = 'div', large = false } = Astro.props;
+---
+
+<Element class={`text-center text-wrap m-auto ${className}`} style={style}>
+  <h1 class={large ? 'text-5xl font-medium py-8 px-0' : 'text-2xl py-4'}>{h}</h1>
+  <p class={large ? 'text-2xl font-medium' : 'text-lg'} class="text-muted">
+    {p}
+  </p>
+</Element>
+
+<style>
+  p {
+    animation: fadeIn 2s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      transform: translateY(200px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  h1 {
+    animation: slideL 1s ease, 
+    pulse 3s ease-in-out infinite 1s;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      transform-origin: center;
+    }
+    50% {
+      transform: scale(1.05);
+      transform-origin: center;
+    }
+  }
+  
+  @keyframes slideL {
+    from {
+      transform: translateX(700px);
+      letter-spacing: 0.5em;
+      opacity: 0;
+    }
+    50% {
+      transform: translateX(-100px);
+      letter-spacing: 0.1em;
+      opacity: 0.2;
+    }
+    70% {
+      transform: translateX(100px);
+      opacity: 0.5;
+    }
+    80% {
+      transform: translateX(-50px);
+      opacity: 0.7;
+    }
+    90% {
+      transform: translateX(30px);
+      opacity: 0.80;
+    }
+    95% {
+      transform: translateX(-20px);
+      opacity: 0.90;
+    }
+    to {
+      transform: translateX(0);
+      letter-spacing: 0em;
+      opacity: 1;
+    }
+  }
+
+
+</style>
+
+
+--- File: index.ts ---
+export { default as HeroSection } from './HeroSection.astro';
+export { default as HeroText } from './hero-text.astro';
+export { default as HeroImage } from './hero-image.astro';
+export { default as HeroAction } from './hero-action.astro';
+
+--- File: hero-action.astro ---
+---
+import Button from '@/components/starwind/button';
+import { Select, SelectSearch, SelectTrigger, SelectGroup, SelectItem, SelectContent } from '@/components/starwind/select';
+
+interface Props {
+  type: 'button' | 'search' | 'link';
+  text?: string;
+  href?: string;
+  class?: string;
+  style?: string;
+}
+
+const { type, text, href, class: className, style } = Astro.props;
+---
+
+{
+  type === 'button' && <Button href={href}>{text}</Button>
+}
+{
+  type === 'search' && <input type="search" placeholder="Search" />
+}
+{
+  type === 'link' && <a href={href}>{text}</a>
+}
+
+
+
+
+
+--- File: hero-text.astro ---
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {
+  h: string;
+  p: string;
+  class?: string;
+  style?: string;
+  as?: keyof HTMLElementTagNameMap;
+  large?: boolean;
+  /** High-contrast text for hero imagery */
+  tone?: 'default' | 'onImage';
+}
+
+const { h, p, class: className = '', style, as: Element = 'div', large = false, tone = 'default' } = Astro.props;
+const onImage = tone === 'onImage';
+---
+
+<Element
+  class:list={[
+    'text-center text-balance m-auto',
+    onImage && 'drop-shadow-md',
+    className,
+  ]}
+  style={style}
+>
+  <h1
+    class:list={[
+      onImage ? 'text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl py-4' 
+      : large ? 'text-5xl font-medium py-8 px-0 text-slate-100 shadow-lg' 
+      : 'text-3xl lh-1.2 py-4 text-slate-100 shadow-lg',
+    ]}
+  >
+    {h}
+  </h1>
+  <hr />
+  <p
+    class:list={[
+      onImage ? 'text-base leading-relaxed text-zinc-100/95 sm:text-lg md:text-xl' 
+      : large ? 'text-3xl font-medium text-slate-100 shadow-lg' 
+      : 'text-xl lh-1.2 text-slate-100 shadow-lg font-bold',
+      !onImage && 'text-muted',
+    ]}
+    style="padding: 0; margin: 2rem auto;"
+  >
+    {p}
+  </p>
+</Element>
+
+<style>
+  hr {
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+  }
+  p {
+    animation: fadeIn 2s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      transform: translateY(200px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  h1 {
+    animation: slideL 1s ease, 
+    pulse 3s ease-in-out infinite 1s;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      transform-origin: center;
+    }
+    50% {
+      transform: scale(1.05);
+      transform-origin: center;
+    }
+  }
+  
+  @keyframes slideL {
+    from {
+      transform: translateX(700px);
+      letter-spacing: 0.5em;
+      opacity: 0;
+    }
+    50% {
+      transform: translateX(-100px);
+      letter-spacing: 0.1em;
+      opacity: 0.2;
+    }
+    70% {
+      transform: translateX(100px);
+      opacity: 0.5;
+    }
+    80% {
+      transform: translateX(-50px);
+      opacity: 0.7;
+    }
+    90% {
+      transform: translateX(30px);
+      opacity: 0.80;
+    }
+    95% {
+      transform: translateX(-20px);
+      opacity: 0.90;
+    }
+    to {
+      transform: translateX(0);
+      letter-spacing: 0em;
+      opacity: 1;
+    }
+  }
+
+
+</style>
+
+
+--- File: index.ts ---
+export { default as HeroSection } from './HeroSection.astro';
+export { default as HeroText } from './hero-text.astro';
+export { default as HeroImage } from './hero-image.astro';
+export { default as HeroAction } from './hero-action.astro';
+

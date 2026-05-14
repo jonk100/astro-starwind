@@ -1,12 +1,10 @@
 ---
 // src/components/sectional/blog-section/BlogSection.astro
-import BlogCard from './blog-card.astro';
 import FeaturedPost from './FeaturedPost.astro';
 import { getCollection } from 'astro:content';
-import { Section, Container, Stack, Grid, Center, ScrollReveal } from '@/components/layout';
+import { Stack, Center, ScrollReveal } from '@/components/layout';
 import FullscreenGrid from './FullscreenGrid.astro';
 import { HeroText } from '../hero-section';
-
 
 // Fetch and sort posts by date descending
 const allPosts = (await getCollection('blog'))
