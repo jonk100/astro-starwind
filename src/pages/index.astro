@@ -3,11 +3,10 @@ import Layout from '@/layouts/Site.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { HeroSection } from '@/components/sectional/hero-section';
 import FeaturesSection from '@/components/sectional/features-section/FeaturesSection.astro';
-// import BlogSectionWide from '@/components/sectional/BlogSectionWide.astro';
-import BlogSectionWider from '@/components/sectional/blog-section-wide/BlogSectionWider.astro';
-import TestimonialsSection from '@/components/sectional/testimonial-section/TestimonialsSection.astro';
+import { BlogSection } from '@/components/sectional/wide-blog-section';
+import { TestimonialsSection } from '@/components/sectional/wide-testimonial';
 import PricingSection from '@/components/sectional/pricing-section/PricingSection.astro';
-import NewsletterSection from '@/components/sectional/newsletter-section/NewsletterSection.astro';
+import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
 import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
 import { ContactSection } from '@/components/layout';
 
@@ -55,7 +54,7 @@ export const prerender = false;
 		]}
 	/>
 
-	<BlogSectionWider />
+	<BlogSection />
 	<TestimonialsSection 
 	  heading="Real stories"
 	  subheading="People who have changed their lives with Mindful Habits Studio."

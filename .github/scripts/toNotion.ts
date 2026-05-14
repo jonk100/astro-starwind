@@ -12,12 +12,12 @@
  * characters per rich-text block).
  *
  * Required environment variables:
- *   NOTION_KEY      Your Notion integration secret token.
- *   NOTION_DB  The ID of the target Notion database.
+ *   KEY      Your Notion integration secret token.
+ *   DB  The ID of the target Notion database.
  *
  * Optional environment variables:
  *   SNAPSHOT_IN         Path to the snapshot JSON file (default: "snapshot.json")
- *   NOTION_API_VERSION  Notion API version header (default: "2022-06-28")
+ *   API_VERSION  Notion API version header (default: "2022-06-28")
  *
  * Expected Notion database properties:
  *   Name  (title)   — The file's repo-relative path.
@@ -33,10 +33,10 @@ import path from "path";
 // Configuration
 // ---------------------------------------------------------------------------
 
-const NOTION_KEY = process.env.NOTION_KEY ?? "";
-const NOTION_DB = process.env.NOTION_DB ?? "";
+const KEY = process.env.KEY ?? "";
+const DB = process.env.DB ?? "";
 const SNAPSHOT_IN = process.env.SNAPSHOT_IN ?? "snapshot.json";
-const NOTION_API_VERSION = process.env.NOTION_API_VERSION ?? "2022-06-28";
+const API_VERSION = process.env.API_VERSION ?? "2022-06-28";
 
 /** Maximum characters per Notion rich-text block. */
 const MAX_BLOCK_CHARS = 1900; // slightly under 2000 for safety
@@ -180,9 +180,9 @@ async function notionFetch<T>(
   const res = await fetch(`https://api.notion.com${endpoint}`, {
     method,
     headers: {
-      Authorization: `Bearer ${NOTION_KEY}`,
+      Authorization: `Bearer ${KEY}`,
       "Content-Type": "application/json",
-      "Notion-Version": NOTION_API_VERSION,
+      "Notion-Version": API_VERSION,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
@@ -212,7 +212,7 @@ async function fetchExistingPages(): Promise<Record<string, string>> {
     if (cursor) body.start_cursor = cursor;
 
     const response = await notionFetch<NotionQueryResponse>(
-      `/v1/databases/${NOTION_DB}/query`,
+      `/v1/databases/${DB}/query`,
       "POST",
       body
     );
@@ -266,7 +266,7 @@ async function createPage(
   extension: string
 ): Promise<void> {
   await notionFetch("/v1/pages", "POST", {
-    parent: { database_id: NOTION_DB },
+    parent: { database_id: DB },
     properties: {
       Name: {
         title: [{ type: "text", text: { content: filePath } }],
@@ -337,12 +337,12 @@ async function updatePage(
  */
 async function main(): Promise<void> {
   // Validate required config
-  if (!NOTION_KEY) {
-    console.error("[toNotion] NOTION_KEY is not set.");
+  if (!KEY) {
+    console.error("[toNotion] KEY is not set.");
     process.exit(1);
   }
-  if (!NOTION_DB) {
-    console.error("[toNotion] NOTION_DB is not set.");
+  if (!DB) {
+    console.error("[toNotion] DB is not set.");
     process.exit(1);
   }
   if (!fs.existsSync(SNAPSHOT_IN)) {

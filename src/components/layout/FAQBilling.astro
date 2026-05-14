@@ -1,26 +1,25 @@
 ---
 /**
  * BillingFAQSection
- * FAQ grid block focused on billing questions.
- *
- * Renders a three-column auto-fit grid of flat question/answer pairs,
- * followed by a CTA block. Matches the layout style from the FAQ mockup.
+ * - FAQ grid block focused on billing questions.
+ * - Renders a three-column auto-fit grid of flat question/answer pairs,
+ * - followed by a CTA block. Matches the layout style from the FAQ mockup.
  *
  * Features:
  * - Data-driven via `items` prop
  * - Reuses Section, ContentWidth, Stack, Grid primitives
  * - Optional section title and description
  * - Optional CTA label and href
+ * @param {string} title - The title of the FAQ section.
+ * @param {string} description - The description of the FAQ section.
+ * @param {FAQItem[]} items - The FAQ items.
+ * @param {string} ctaLabel - The label of the CTA button.
+ * @param {string} ctaHref - The href of the CTA button.
  */
 
-import Section from './Section.astro';
-import ContentWidth from './ContentWidth.astro';
-import Stack from './Stack.astro';
-import Grid from './Grid.astro';
+import { Section, ContentWidth, Stack, Grid } from './';
 
-/**
- * A single billing FAQ entry.
- */
+/** A single billing FAQ entry. */
 interface FAQItem {
   /** The question text displayed as a heading. */
   question: string;
@@ -28,36 +27,17 @@ interface FAQItem {
   answer: string;
 }
 
-/**
- * Props for BillingFAQSection.
- */
+/** Props for BillingFAQSection. */
 interface Props {
-  /**
-   * Section heading.
-   * @default 'Billing'
-   */
+  /** Section heading. @default 'Billing' */
   title?: string;
-
-  /**
-   * Optional subtitle below the heading.
-   */
+  /** Optional subtitle */
   description?: string;
-
-  /**
-   * Array of FAQ items to render.
-   */
+  /** Array of FAQ items */
   items: FAQItem[];
-
-  /**
-   * Label for the CTA button.
-   * @default 'Contact us'
-   */
+  /** Label for the CTA button. @default 'Contact us' */
   ctaLabel?: string;
-
-  /**
-   * Href for the CTA button.
-   * @default '/contact'
-   */
+  /** Href for the CTA button. @default '/contact' */
   ctaHref?: string;
 }
 
@@ -73,12 +53,18 @@ const {
 <Section size="lg">
   <ContentWidth>
     <Stack gap="lg">
-
+      {/**
+       * Section Header
+       * - Title and description props
+       */}
       <Stack gap="sm">
         <h2>{title}</h2>
         {description && <p class="section-description">{description}</p>}
       </Stack>
-
+      {/**
+       * FAQ Grid
+       * - Three-column auto-fit grid of FAQ items
+       */}
       <Grid min="16rem" gap="lg">
         {items.map((item) => (
           <div class="faq-item">
@@ -87,7 +73,10 @@ const {
           </div>
         ))}
       </Grid>
-
+      {/**
+       * CTA Block
+       * - Need more help? section with button
+       */}
       <div class="cta-block">
         <Stack gap="sm">
           <h3>Need more help?</h3>
@@ -97,7 +86,6 @@ const {
           </div>
         </Stack>
       </div>
-
     </Stack>
   </ContentWidth>
 </Section>

@@ -4,8 +4,8 @@
 # Also supports manual runs via workflow_dispatch.
 #
 # Required repository secrets:
-#   NOTION_API_KEY      — Your Notion integration token
-#   NOTION_DATABASE_ID  — The target database ID
+#   NOTION_KEY      — Your Notion integration token
+#   NOTION_DB  — The target database ID
 #
 # Optional tweaks:
 #   Change SNAPSHOT_DIRS below to add more directories (comma-separated).
@@ -69,6 +69,6 @@ jobs:
       - name: Sync to Notion
         run: pnpm dlx tsx .github/scripts/toNotion.ts
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_KEY: ${{ secrets.NOTION_KEY }}
+          NOTION_DB: ${{ secrets.NOTION_DB }}
           SNAPSHOT_IN: "snapshot.json"

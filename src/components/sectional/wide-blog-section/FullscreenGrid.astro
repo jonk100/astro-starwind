@@ -1,6 +1,6 @@
 ---
 import { Grid, ScrollReveal } from '@/components/layout';
-import BlogCard from './blog-card.astro';
+import { BlogCard } from './';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -13,7 +13,7 @@ const { posts } = Astro.props;
 
 <Grid min="20rem" gap="lg">
   {posts.map((post) => (
-    <ScrollReveal axis="y" distance="60px">
+    <ScrollReveal axis="x" distance="-420px">
       <BlogCard post={post} variant="standard" />
     </ScrollReveal>
   ))}

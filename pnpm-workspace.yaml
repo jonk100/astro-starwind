@@ -2,7 +2,5 @@ allowBuilds:
   astro-meta-engine: false
   esbuild: true
   supabase: true
-  workerd: true
   sharp: false
-  '@sentry/cli': true
-  '@parcel/watcher': true
+

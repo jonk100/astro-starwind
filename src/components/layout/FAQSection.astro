@@ -1,12 +1,14 @@
 ---
 /**
  * FAQSection
- * Standard FAQ layout block with structured question/answer flow.
+ * - Standard FAQ layout block with structured question/answer flow.
+ * @param {string} title - The title of the FAQ section.
+ * @param {FAQItem[]} items - The FAQ items.
+ * @param {string} items.question - The question text.
+ * @param {string} items.answer - The answer text.
  */
 
-import Section from './Section.astro';
-import ContentWidth from './ContentWidth.astro';
-import Stack from './Stack.astro';
+import { Section, ContentWidth, Stack } from './';
 
 interface FAQItem {
   question: string;
@@ -25,8 +27,14 @@ const { title = 'FAQ', items } = Astro.props;
   <ContentWidth width="md">
     <Stack gap="lg">
 
-      <h2>{title}</h2>
-
+      <!-- Title -->
+      <h2>{title}</h2>    
+      {/**
+       * FAQ items
+       * - Each item is a details element
+       * - Summary is the question
+       * - P tag is the answer
+       */}
       <Stack gap="md">
         {items.map((item) => (
           <details class="faq-item">
@@ -35,7 +43,6 @@ const { title = 'FAQ', items } = Astro.props;
           </details>
         ))}
       </Stack>
-
     </Stack>
   </ContentWidth>
 </Section>

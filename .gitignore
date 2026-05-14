@@ -30,3 +30,4 @@ docs/
 dist/
 # Local Netlify folder
 .netlify
+barrel-builder.config.json

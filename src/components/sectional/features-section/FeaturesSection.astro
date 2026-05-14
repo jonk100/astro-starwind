@@ -1,6 +1,17 @@
 ---
 import FeatureCard from './FeatureCard.astro';
-import ScrollReveal from '@/components/layout/ScrollReveal.astro';
+import { ScrollReveal } from '@/components/layout';
+/**
+ * FeaturesSection
+ * - displays feature cards or feature list content in a grid
+ * @param heading - The heading of the section
+ * @param subheading - The subheading of the section
+ * @param features - The features to display
+ * @param class - Additional classes to apply to the section
+ * 
+ * Features
+ * - 
+ */
 
 interface Props {
   heading: string;
