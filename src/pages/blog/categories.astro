@@ -25,7 +25,14 @@ const sortedCategories = Array.from(categoryMap.entries())
   .sort(([a, b]: [string, unknown]) => a.localeCompare(b as string))
   .map(([category, categoryPosts]: [string, unknown[]]) => ({
     name: category,
-    posts: categoryPosts.sort((a: unknown, b: unknown) => new Date((a as { data: { date: string | Date } }).data.date).valueOf() - new Date((b as { data: { date: string | Date } }).data.date).valueOf()),
+    posts: categoryPosts.sort((
+      a: unknown, 
+      b: unknown
+    ) => new Date((
+      a as { data: { date: string | Date } }
+    ).data.date).valueOf() - new Date((
+      b as { data: { date: string | Date } }
+    ).data.date).valueOf()),
     count: categoryPosts.length
   }));
 
@@ -139,5 +146,4 @@ const allPostsData = posts.map(post => ({
         <p>Check back later for categorized content.</p>
       </div>
     )}
-  </div>
 </BlogIndexLayout>

@@ -3,11 +3,12 @@ import Head from './BaseHead.astro';
 import Navigation from '../components/header/Header.astro';
 import Footer from '../layouts/Footer.astro';
 import '../styles/global.css';
+import type { User } from '@supabase/supabase-js';
 
 interface Props {
 	title: string;
 	description: string;
-	user?: any;
+	user?: User;
 }
 
 const { title, description, user: userProp } = Astro.props;
