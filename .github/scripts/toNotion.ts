@@ -33,8 +33,8 @@ import path from "path";
 // Configuration
 // ---------------------------------------------------------------------------
 
-const KEY = process.env.KEY ?? "";
-const DB = process.env.DB ?? "";
+const KEY = process.env.NOTION_KEY ?? "";
+const DB = process.env.NOTION_DB ?? "";
 const SNAPSHOT_IN = process.env.SNAPSHOT_IN ?? "snapshot.json";
 const API_VERSION = process.env.API_VERSION ?? "2022-06-28";
 
