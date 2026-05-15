@@ -44,7 +44,7 @@ const wrapperProps = href ? { href, class: "block" } : { class: "block" };
 <ImageWrapper {...wrapperProps}>
   <div class={blogCardImage({ aspectRatio, class: className })} {...rest}>
     <Image 
-      src={post.image || "/blog-placeholder-1.jpg"} 
+      src={post.image || ""} 
       alt={post.title}
       inferSize
       class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"

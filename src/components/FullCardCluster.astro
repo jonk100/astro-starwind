@@ -1,0 +1,215 @@
+---
+/**
+ * FullCardCluster.astro
+ *
+ * A full-bleed cluster wrapper for Card.astro components. Stretches edge-to-edge
+ * across the viewport while keeping its inner grid centred within a max-width
+ * container. Cards are arranged in a responsive CSS grid whose column count is
+ * controlled by the `columns` prop.
+ *
+ * Colour-scheme assignment
+ * ────────────────────────
+ * Each direct child Card receives a `scheme` prop ("light" | "dark"). The
+ * cluster can operate in three modes set by the `schemeMode` prop:
+ *
+ *   "alternate"  (default) — strict light/dark/light/dark… sequence.
+ *   "random"               — each card gets a randomly chosen scheme on the
+ *                            server at render time (stable across page loads
+ *                            for a given set of cards, no hydration flash).
+ *   "uniform"              — all cards share the value of `defaultScheme`.
+ *
+ * Usage
+ * ─────
+ * ```astro
+ * ---
+ * import FullCardCluster from "@/components/FullCardCluster.astro";
+ * import Card            from "@/components/Card.astro";
+ * ---
+ *
+ * <FullCardCluster columns={3} schemeMode="alternate">
+ *   <Card title="Something dark" tag="Essay" />
+ *   <Card title="Something light" image="/hero.jpg" tag="Review" />
+ *   <Card title="Another dark" href="/read/slug">
+ *     A line or two of body copy dropped in via the default slot.
+ *   </Card>
+ * </FullCardCluster>
+ * ```
+ *
+ * @prop {number}  [columns=3]              - Grid column count at desktop widths.
+ * @prop {"alternate"|"random"|"uniform"} [schemeMode="alternate"]
+ *                                          - Strategy for assigning card colour schemes.
+ * @prop {"light"|"dark"} [defaultScheme="light"]
+ *                                          - Seed / uniform scheme value.
+ * @prop {string}  [clusterBg]              - Override the cluster's outer background
+ *                                            (defaults to a mid-tone that works with
+ *                                            both light and dark cards).
+ * @prop {string}  [gap="2rem"]             - Gap between cards (any CSS length).
+ * @prop {string}  [padding="3rem 2rem"]    - Inner padding of the cluster (any CSS shorthand).
+ * @prop {string}  [maxWidth="90rem"]       - Max-width of the card grid container.
+ */
+
+interface Props {
+  columns?: number;
+  schemeMode?: "alternate" | "random" | "uniform";
+  defaultScheme?: "light" | "dark";
+  clusterBg?: string;
+  gap?: string;
+  padding?: string;
+  maxWidth?: string;
+}
+
+const {
+  columns = 2,
+  schemeMode = "alternate",
+  defaultScheme = "light",
+  gap = "2rem",
+  padding = "3rem 2rem",
+  maxWidth = "90rem",
+} = Astro.props;
+
+/**
+ * Build a finite list of schemes to inject as `data-scheme` on each child card.
+ * We pre-generate 50 values — more than enough for any realistic cluster.
+ * The cluster uses CSS `nth-child` selectors to apply them without JS.
+ *
+ * For "random" mode we generate a stable sequence at SSR time using a simple
+ * deterministic shuffle seeded by the column count so re-renders are consistent.
+ *
+ * @param {"alternate"|"random"|"uniform"} mode
+ * @param {"light"|"dark"} seed
+ * @param {number} count
+ * @returns {Array<"light"|"dark">}
+ */
+function buildSchemes(
+  mode: "alternate" | "random" | "uniform",
+  seed: "light" | "dark",
+  count: number
+): Array<"light" | "dark"> {
+  if (mode === "uniform") {
+    return Array(count).fill(seed);
+  }
+
+  if (mode === "alternate") {
+    return Array.from({ length: count }, (_, i) =>
+      (i % 2 === 0) === (seed === "light") ? "light" : "dark"
+    );
+  }
+
+  // "random" — pseudo-random but stable (seeded by column count + index)
+  const opposite: Record<"light" | "dark", "light" | "dark"> = {
+    light: "dark",
+    dark: "light",
+  };
+  return Array.from({ length: count }, (_, i) => {
+    // Simple hash: combine index with column count to get a 0/1
+    const hash = (i * 2654435761 + count) >>> 0;
+    const pick = hash % 2 === 0;
+    return pick ? seed : opposite[seed];
+  });
+}
+
+const SCHEME_COUNT = 50;
+const schemes = buildSchemes(schemeMode, defaultScheme, SCHEME_COUNT);
+
+// Build one CSS rule per position so cards inherit their scheme without JS.
+// e.g.  .cluster__grid > :nth-child(1) { --slot-scheme: "light"; }
+// Card.astro reads `data-scheme` which is set via the nth-child attr selector trick —
+// but because Astro slots don't let us inject props into slotted children from the
+// parent, we rely on CSS custom properties on the card *position* and let Card.astro
+// expose a CSS-only colour scheme that the cluster overrides via nth-child selectors.
+//
+// The cleanest approach is to declare the CSS variables for each nth-child position
+// and have Card.astro consume them as a fallback — but since Card already uses
+// data-scheme for its own vars, we generate nth-child overrides that re-set
+// those same custom properties directly on the positional element.
+//
+// This means cards are styled correctly with zero JS and zero prop-drilling.
+
+const nthChildRules = schemes
+  .map((scheme, i) => {
+    const bg        = scheme === "light" ? "#f5f2ec" : "#141414";
+    const fg        = scheme === "light" ? "#111010" : "#e8e4dc";
+    const tagBg     = scheme === "light" ? "#111010" : "#e8e4dc";
+    const tagFg     = scheme === "light" ? "#f5f2ec" : "#141414";
+    const border    = scheme === "light" ? "#c8c3b8" : "#2e2e2e";
+    const imgBg     = scheme === "light" ? "#dedad3" : "#1f1f1f";
+    return `.cluster__grid > :nth-child(${i + 1}) {
+  --card-bg: ${bg};
+  --card-fg: ${fg};
+  --card-tag-bg: ${tagBg};
+  --card-tag-fg: ${tagFg};
+  --card-border: ${border};
+  --card-img-bg: ${imgBg};
+}`;
+  })
+  .join("\n");
+---
+
+<section
+  class="cluster"
+  style={[
+    `--grid-columns: ${columns}`,
+    `--grid-gap: ${gap}`,
+    `--grid-padding: ${padding}`,
+    `--grid-max-width: ${maxWidth}`,
+  ].join("; ")}
+>
+  <div class="cluster__inner">
+    <div class="cluster__grid">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<!--
+  Inject per-position scheme overrides.
+  `is:global` + a unique class prefix keeps these from leaking while
+  still targeting slotted children (which Astro scoped styles can't reach).
+-->
+<style is:global set:html={nthChildRules} />
+
+<style>
+  /* ─── Cluster (full-bleed outer shell) ───────────────────────────── */
+  .cluster {
+    /* Default mid-tone sits between the two card schemes */
+    width: 100%;
+    padding: 1rem;
+    margin: 0 auto;
+  }
+
+  /* ─── Inner container (centred, max-width) ───────────────────────── */
+  .cluster__inner {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ─── Grid ───────────────────────────────────────────────────────── */
+  .cluster__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+    gap: var(--grid-gap);
+    /*
+     * align-items: stretch ensures cards in the same row share a height,
+     * which makes the image-half / text-half split visually consistent.
+     */
+    align-items: stretch;
+    margin: 0 auto;
+  }
+
+  /* ─── Responsive column collapse ────────────────────────────────── */
+  @media (max-width: 72rem) {
+    .cluster__grid {
+      grid-template-columns: repeat(
+        min(var(--grid-columns), 2),
+        minmax(0, 1fr)
+      );
+      margin: 0 auto;
+    }
+  }
+
+  @media (max-width: 44rem) {
+    .cluster__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

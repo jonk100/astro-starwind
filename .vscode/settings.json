@@ -2,9 +2,14 @@
     "workbench.activityBar.autoHide": false,
     "workbench.activityBar.compact": true,
     "workbench.editor.decorations.colors": false,
-    "workbench.colorTheme": "One Dark Pro Darker",
+    "workbench.colorTheme": "Bearded Theme feat. WebDevCody",
     "workbench.colorCustomizations": {
 
         
+    },
+    "piny.project_settings": {
+        "open-pages": [
+            "pinyfakepage.html"
+        ]
     }
 }

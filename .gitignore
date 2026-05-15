@@ -24,7 +24,7 @@ pnpm-debug.log*
 .idea/
 
 # Docs
-docs/
+# docs/
 
 # Build outputs
 dist/

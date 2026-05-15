@@ -23,9 +23,9 @@ interface Props {
 const { title = 'FAQ', items } = Astro.props;
 ---
 
-<Section size="lg">
-  <ContentWidth width="md">
-    <Stack gap="lg">
+<!-- <Section size="lg"> -->
+  <!-- <ContentWidth width="full"> -->
+    <!-- <Stack gap="lg"> -->
 
       <!-- Title -->
       <h2>{title}</h2>    
@@ -35,17 +35,17 @@ const { title = 'FAQ', items } = Astro.props;
        * - Summary is the question
        * - P tag is the answer
        */}
-      <Stack gap="md">
+      <!-- <Stack gap="md"> -->
         {items.map((item) => (
           <details class="faq-item">
             <summary>{item.question}</summary>
             <p>{item.answer}</p>
           </details>
         ))}
-      </Stack>
-    </Stack>
-  </ContentWidth>
-</Section>
+      <!-- </Stack> -->
+    <!-- </Stack> -->
+  <!-- </ContentWidth> -->
+<!-- </Section> -->
 
 <style>
   .faq-item summary {

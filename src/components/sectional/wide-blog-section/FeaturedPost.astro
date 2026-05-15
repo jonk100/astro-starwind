@@ -30,7 +30,7 @@ const formattedDate = new Date(featuredPost.data.date).toLocaleDateString('en-US
 ---
 
 <Element
-  class:list={['relative min-h-[40vh] flex items-center justify-center overflow-hidden mx-4 my-8', classList]}
+  class:list={['relative min-h-[40vh] flex items-center justify-center overflow-hidden mx-4 my-8 w-full h-[100vh]', classList]}
   {...rest}
 >
   {featuredPost.data.image && (
@@ -39,7 +39,7 @@ const formattedDate = new Date(featuredPost.data.date).toLocaleDateString('en-US
           {categories.map((cat: string) => <span class="text-rose-300 border-bottom border-white">{cat}</span><span>.</span>)}
           <span class="opacity-80"></span>
           <span>{formattedDate}</span>
-        </Cluster>
+      </Cluster>
       <Image
         src={featuredPost.data.image}
         alt={featuredPost.data.title}
@@ -54,22 +54,20 @@ const formattedDate = new Date(featuredPost.data.date).toLocaleDateString('en-US
   <div class="relative z-10 w-full py-20">
     <ScrollReveal>
       <Stack gap="lg" class="text-center">
-        
-        
         <Stack gap="lg" class="w-full box-shadow-lg box-shadow-color-black/20" style="font-weight: bold;">
         <HeroText
           h={featuredPost.data.title}
           p={featuredPost.data.description || ''}
           tone="onImage" 
           large
+          class="max-w-4xl"
         />
-
         <Cluster gap="md" align="center">
           {tags.map((tag: string) => (
             <a href={`/blog?tag=${tag}`} class="no-underline">
               <Button
-                size="sm"
-                variant="outline"
+                size="lg"
+                variant="secondary"
                 class="hover:scale-105 transition-transform"
                 style={`border-color: ${getTagColor(tag)}; color: white; background: rgba(0,0,0,0.3);`}
               >

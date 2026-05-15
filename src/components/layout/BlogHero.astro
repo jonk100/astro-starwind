@@ -1,0 +1,62 @@
+---
+interface Props {
+  /**
+   * Main heading displayed at the top of the hero.
+   * Font size scales from 2xl on mobile up to 6xl on large screens.
+   */
+  heading: string;
+
+  /**
+   * Optional subheading displayed beneath the main heading.
+   * Scales from lg on mobile to 2xl on large screens.
+   */
+  subheading?: string;
+
+  /**
+   * Visual treatment of the hero container.
+   * - "card"  — rounded panel with background and shadow, centred at half width.
+   * - "flush" — full width, no background treatment, minimal padding.
+   * @default "card"
+   */
+  variant?: "card" | "flush";
+
+  /** Optional additional classes passed to the root element. */
+  class?: string;
+}
+
+const {
+  heading,
+  subheading,
+  variant = "card",
+  class: className,
+} = Astro.props;
+---
+
+<div
+  class:list={[
+    "text-center w-full",
+    variant === "card" && [
+      "bg-[var(--primary-1)]",
+      "shadow-xl shadow-slate-900/20",
+      "border rounded-xl",
+      "lg:w-1/2 mx-auto",
+      "px-8 pb-8",
+    ],
+    variant === "flush" && "py-12",
+    className,
+  ]}
+>
+  <h1 class="pt-12 text-2xl sm:text-4xl lg:text-6xl font-bold text-[rgb(var(--purple))] leading-tight">
+    {heading}
+  </h1>
+
+  {subheading && (
+    <p class="mt-4 text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-2xl mx-auto font-bold">
+      {subheading}
+    </p>
+  )}
+
+  <div class="mt-6 max-w-2xl mx-auto">
+    <slot />
+  </div>
+</div>

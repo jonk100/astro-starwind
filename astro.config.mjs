@@ -1,4 +1,4 @@
-import { defineConfig, fontProviders } from 'astro/config';
+import { defineConfig } from 'astro/config';
 import astroConsent from "astro-consent";
 import tailwindcss from "@tailwindcss/vite";
 import mdx from '@astrojs/mdx';

@@ -1,9 +1,13 @@
 ---
+/**
+ * Base site layout with header, main content, and footer
+ */
 import Head from './BaseHead.astro';
-import Navigation from '../components/header/Header.astro';
+import Header from '../components/header/Header.astro';
 import Footer from '../layouts/Footer.astro';
 import '../styles/global.css';
 import type { User } from '@supabase/supabase-js';
+import { Stack } from '@/components/layout';
 
 interface Props {
 	title: string;
@@ -16,19 +20,29 @@ const user = userProp ?? Astro.locals.user;
 ---
 <html lang="en">
 	<head>
-		<Head title={title} description={description} />
+		<Head 
+    title={title} description={description} />
+
 	</head>
 	<body>
-    <div class="site-header-region">
-      <Navigation user={user} />
+    <header class="layout-header sticky top-0 z-50">
+      <Header user={user} />
       <slot name="header" />
-    </div>
+    </header>
       <slot name="hero" class="hero-section" />
-    <main>
-      <slot name="main-top" />
-      <slot />
-      <slot name="main-bottom" />
-    </main>
+          <main>
+
+          <Stack>
+          <slot name="main-top" />
+
+          </Stack>
+
+          <slot />
+          
+          <Stack>
+          <slot name="main-bottom" />
+        </Stack>
+      </main>
     <slot name="zero" />
     <footer class="mt-auto">
       <Footer />

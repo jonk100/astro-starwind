@@ -90,18 +90,12 @@
 }
 
 :root {
-  --background: #EAEFE8;
+  --background: #f9faf9be;
   --foreground: var(--color-stone-950);
   --card: var(--color-stone-50);
   --card-foreground: var(--color-stone-950);
   --popover: var(--color-white);
   --popover-foreground: var(--color-stone-950);
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-stone-50);
-  --primary-accent: var(--color-blue-700);
-  --secondary: var(--color-stone-200);
-  --secondary-foreground: var(--color-stone-950);
-  --secondary-accent: var(--color-stone-950);
   --muted: var(--color-stone-100);
   --muted-foreground: var(--color-stone-600);
   --accent-foreground: var(--color-stone-900);

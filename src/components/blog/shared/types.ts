@@ -1,4 +1,6 @@
 export interface BlogPost {
+  data: any;
+  id: any;
   title: string;
   description: string;
   date: Date | string;
@@ -42,7 +44,7 @@ export interface BlogBreadcrumb {
   current?: boolean;
 }
 
-export type BlogCardVariant = "default" | "featured" | "minimal" | "compact";
+export type BlogCardVariant = "default" | "featured" | "minimal" | "compact" | "colorful";
 export type BlogCardSize = "sm" | "md" | "lg";
 export type HeroCardStyle = "classic" | "modern" | "minimal" | "overlay";
 export type GridLayout = "three-column" | "stacking" | "masonry";

@@ -15,6 +15,7 @@ interface Props
 
 const { variant, size, class: className, ...rest } = Astro.props;
 
+
 export const button = tv({
   base: [
     "inline-flex items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap",
@@ -29,7 +30,7 @@ export const button = tv({
       primary:
         "bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/50",
       secondary:
-        "bg-secondary text-secondary-foreground hover:bg-secondary/90 focus-visible:ring-secondary/50",
+        "bg-secondary-1 text-accent5 hover:bg-secondary/90 focus-visible:ring-secondary/50",
       outline:
         "dark:border-input focus-visible:ring-outline/50 bg-background dark:bg-input/30 focus-visible:border-outline hover:bg-muted dark:hover:bg-input/50 hover:text-foreground border shadow-xs",
       ghost: "hover:bg-transparent hover:text-primary-accent hover:font-semibold focus-visible:ring-outline/50",

@@ -35,77 +35,133 @@ const faqs = [
   }
 ];
 ---
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-16 items-start">
 
-<section class={`py-16 ${className}`}>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-      
-      <!-- FAQ Section -->
-      <div>
-        <h2 class="text-4xl font-bold mb-8 text-stone-900 dark:text-stone-50">Questions</h2>
-        <Stack gap="md">
-          {faqs.map((faq) => (
-            <div class="border-b border-stone-200 dark:border-stone-800 pb-6">
-              <h3 class="text-xl font-semibold mb-2 text-stone-900 dark:text-stone-50">
-                {faq.question}
-              </h3>
-              <p class="text-stone-600 dark:text-stone-400 leading-relaxed">
-                {faq.answer}
-              </p>
-            </div>
-          ))}
-        </Stack>
-        
-        <div class="mt-8 pt-8 border-t border-stone-200 dark:border-stone-800">
-          <p class="text-lg text-stone-700 dark:text-stone-300 mb-4">Need more help?</p>
-          <Button href="/contact" size="lg">
-            Contact us
-          </Button>
-        </div>
+    <!-- FAQ Section -->
+    <div>
+      <h2 class="text-4xl font-bold mb-8 text-stone-900 dark:text-stone-50">
+        Questions
+      </h2>
+
+      <Stack gap="md">
+        {faqs.map((faq) => (
+          <div class="border-b border-stone-200 dark:border-stone-800 pb-6">
+            <h3 class="text-xl font-semibold mb-2 text-stone-900 dark:text-stone-50">
+              {faq.question}
+            </h3>
+
+            <p class="text-stone-600 dark:text-stone-400 leading-relaxed">
+              {faq.answer}
+            </p>
+          </div>
+        ))}
+      </Stack>
+
+      <div class="mt-10 pt-8 border-t border-stone-200 dark:border-stone-800">
+        <p class="text-lg text-stone-700 dark:text-stone-300 mb-4">
+          Need more help?
+        </p>
+
+        <Button href="/contact" size="lg">
+          Contact us
+        </Button>
       </div>
-      
-      <!-- Contact Section -->
-      <div>
-        <h2 class="text-4xl font-bold mb-8 text-stone-900 dark:text-stone-50">Support</h2>
-        
-        <div class="mb-8">
-          <h3 class="text-2xl font-semibold mb-6 text-stone-900 dark:text-stone-50">Get in touch</h3>
-          
-          <Stack gap="lg">
-            <div>
-              <p class="text-sm font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Email</p>
-              <a href="mailto:hello@mindfulhabits.com" class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors">
-                hello@mindfulhabits.com
-              </a>
-            </div>
-            
-            <div>
-              <p class="text-sm font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Phone</p>
-              <a href="tel:+14155550147" class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors">
-                +1 (415) 555-0147
-              </a>
-            </div>
-            
-            <div>
-              <p class="text-sm font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Office</p>
-              <address class="text-lg text-stone-900 dark:text-stone-50 not-italic">
-                456 Mindful Lane<br />
-                San Francisco, CA 94105<br />
-                US
-              </address>
-              <a href="https://maps.google.com/?q=456+Mindful+Lane+San+Francisco+CA+94105" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 text-accent hover:underline">
-                Get directions →
-              </a>
-            </div>
-          </Stack>
-        </div>
-        
-        <!-- Placeholder for contact image -->
-        <div class="bg-stone-100 dark:bg-stone-800 rounded-2xl aspect-video flex items-center justify-center">
-          <p class="text-stone-400 dark:text-stone-600">Contact image placeholder</p>
-        </div>
-      </div>
-      
     </div>
+
+    <!-- Contact Section -->
+    <aside class="lg:sticky lg:top-24">
+      <div class="
+        rounded-3xl
+        border
+        border-stone-200
+        dark:border-stone-800
+        bg-white/80
+        dark:bg-stone-900/80
+        backdrop-blur
+        p-8
+      ">
+        <div class="mb-8">
+          <p class="text-sm font-semibold tracking-[0.2em] uppercase text-stone-500 dark:text-stone-400 mb-3">
+            Support
+          </p>
+
+          <h2 class="text-3xl font-bold text-stone-900 dark:text-stone-50 mb-4">
+            Get in touch
+          </h2>
+
+          <p class="text-stone-600 dark:text-stone-400 leading-relaxed">
+            Questions, feedback, or technical issues — our support team is available every day.
+          </p>
+        </div>
+
+        <Stack gap="lg">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
+              Email
+            </p>
+
+            <a
+              href="mailto:support@example.com"
+              class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors"
+            >
+              support@example.com
+            </a>
+          </div>
+
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
+              Phone
+            </p>
+
+            <a
+              href="tel:+14155550147"
+              class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors"
+            >
+              +1 (415) 555-0147
+            </a>
+          </div>
+
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
+              Office
+            </p>
+
+            <address class="not-italic text-stone-700 dark:text-stone-300 leading-relaxed">
+              456 Mindful Lane<br />
+              San Francisco, CA 94105<br />
+              United States
+            </address>
+
+            <a
+              href="https://maps.google.com/?q=456+Mindful+Lane+San+Francisco+CA+94105"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center mt-3 text-sm font-medium text-accent hover:underline"
+            >
+              Get directions →
+            </a>
+          </div>
+        </Stack>
+
+        <!-- Optional image / illustration -->
+        <div class="
+          mt-10
+          rounded-2xl
+          overflow-hidden
+          aspect-[4/3]
+          bg-stone-100
+          dark:bg-stone-800
+          flex
+          items-center
+          justify-center
+        ">
+          <p class="text-sm text-stone-400 dark:text-stone-500">
+            Support image
+          </p>
+        </div>
+      </div>
+    </aside>
+
   </div>
-</section>
+</div>

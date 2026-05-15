@@ -12,26 +12,25 @@ interface Props {
 
 const { user } = Astro.props;
 ---
-<Element server:defer>
-  <header class="sticky top-0 z-50" >
-    <HeaderLogo />
-    <div class="header-right">
-      <Menu user={user} />
-      <a href="https://github.com/jonk100/astro-starwind" target="_blank" class="nav-link github-nav">
-        <span class="sr-only">Go to your GitHub repo</span>
-        <GitHubIcon size="xl" color="" />
-      </a>
-    </div>
-  </header>
-</Element>
 
+<header class=" sticky top-0 ">
+  <HeaderLogo />
+  <div class="header-right">
+    <Menu user={user} />
+    <a href="https://github.com/jonk100/astro-starwind" target="_blank" rel="noopener noreferrer" class="github-nav">
+      <span class="sr-only">GitHub</span>
+      <GitHubIcon size="md" />
+    </a>
+  </div>
+</header>
 
 
 <style>
   header {
     display: flex;
+    height: 100px;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-around;
     padding: 1rem 2rem;
     margin: auto;
     background-color: lab(96.34% -12.13 -5.72 / 0.905);
@@ -53,7 +52,7 @@ const { user } = Astro.props;
     text-decoration: none;
     transition: all 0.2s ease;
   }
-  
+
   .github-nav:hover {
     color: var(--primary-accent);
     background-color: transparent;
@@ -66,7 +65,7 @@ const { user } = Astro.props;
     50% { transform: scale(1.125); }
     100% { transform: scale(1); }
   }
-  
+
   @media (max-width: 768px) {
     header {
       flex-direction: column;

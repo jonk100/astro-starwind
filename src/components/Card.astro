@@ -1,0 +1,165 @@
+---
+/**
+ * Card.astro
+ *
+ * A flexible card component designed to be used inside FullCardCluster.astro.
+ * Supports an optional top-half image, a title, body content (via slot), and
+ * an optional footer label. Colour scheme is assigned by the parent cluster via
+ * a `data-scheme` attribute so cards contrast each other automatically.
+ *
+ * @prop {string}  title       - Card heading (required).
+ * @prop {string}  [image]     - Absolute or relative URL for the top-half image.
+ * @prop {string}  [imageAlt]  - Alt text for the image (defaults to title).
+ * @prop {string}  [tag]       - Small label rendered above the title (e.g. "Interview").
+ * @prop {string}  [href]      - Makes the entire card a link when supplied.
+ * @prop {"light"|"dark"} [scheme="light"] - Colour scheme applied to this card.
+ *   The parent cluster sets this automatically, but you can override per-card.
+ */
+
+interface Props {
+  title: string;
+  image?: string;
+  imageAlt?: string;
+  tag?: string;
+  href?: string;
+  scheme?: "light" | "dark";
+}
+
+const {
+  title,
+  image,
+  imageAlt = title,
+  tag,
+  href,
+  scheme = "light",
+} = Astro.props;
+
+/** Resolve the wrapper element — anchor when href is provided, div otherwise. */
+const Tag = href ? "a" : "div";
+---
+
+<Tag
+  class="card h-500px"
+  data-scheme={scheme}
+  href={href ?? undefined}
+  aria-label={href ? title : undefined}
+>
+  {image && (
+    <figure class="card__image-wrap">
+      <img class="card__image" src={image} alt={imageAlt} loading="lazy" />
+    </figure>
+  )}
+
+  <div class="card__body">
+    {tag && <span class="card__tag">{tag}</span>}
+    <h3 class="card__title">{title}</h3>
+    <div class="card__content">
+      <slot />
+    </div>
+  </div>
+</Tag>
+
+<style>
+  /* ─── Scheme tokens ──────────────────────────────────────────────── */
+  /*
+   * Two schemes share the same property names so the card itself never
+   * branches on colour — the [data-scheme] selector swaps the values in.
+   */
+  .card[data-scheme="light"] {
+    --card-bg:        #f5f2ec;
+    --card-fg:        #111010;
+    --card-tag-bg:    #00dae5;
+    --card-tag-fg:    #e53737;
+    --card-border:    #c8c3b8;
+    --card-img-bg:    #dedad3;
+  }
+
+  .card[data-scheme="dark"] {
+    --card-bg:        #141414;
+    --card-fg:        #e8e4dc;
+    --card-tag-bg:    #6caeff;
+    --card-tag-fg:    #141414;
+    --card-border:    #2e2e2e;
+    --card-img-bg:    #1f1f1f;
+  }
+
+  /* ─── Card shell ─────────────────────────────────────────────────── */
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    color: var(--card-fg);
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    height: 100%; /* fills the grid row so cards in the same row are equal height */
+  }
+
+  /* Only add hover lift when the card is a link */
+  a.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  }
+
+  /* ─── Image ──────────────────────────────────────────────────────── */
+  .card__image-wrap {
+    /* Exactly half the card's height when an image is present.
+       flex-shrink: 0 prevents the image from being squeezed. */
+    flex: 0 0 50%;
+    min-height: 180px;
+    background: var(--card-img-bg);
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .card__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* ─── Body ───────────────────────────────────────────────────────── */
+  .card__body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem 1.375rem 1.5rem;
+  }
+
+  /* ─── Tag ────────────────────────────────────────────────────────── */
+  .card__tag {
+    display: inline-block;
+    align-self: flex-start;
+    background: var(--card-tag-bg);
+    color: var(--card-tag-fg);
+    font-family: "DM Mono", "Fira Mono", monospace;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2em 0.55em;
+  }
+
+  /* ─── Title ──────────────────────────────────────────────────────── */
+  .card__title {
+    margin: 0;
+    font-family: "DM Serif Display", "Playfair Display", Georgia, serif;
+    font-size: clamp(1rem, 1.25vw + 0.5rem, 1.375rem);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  /* ─── Slotted content ────────────────────────────────────────────── */
+  .card__content {
+    flex: 1 1 auto;
+    font-family: "DM Mono", "Fira Mono", monospace;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    opacity: 0.75;
+  }
+</style>

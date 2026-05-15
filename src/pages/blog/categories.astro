@@ -1,149 +1,111 @@
 ---
 import { getCollection } from 'astro:content';
 import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
-import { BlogSearch } from '@/components/blog';
+import { ThreeColumnGrid, BlogSearch } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
+import BlogHero from '@/components/layout/BlogHero.astro';
 
-// Get all posts and extract categories
-const posts = await getCollection('blog');
+export const prerender = true;
 
-// Extract and organize categories
-const categoryMap = new Map();
-posts.forEach(post => {
-  if (post.data.categories) {
-    post.data.categories.forEach(category => {
-      if (!categoryMap.has(category)) {
-        categoryMap.set(category, []);
-      }
-      categoryMap.get(category).push(post);
-    });
-  }
-});
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
 
-// Sort categories alphabetically and by post count
-const sortedCategories = Array.from(categoryMap.entries())
-  .sort(([a, b]: [string, unknown]) => a.localeCompare(b as string))
-  .map(([category, categoryPosts]: [string, unknown[]]) => ({
-    name: category,
-    posts: categoryPosts.sort((
-      a: unknown, 
-      b: unknown
-    ) => new Date((
-      a as { data: { date: string | Date } }
-    ).data.date).valueOf() - new Date((
-      b as { data: { date: string | Date } }
-    ).data.date).valueOf()),
-    count: categoryPosts.length
+  const categories = new Set<string>();
+  posts.forEach(post => {
+    post.data.categories?.forEach(category => categories.add(category));
+  });
+
+  return Array.from(categories).map(category => ({
+    params: { category },
+    props: {
+      posts: posts.filter(post => post.data.categories?.includes(category)),
+    },
   }));
+}
 
-// Sort by post count (descending) for display
-const categoriesByCount = [...sortedCategories].sort((a: { count: number }, b: { count: number }) => b.count - a.count);
+const { category } = Astro.params;
+const { posts } = Astro.props;
 
-// Convert posts to blog component format
-const allPostsData = posts.map(post => ({
+const sortedPosts = posts.sort(
+  (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
+);
+
+const postsData = sortedPosts.map(post => ({
   ...post.data,
   slug: post.id,
-  content: post.body
+  content: post.body,
 }));
 ---
-<BlogIndexLayout 
-  title={`Categories - ${SITE_TITLE}`} 
-  description={`${SITE_DESCRIPTION} - Browse all blog categories`}
+
+<BlogIndexLayout
+  title={`${category} - ${SITE_TITLE}`}
+  description={`${SITE_DESCRIPTION} - Posts in ${category} category`}
+  showProgress={true}
   breadcrumbs={[
-    { label: 'Home', href: '/' }, 
-    { label: 'Blog', href: '/blog' }, 
-    { label: 'Categories', href: '/blog/categories', current: true }
+    { label: 'Home', href: '/' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Categories', href: '/blog/categories' },
+    { label: category, href: `/blog/category/${category}`, current: true },
   ]}
 >
-    <!-- Hero Section -->
-    <Fragment slot="hero-search">
-      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
-        Browse all blog categories to find content that interests you. Each category contains related articles on specific topics.
-      </p>
+  <div slot="hero-search">
+    <BlogHero
+      heading={category}
+      subheading={`${sortedPosts.length} ${sortedPosts.length === 1 ? 'post' : 'posts'} in this category`}
+      variant="flush"
+    >
+      <div class="flex gap-3 justify-center flex-wrap">
         
-      <div class="flex justify-center gap-8 flex-wrap">
-        <div class="text-center">
-          <div class="text-3xl font-bold text-[rgb(var(--accent))]">{sortedCategories.length}</div>
-          <div class="text-sm text-muted-foreground uppercase tracking-wide">Categories</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-[rgb(var(--accent))]">{posts.length}</div>
-          <div class="text-sm text-muted-foreground uppercase tracking-wide">Total Posts</div>
-        </div>
+          href="/blog"
+          class="px-5 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
+        >
+          ← All Posts
+        </a>
+        
+          href="/blog/categories"
+          class="px-5 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
+        >
+          All Categories
+        </a>
       </div>
+    </BlogHero>
+  </div>
 
-      <!-- Search Section -->
+  {postsData.length > 0 ? (
+    <section class="space-y-6">
       <div class="max-w-2xl mx-auto">
-        <BlogSearch posts={allPostsData} placeholder="Search articles by category..." showFilters={true} />
+        <BlogSearch
+          posts={postsData}
+          placeholder={`Search articles in ${category}...`}
+          showFilters={false}
+        />
       </div>
-    </Fragment>
-
-    <!-- Categories Grid -->
-    <section class="space-y-8">
-      <h2 class="text-2xl font-semibold text-[rgb(var(--purple))] text-center">All Categories</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedCategories.map((categoryData) => (
-          <a 
-            href={`/blog/category/${categoryData.name}/`}
-            class="block p-6 border border-border rounded-lg hover:border-[rgb(var(--accent))] hover:shadow-lg transition-all group"
-          >
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-8 h-8 bg-[rgb(var(--purple))] text-white rounded-lg flex items-center justify-center text-sm font-bold">
-                📁
-              </div>
-              <h3 class="text-lg font-semibold group-hover:text-[rgb(var(--purple))] transition-colors">
-                {categoryData.name}
-              </h3>
-            </div>
-            
-            <p class="text-muted-foreground mb-4">
-              {categoryData.count} {categoryData.count === 1 ? 'post' : 'posts'}
-            </p>
-            
-            {categoryData.posts.length > 0 && (
-              <div class="border-t pt-4">
-                <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Recent Posts
-                </h4>
-                <ul class="space-y-1 text-sm text-muted-foreground">
-                  {categoryData.posts.slice(0, 3).map((post) => (
-                    <li class="truncate hover:text-[rgb(var(--accent))] transition-colors">
-                      {(post as { data: { title: string } }).data.title}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </a>
-        ))}
-      </div>
+      <h2 class="text-2xl font-semibold text-[rgb(var(--purple))] text-center">
+        {sortedPosts.length} {sortedPosts.length === 1 ? 'Article' : 'Articles'} Found
+      </h2>
+      <ThreeColumnGrid
+        posts={postsData}
+        cardVariant="default"
+        showImage={true}
+        showTags={true}
+        showAuthor={true}
+        showReadTime={true}
+      />
     </section>
-
-    <!-- Popular Categories -->
-    {categoriesByCount.length > 0 && (
-      <section class="space-y-6">
-        <h2 class="text-2xl font-semibold text-[rgb(var(--purple))] text-center">Popular Categories</h2>
-        <div class="flex flex-wrap justify-center gap-3">
-          {categoriesByCount.slice(0, 10).map((categoryData) => (
-            <a 
-              href={`/blog/category/${categoryData.name}/`}
-              class="inline-flex items-center gap-2 px-4 py-2 bg-[rgb(var(--purple))] text-white rounded-lg font-medium hover:bg-[rgb(var(--accent))] transition-colors"
-            >
-              {categoryData.name}
-              <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">
-                {categoryData.count}
-              </span>
-            </a>
-          ))}
-        </div>
-      </section>
-    )}
-
-    <!-- Empty State -->
-    {sortedCategories.length === 0 && (
-      <div class="text-center py-16 text-muted-foreground">
-        <h2 class="text-2xl font-semibold mb-2">No categories found</h2>
-        <p>Check back later for categorized content.</p>
-      </div>
-    )}
+  ) : (
+    <div class="text-center py-16 space-y-4">
+      <h2 class="text-2xl font-semibold text-muted-foreground">
+        No posts found in {category}
+      </h2>
+      <p class="text-muted-foreground">
+        Check back later for new content in this category.
+      </p>
+      <a
+        href="/blog/"
+        class="inline-block px-6 py-3 bg-[rgb(var(--accent))] text-white rounded-lg font-medium hover:bg-[rgb(var(--accent-dark))] transition-colors"
+      >
+        Back to Blog
+      </a>
+    </div>
+  )}
 </BlogIndexLayout>

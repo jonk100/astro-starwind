@@ -1,0 +1,99 @@
+---
+import { Cluster, Stack } from "../layout";
+---
+
+<section
+  class="
+		flex
+		flex-col
+		bg-gray-200
+		m-auto
+		h-[100vh]
+  "
+>
+  <Stack
+    class="
+      items-center
+			m-auto
+    "
+  >
+    <h2
+      class="
+        mb-4
+        text-5xl
+        font-bold
+        leading-tight
+        text-accent
+      "
+    >
+      Need Immediate Help?
+    </h2>
+
+    <p
+      class="
+        mx-auto
+        mb-8
+        max-w-[37.5rem]
+        text-2xl
+        leading-relaxed
+        text-accent
+				font-bold
+      "
+    >
+      If you're in crisis or need urgent support, please reach out to emergency services
+    </p>
+
+    <Cluster
+      class="
+        flex-wrap
+        justify-center
+        gap-4
+      "
+    >
+      <a
+        href="tel:988"
+        class="
+          rounded-lg
+          bg-primary
+          px-8
+          py-4
+          font-semibold
+          text-white
+          no-underline
+          transition-all
+          duration-300
+          ease-in-out
+          hover:-translate-y-0.5
+          hover:bg-accent
+        "
+      >
+        Call 988 (Suicide & Crisis Lifeline)
+      </a>
+
+      <a
+        href="https://www.crisistextline.org"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="
+          rounded-lg
+          border-2
+          border-primary
+          bg-secondary
+          px-8
+          py-4
+          font-semibold
+          text-accent
+          no-underline
+          transition-all
+          duration-300
+          ease-in-out
+          hover:-translate-y-0.5
+          hover:bg-primary 
+          hover:text-white
+        "
+      >
+        Text HOME to 741741
+      </a>
+    </Cluster>
+  </Stack>
+</section>

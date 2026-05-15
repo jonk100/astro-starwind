@@ -1,62 +1,315 @@
 ---
-import Layout from '../layouts/Site.astro';
+import Layout from '@/layouts/Site.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
+import { HeroSection } from '@/components/sectional/hero-section';
+import FeaturesSection from '@/components/sectional/features-section/FeaturesSection.astro';
+import { BlogSection } from '@/components/sectional/wide-blog-section';
+import { TestimonialsSection } from '@/components/sectional/wide-testimonial';
+import { PricingSection } from '@/components/sectional/wide-pricing-section';
+import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
+import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
+import { ContactSection } from '@/components/layout';
+import OurTeam from '@/components/sectional/team-section/OurTeam.astro';
+import FullCardCluster from '@/components/FullCardCluster.astro';
+import Card from '@/components/Card.astro';
+import Center from '@/components/layout/primitives/Center.astro';
+import { features as FeatureData, testimonials as TestimonialData } from '@/data/consts';
+
+const features = FeatureData;
+const testimonials = TestimonialData;
 
 export const prerender = false;
 ---
 
-<Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
+<Layout 
+	title={`Who We Are - ${SITE_TITLE}`} 
+	description={SITE_DESCRIPTION}
 >
-	<p>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo
-		viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam
-		adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus
-		et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus
-		vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque
-		sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet.
-	</p>
+	<HeroSection 
+		h="The People Behind Your Journey"
+		p="We're a team of dreamers, doers, and mental health advocates working together to make wellness accessible, joyful, and judgment-free."
+		imgSrc="https://res.cloudinary.com/dikyfam2c/image/upload/v1734536831/flower_gvof2g.webp"
+		imgAlt="Team collaboration"
+		width={2688}
+		height={1920}
+		slot="hero"
+		style="background: linear-gradient(to bottom, var(--purple-5), var(--purple3)) no-repeat;"
+	/>
 
-	<p>
-		Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non
-		tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non
-		blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna
-		porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis
-		massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc.
-		Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis
-		bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra
-		massa massa ultricies mi.
-	</p>
+	<section class="who-we-are">
+		<div class="container">
+			<h2>Who We Are</h2>
+			<p>
+				It all started on a rainy Tuesday afternoon when we realized that mental health conversations were too often wrapped in clinical jargon or heavy, somber tones. We wanted something different—something that felt like a warm hug from a friend rather than a medical diagnosis. After watching someone we love struggle to find resources that actually resonated with them, we knew there had to be a better way. That spark of frustration mixed with hope became the foundation of everything we do today.
+			</p>
 
-	<p>
-		Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl
-		suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet
-		nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae
-		turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem
-		dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat
-		semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus
-		vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum
-		facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam
-		vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla
-		urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim.
-	</p>
+			<p>
+				Our decisions are guided by four core values that we hold close to our hearts. First, <strong>empathy first</strong>—every piece of content we create is filtered through the question "would this make someone feel seen and understood?" Second, <strong>accessibility matters</strong>—we believe mental health wisdom shouldn't require a dictionary to decode. Third, <strong>joy is essential</strong>—we reject the notion that growth has to be painful or boring. And finally, <strong>community over competition</strong>—we're not here to be the only voice in the room, but to add to a chorus of caring voices already making a difference.
+			</p>
 
-	<p>
-		Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper
-		viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc
-		scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur
-		gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus
-		pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim
-		blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id
-		cursus metus aliquam eleifend mi.
-	</p>
+			<p>
+				Our goal is simple but ambitious: help people learn and grow their mental health through modern, forward-thinking content that radiates strictly positive vibes. We're crafting resources that meet people where they are—whether that's scrolling through social media on a lunch break or seeking deeper understanding during quiet moments. No shame, no judgment, just genuine support wrapped in beautiful design and words that actually land. Because mental health isn't just about surviving—it's about thriving, and we think that's something worth celebrating.
+			</p>
+		</div>
+	</section>
 
-	<p>
-		Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta
-		nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam
-		tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci
-		ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar
-		proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
-	</p>
+	<OurTeam />
+
+	<section class="stats-section">
+		<div class="container">
+			<h2 class="stats-heading">Our Impact</h2>
+			<div class="stats-grid">
+				<div class="stat-card">
+					<div class="stat-number">50K+</div>
+					<div class="stat-label">Community Members</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number">200+</div>
+					<div class="stat-label">Expert Articles</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number">15K+</div>
+					<div class="stat-label">Daily Readers</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number">98%</div>
+					<div class="stat-label">Satisfaction Rate</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="logo-list-section">
+		<div class="container">
+			<h2 class="logo-heading">Trusted By</h2>
+			<p class="logo-subheading">Featured in and partnered with leading organizations</p>
+			<div class="logo-grid">
+				<div class="logo-item">Mindful Magazine</div>
+				<div class="logo-item">Wellness Weekly</div>
+				<div class="logo-item">Health Today</div>
+				<div class="logo-item">Psych Central</div>
+				<div class="logo-item">Calm App</div>
+				<div class="logo-item">Headspace</div>
+			</div>
+		</div>
+	</section>
+
+	<FeaturesSection
+		heading="What We Believe In"
+		subheading="The principles that guide everything we do"
+		features={features}
+		variant="plea"
+	/>
+
+	<Center axis="both" class="h-[100vh]">
+		<NewsletterSection heading="Join our community" class="h-em "/>
+	</Center>
+
+	<div>
+		<FullCardCluster columns={3} schemeMode="alternate">
+			<Card title="Our Story" tag="About" />
+			<Card title="Our Mission" image="/hero.jpg" tag="Values" />
+			<Card title="Our Vision" href="/read/slug">
+				Building a world where mental health support is as normal as checking the weather.
+			</Card>
+		</FullCardCluster>
+	</div>
+
+	<TestimonialsSection
+	  heading="What People Say"
+	  subheading="Stories from our community about their journey with us."
+	  testimonials={testimonials}
+	/>
+
+	<FAQSection />
+
+	<section class="cta-section">
+		<div class="container">
+			<h2 class="cta-heading">Ready to Start Your Journey?</h2>
+			<p class="cta-subheading">Join thousands of people who have transformed their mental wellness with our resources</p>
+			<div class="cta-buttons">
+				<a href="/" class="cta-button primary">Get Started Free</a>
+				<a href="/contact" class="cta-button secondary">Contact Us</a>
+			</div>
+		</div>
+	</section>
+
+	<ContactSection />
+	<div>
+		<NewsletterSection heading="Stay connected" class="h-em "/>
+	</div>
 </Layout>
+
+<style>
+	.who-we-are {
+		padding: 4em 0;
+		background: var(--surface-primary);
+	}
+
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 2em;
+	}
+
+	.who-we-are h2 {
+		font-size: 2.5em;
+		text-align: center;
+		margin-bottom: 1.5em;
+		color: var(--text-primary);
+	}
+
+	.who-we-are p {
+		font-size: 1.125em;
+		line-height: 1.8;
+		margin-bottom: 1.5em;
+		color: var(--text-secondary);
+	}
+
+	.who-we-are strong {
+		color: var(--primary);
+		font-weight: 600;
+	}
+
+	.stats-section {
+		padding: 4em 0;
+		background: linear-gradient(to bottom, var(--purple3), var(--purple-5));
+	}
+
+	.stats-heading {
+		font-size: 2.5em;
+		text-align: center;
+		margin-bottom: 3em;
+		color: var(--text-primary);
+	}
+
+	.stats-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 2em;
+	}
+
+	.stat-card {
+		background: var(--surface-primary);
+		border-radius: 1em;
+		padding: 2em;
+		text-align: center;
+		transition: transform 0.3s ease;
+	}
+
+	.stat-card:hover {
+		transform: translateY(-0.5em);
+	}
+
+	.stat-number {
+		font-size: 3em;
+		font-weight: 700;
+		color: var(--primary);
+		margin-bottom: 0.5em;
+	}
+
+	.stat-label {
+		font-size: 1.125em;
+		color: var(--text-secondary);
+	}
+
+	.logo-list-section {
+		padding: 4em 0;
+		background: var(--surface-primary);
+	}
+
+	.logo-heading {
+		font-size: 2.5em;
+		text-align: center;
+		margin-bottom: 0.5em;
+		color: var(--text-primary);
+	}
+
+	.logo-subheading {
+		font-size: 1.25em;
+		text-align: center;
+		margin-bottom: 3em;
+		color: var(--text-secondary);
+	}
+
+	.logo-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 2em;
+		align-items: center;
+	}
+
+	.logo-item {
+		background: var(--surface-secondary);
+		border-radius: 0.5em;
+		padding: 1.5em;
+		text-align: center;
+		font-weight: 600;
+		color: var(--text-secondary);
+		transition: all 0.3s ease;
+	}
+
+	.logo-item:hover {
+		background: var(--primary);
+		color: white;
+	}
+
+	.cta-section {
+		padding: 6em 0;
+		background: linear-gradient(to bottom, var(--purple-5), var(--purple3));
+		text-align: center;
+	}
+
+	.cta-heading {
+		font-size: 3em;
+		margin-bottom: 1em;
+		color: var(--text-primary);
+	}
+
+	.cta-subheading {
+		font-size: 1.25em;
+		margin-bottom: 2em;
+		color: var(--text-secondary);
+		max-width: 600px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.cta-buttons {
+		display: flex;
+		gap: 1em;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.cta-button {
+		padding: 1em 2em;
+		border-radius: 0.5em;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.3s ease;
+	}
+
+	.cta-button.primary {
+		background: var(--primary);
+		color: white;
+	}
+
+	.cta-button.primary:hover {
+		background: var(--primary-dark);
+		transform: translateY(-0.125em);
+	}
+
+	.cta-button.secondary {
+		background: var(--surface-primary);
+		color: var(--text-primary);
+		border: 2px solid var(--primary);
+	}
+
+	.cta-button.secondary:hover {
+		background: var(--primary);
+		color: white;
+		transform: translateY(-0.125em);
+	}
+</style>
+

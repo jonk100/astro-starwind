@@ -1,31 +1,37 @@
 ---
 import FeatureCard from './FeatureCard.astro';
 import { ScrollReveal } from '@/components/layout';
+import type { Feature } from '@/data/types/features.types';
 /**
  * FeaturesSection
  * - displays feature cards or feature list content in a grid
  * @param heading - The heading of the section
  * @param subheading - The subheading of the section
- * @param features - The features to display
+ * @param features - The features to display (with variant support)
+ * @param variant - The copy variant to use (word, action, plea, name)
  * @param class - Additional classes to apply to the section
- * 
+ *
  * Features
- * - 
+ * -
  */
 
 interface Props {
   heading: string;
   subheading: string;
-  features: Array<{
-    title: string;
-    phrase: string;
-    description: string;
-    link: string;
-  }>;
+  features: Feature[];
+  variant?: 'word' | 'action' | 'plea' | 'name';
   class?: string;
 }
 
-const { heading, subheading, features, class: className = '' } = Astro.props;
+const { heading, subheading, features, variant = 'word', class: className = '' } = Astro.props;
+
+// Transform features based on variant
+const transformedFeatures = features.map(feature => ({
+  title: feature[variant].title,
+  phrase: feature[variant].phrase,
+  description: feature.description,
+  link: feature.link,
+}));
 
 /** The three schemes to cycle through, applied to cards in order. */
 const schemes = ['light', 'dark', 'primary'] as const;
@@ -45,7 +51,7 @@ const schemes = ['light', 'dark', 'primary'] as const;
 
 
     <div class="grid grid-cols-1 md:grid-cols-3 lg:gap-16 md:gap-4 padding">
-      {features.map((feature, i) => (
+      {transformedFeatures.map((feature, i) => (
         <ScrollReveal>
         <FeatureCard
           title={feature.title}

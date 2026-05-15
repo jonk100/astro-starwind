@@ -45,18 +45,21 @@ import '@/styles/starwind.css';
     )}
     
     <!-- Hero / Search Slot -->
-    <main class="layout-main">
-      <div class="bg-blue-200/50 p-8 rounded-xl text-center" style="h1{color: white}">
-        <h1 class="text-4xl lg:text-6xl mt-0 pt-0 font-bold text-[rgb(var(--purple))]">{title.slice(0, -16)}</h1>
-        <slot name="hero-search" />
-      </div>
-
-      <div class="layout-main-content relative">
-        <div class="pt-0 mt-0">
-          <slot />
+     <div class="relative"> 
+      <div class="min-h-[90vh] bg-rose-200 my-auto flex items-center justify-center">
+        <div class="w-full">
+          <slot name="hero-search" />
         </div>
       </div>
-    </main>
+    </div>  
+      <main>
+        <div class="max-w-5xl mx-auto px-4 bg-transparent">
+          <slot name="main-top" />
+        </div>
+        <div class="layout-main-content relative">
+          <slot />
+        </div>
+      </main>
 
     <footer class="layout-footer">
       <slot name="footer" />

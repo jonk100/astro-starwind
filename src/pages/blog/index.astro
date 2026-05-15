@@ -4,61 +4,64 @@ import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
 import { ThreeColumnGrid, BlogSearch } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { RecentPostsCarousel } from '@/components/blog/RecentPosts';
+import BlogHero from '@/components/layout/BlogHero.astro';
+
+export const prerender = false;
 
 const posts = (await getCollection('blog')).sort(
-	(a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
 );
 
 const recentPosts = posts.slice(1, 7);
+
 const allPostsData = posts.map(post => ({
   ...post.data,
   slug: post.id,
-  content: post.body
+  content: post.body,
 }));
-
 ---
-<BlogIndexLayout 
-  title={`All Posts - ${SITE_TITLE}`} 
+
+<BlogIndexLayout
+  title={`All Posts - ${SITE_TITLE}`}
   description={`${SITE_DESCRIPTION} | Blog posts`}
   showBreadcrumbs={false}
-  breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog', current: true }]}
+  breadcrumbs={[
+    { label: 'Home', href: '/' },
+    { label: 'Blog', href: '/blog', current: true },
+  ]}
 >
-  <Fragment slot="hero-search">
-    <p class="text-xl text-muted-foreground max-w-2xl mx-auto my-1 font-bold">
-      Explore our latest articles, insights, and stories on technology, design, and development.
-    </p>
-
-    <!-- Search Section -->
-    <div class="max-w-2xl mx-auto gap-4 p-2">
-      <BlogSearch posts={allPostsData} placeholder="Search articles..." showFilters={true} />
-    </div>
-
-    <!-- Featured Post -->
-    <!-- {featuredPost && (
-      <section class="space-y-6">
-        <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">Featured Article</h2>
-        <HeroCard 
-          post={{ ...featuredPost.data, slug: featuredPost.id }}
-          style="modern"
-          href={`/blog/${featuredPost.id}`}
-        />
-      </section>
-    )} -->
-  </Fragment>
-    <!-- Recent Posts Carousel -->
-    <RecentPostsCarousel recentPosts={recentPosts} />
-
-    <!-- All Posts Grid -->
-    <section class="space-y-6">
-      <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">All Articles</h2>
-      <ThreeColumnGrid 
+  <div slot="hero-search">
+    <BlogHero
+      heading="All Posts"
+      subheading="Explore our latest articles, insights, and stories on technology, design, and development."
+      variant="card"
+    >
+      <BlogSearch
         posts={allPostsData}
-        cardVariant="colorful"
-        showImage={true}
-        showTags={true}
-        showAuthor={true}
-        showReadTime={true}
+        placeholder="Search articles..."
+        showFilters={true}
       />
-    </section>
+    </BlogHero>
+  </div>
 
+  <div
+    slot="main-top"
+    class="w-screen relative left-1/2 -translate-x-1/2 bg-primary dark:bg-slate-900 py-8"
+  >
+    <div class="max-w-5xl mx-auto px-4">
+      <RecentPostsCarousel recentPosts={recentPosts} />
+    </div>
+  </div>
+
+  <section class="space-y-6">
+    <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">All Articles</h2>
+    <ThreeColumnGrid
+      posts={allPostsData}
+      cardVariant="colorful"
+      showImage={true}
+      showTags={true}
+      showAuthor={true}
+      showReadTime={true}
+    />
+  </section>
 </BlogIndexLayout>

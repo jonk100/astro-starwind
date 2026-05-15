@@ -9,6 +9,14 @@ import { PricingSection } from '@/components/sectional/wide-pricing-section';
 import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
 import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
 import { ContactSection } from '@/components/layout';
+import FullCardCluster from '@/components/FullCardCluster.astro';
+import Card from '@/components/Card.astro';
+import Center from '@/components/layout/primitives/Center.astro';
+import { features as FeatureData, testimonials as TestimonialData, pricing as PricingData } from '@/data/consts';
+
+const features = FeatureData;
+const testimonials = TestimonialData;
+const plans = PricingData;
 
 export const prerender = false;
 
@@ -25,109 +33,54 @@ export const prerender = false;
 		width={2688}
 		height={1920}
 		slot="hero"
-	/><div>
-		<NewsletterSection heading="Never miss an update" class="h-em "/>
-	</div>
+		style="background: linear-gradient(to bottom, var(--purple-5), var(--purple3)) no-repeat;"
+	/>
+
 	<hr style="box-shadow: 2em;"/>
 	<FeaturesSection
 		heading="Three ways to grow"
 		subheading="Build better habits with our simple, powerful tools"
-		features={[
-			{
-				title: "Focus",
-				phrase: "Watch your habits take shape",
-				description: "Monitor your daily progress with intuitive visualizations that help you stay motivated and on track.",
-				link: "/app/habit/track"
-			},
-			{
-				title: "Growth",
-				phrase: "Write your way to clarity",
-				description: "Journal your thoughts and experiences to gain deeper insights into your patterns and behaviors.",
-				link: "/app/journal/write"
-			},
-			{
-				title: "Breathework",
-				phrase: "Find stillness when you need it",
-				description: "Take mindful breaks with guided breathing exercises designed to reduce stress and improve focus.",
-				link: "/app/relax/happy-place"
-			}
-		]}
+		features={features}
+		variant="plea"
 	/>
+	<Center axis="both" class="h-[100vh]">
+		<NewsletterSection heading="Never miss an update" class="h-em "/>
+	</Center>
+	<div>
+		<FullCardCluster columns={3} schemeMode="alternate">
+			<Card title="Something dark" tag="Essay" />
+			<Card title="Something light" image="/hero.jpg" tag="Review" />
+			<Card title="Another dark" href="/read/slug">
+				A line or two of body copy dropped in via the default slot.
+			</Card>
+		</FullCardCluster>
+	</div>
 
+	
+
+	/** 
+	 * @todo the heights of the cards are uneven
+	 * @todo there's no space between each cards
+	 * @todo the width of the section doesn't each the sides, which it needs to
+	 * @todo the featured post should be larger
+	 * @todo the featured post's text should be much less of the full width and centered
+	 * @todo the featured post's height should be much higher
+	 */
 	<BlogSection />
-	<TestimonialsSection 
+	<TestimonialsSection
 	  heading="Real stories"
 	  subheading="People who have changed their lives with Mindful Habits Studio."
-				testimonials={[
-					{
-						name: "Sarah M.",
-						title: "Product Manager",
-						quote: "I finally understand what's driving my behavior. The journal app helped me see patterns I'd been missing for years."
-					},
-					{
-						name: "John D.",
-						title: "Software Engineer",
-						quote: "The habit tracker made me see what I was actually doing, not what I thought I was doing."
-					},
-					{
-						name: "Emily R.",
-						title: "Marketing Specialist",
-						quote: "Writing in the journal became the thing I looked forward to each night. It settled me."
-					}
-				]}
-				
+	  testimonials={testimonials}
 	/>
-				<FAQSection />
-	
-	
-	
-	<PricingSection 
+	<FAQSection />
+	<PricingSection
 	  heading="Simple pricing"
 	  subheading="Choose the plan that fits your journey"
-	  plans={[
-			{
-				title: "Starter",
-				price: "Free",
-				features: [
-					"Basic habit tracking",
-					"Daily journal entries",
-					"5 meditation sessions",
-					"Community access"
-				],
-				ctaText: "Get started"
-			},
-			{
-				title: "Professional",
-				price: "$12",
-				period: "/mo",
-				features: [
-					"Unlimited habit tracking",
-					"Unlimited journal entries",
-					"All meditation sessions",
-					"Advanced analytics",
-					"Priority support"
-				],
-				highlighted: true,
-				ctaText: "Get started"
-			},
-			{
-				title: "Premium",
-				price: "$24",
-				period: "/mo",
-				features: [
-					"Everything in Professional",
-					"1-on-1 coaching session",
-					"Custom habit plans",
-					"API access",
-					"White-label options"
-				],
-				ctaText: "Get started"
-			}
-		]}
+	  plans={plans}
 	/>
 	<ContactSection />
 	<div>
-		<NewsletterSection heading="Stay in the loop" class="h-em "/>
+	<NewsletterSection heading="Stay in the loop" class="h-em "/>
 	</div>
 
 </Layout>

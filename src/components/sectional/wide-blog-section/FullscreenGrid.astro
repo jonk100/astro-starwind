@@ -11,7 +11,7 @@ interface Props {
 const { posts } = Astro.props;
 ---
 
-<Grid min="20rem" gap="lg">
+<Grid min="22rem" class="w-full gap-8 mx-auto w-full">
   {posts.map((post) => (
     <ScrollReveal axis="x" distance="-420px">
       <BlogCard post={post} variant="standard" />
