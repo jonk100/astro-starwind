@@ -1,0 +1,367 @@
+---
+/**
+ * CategoryPostsSection
+ *
+ * Two-column grid (1 on mobile) of category panels.
+ * Each panel:
+ *   - Gradient header bar coloured per category (from categoryColors.ts)
+ *   - Featured post (most-recent): compact horizontal card when collapsed
+ *   - Toggle button: expands into a full-width cinematic banner + scrollable list
+ *   - The expanded list background is tinted with the category colour
+ */
+import type { CollectionEntry } from 'astro:content';
+import { formatDate } from '@/components/blog/shared/utils';
+import { getCategoryTheme } from '@/components/blog/shared/categoryColors';
+import type { CategoryTheme } from '@/components/blog/shared/categoryColors';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+
+const sorted = [...posts]
+  .filter(p => !p.data.draft)
+  .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
+
+const categoryMap = new Map<string, CollectionEntry<'blog'>[]>();
+sorted.forEach(post => {
+  for (const cat of post.data.categories ?? []) {
+    if (!categoryMap.has(cat)) categoryMap.set(cat, []);
+    categoryMap.get(cat)!.push(post);
+  }
+});
+
+type Panel = {
+  category:  string;
+  anchorId:  string;
+  featured:  CollectionEntry<'blog'>;
+  nextFour:  CollectionEntry<'blog'>[];
+  total:     number;
+  overflow:  number;
+  theme:     CategoryTheme;
+};
+
+const panels: Panel[] = [...categoryMap.entries()]
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([category, catPosts]) => ({
+    category,
+    anchorId:  `cat-${category.toLowerCase().replace(/\s+/g, '-')}`,
+    featured:  catPosts[0],
+    nextFour:  catPosts.slice(1, 5),
+    total:     catPosts.length,
+    overflow:  Math.max(0, catPosts.length - 5),
+    theme:     getCategoryTheme(category),
+  }));
+---
+
+<section class="py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+      {panels.map(({ category, anchorId, featured, nextFour, total, overflow, theme }) => (
+        <div
+          id={anchorId}
+          class="flex flex-col bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300"
+          data-category-panel
+        >
+
+          {/* ── Gradient header ── */}
+          <div
+            class="flex items-center justify-between px-4 py-3 shrink-0"
+            style={theme.headerStyle}
+          >
+            <a href={`/blog/category/${category}`} class="flex items-baseline gap-2 min-w-0">
+              <h2 class="text-sm font-semibold text-white truncate leading-none">
+                {category}
+              </h2>
+              <span class="text-[0.7rem] text-white/70 shrink-0 leading-none">
+                {total} {total === 1 ? 'post' : 'posts'}
+              </span>
+            </a>
+            <a
+              href={`/blog/category/${category}`}
+              class="text-xs font-medium text-white/80 hover:text-white transition-colors shrink-0 ml-3"
+            >
+              View all →
+            </a>
+          </div>
+
+          {/* ── Featured post – COLLAPSED (horizontal) ── */}
+          <a
+            href={`/blog/${featured.id}`}
+            class="group flex hover:bg-muted/30 transition-colors duration-200"
+            data-featured-collapsed
+          >
+            {featured.data.image ? (
+              <div class="shrink-0 w-36 sm:w-44 overflow-hidden">
+                <img
+                  src={featured.data.image}
+                  alt={featured.data.title}
+                  class="w-full h-full object-cover min-h-36 transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+            ) : (
+              <div
+                class="shrink-0 w-36 sm:w-44 min-h-36 flex items-center justify-center text-4xl select-none"
+                style={`background: rgba(${theme.tintRgb}, 0.15)`}
+              >
+                📰
+              </div>
+            )}
+            <div class="flex flex-col justify-between p-4 flex-1 min-w-0">
+              <div>
+                <span
+                  class="inline-block text-[0.6rem] font-black uppercase tracking-widest mb-1.5"
+                  style={`color: ${theme.accentColor}`}
+                >
+                  Latest
+                </span>
+                <h3 class="font-semibold text-base leading-snug line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors duration-200">
+                  {featured.data.title}
+                </h3>
+                {featured.data.description && (
+                  <p class="mt-1.5 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                    {featured.data.description}
+                  </p>
+                )}
+              </div>
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-3 text-xs text-muted-foreground">
+                {featured.data.author && (
+                  <Fragment>
+                    <span class="font-medium">{featured.data.author}</span>
+                    <span aria-hidden="true">·</span>
+                  </Fragment>
+                )}
+                <time datetime={new Date(featured.data.date).toISOString()}>
+                  {formatDate(featured.data.date)}
+                </time>
+                {featured.data.minutesRead && (
+                  <Fragment>
+                    <span aria-hidden="true">·</span>
+                    <span>{featured.data.minutesRead}</span>
+                  </Fragment>
+                )}
+              </div>
+            </div>
+          </a>
+
+          {/* ── Featured post – EXPANDED (cinematic banner) ── */}
+          <a
+            href={`/blog/${featured.id}`}
+            class="group hidden relative overflow-hidden"
+            data-featured-expanded
+          >
+            <div class="relative w-full h-56 overflow-hidden">
+              {featured.data.image ? (
+                <img
+                  src={featured.data.image}
+                  alt={featured.data.title}
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div
+                  class="w-full h-full"
+                  style={theme.headerStyle}
+                />
+              )}
+              <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent" />
+              <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <span class="inline-block text-[0.6rem] font-black uppercase tracking-widest text-white/60 mb-1">
+                  Latest
+                </span>
+                <h3 class="font-bold text-xl leading-snug line-clamp-2">
+                  {featured.data.title}
+                </h3>
+                {featured.data.description && (
+                  <p class="text-sm text-white/75 line-clamp-1 mt-1">
+                    {featured.data.description}
+                  </p>
+                )}
+                <div class="flex flex-wrap items-center gap-x-2 mt-2 text-xs text-white/60">
+                  {featured.data.author && (
+                    <Fragment>
+                      <span class="font-medium text-white/80">{featured.data.author}</span>
+                      <span aria-hidden="true">·</span>
+                    </Fragment>
+                  )}
+                  <time datetime={new Date(featured.data.date).toISOString()}>
+                    {formatDate(featured.data.date)}
+                  </time>
+                  {featured.data.minutesRead && (
+                    <Fragment>
+                      <span aria-hidden="true">·</span>
+                      <span>{featured.data.minutesRead}</span>
+                    </Fragment>
+                  )}
+                </div>
+              </div>
+            </div>
+          </a>
+
+          {/* ── Collapsed posts list (revealed on expand) ── */}
+          {nextFour.length > 0 && (
+            <div
+              class="overflow-hidden border-t border-border"
+              style={`background: rgba(${theme.tintRgb}, 0.06); max-height: 0; opacity: 0; transition: max-height 0.45s ease, opacity 0.3s ease;`}
+              data-posts-list
+            >
+              <ul class="flex flex-col divide-y divide-border/60">
+                {nextFour.map(post => (
+                  <li>
+                    <a
+                      href={`/blog/${post.id}`}
+                      class="group flex items-center gap-3 px-4 py-3.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200"
+                    >
+                      {post.data.image ? (
+                        <div class="shrink-0 w-14 h-12 rounded-lg overflow-hidden">
+                          <img
+                            src={post.data.image}
+                            alt={post.data.title}
+                            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          class="shrink-0 w-14 h-12 rounded-lg flex items-center justify-center text-lg select-none"
+                          style={`background: rgba(${theme.tintRgb}, 0.2)`}
+                        >
+                          📄
+                        </div>
+                      )}
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors duration-200 leading-snug">
+                          {post.data.title}
+                        </p>
+                        <div class="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                          <time datetime={new Date(post.data.date).toISOString()}>
+                            {formatDate(post.data.date)}
+                          </time>
+                          {post.data.minutesRead && (
+                            <Fragment>
+                              <span aria-hidden="true">·</span>
+                              <span>{post.data.minutesRead}</span>
+                            </Fragment>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        class="shrink-0 text-muted-foreground/40 group-hover:text-[rgb(var(--purple))] group-hover:translate-x-0.5 transition-all duration-200 text-sm"
+                        aria-hidden="true"
+                      >
+                        →
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+
+              {overflow > 0 && (
+                <div class="px-4 py-3.5 border-t border-border/60 text-center">
+                  <a
+                    href={`/blog/category/${category}`}
+                    class="text-xs font-semibold text-muted-foreground hover:text-[rgb(var(--purple))] transition-colors"
+                  >
+                    + {overflow} more {overflow === 1 ? 'post' : 'posts'} in {category}
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Toggle button ── */}
+          {nextFour.length > 0 && (
+            <button
+              type="button"
+              class="w-full py-3 flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground border-t border-border hover:bg-muted/40 transition-colors duration-200 shrink-0"
+              data-toggle-btn
+              aria-expanded="false"
+            >
+              <span data-collapsed-label>
+                {nextFour.length} more {nextFour.length === 1 ? 'post' : 'posts'}
+              </span>
+              <span data-expanded-label class="hidden">Show less</span>
+              <svg
+                data-toggle-icon
+                class="size-3.5 transition-transform duration-300"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+          )}
+
+        </div>
+      ))}
+
+    </div>
+  </div>
+</section>
+
+<script>
+  const setup = () => {
+    document.querySelectorAll<HTMLElement>('[data-category-panel]').forEach(panel => {
+      const btn          = panel.querySelector<HTMLButtonElement>('[data-toggle-btn]');
+      if (!btn) return; // single-post category, no toggle needed
+
+      const collapsedEl  = panel.querySelector<HTMLElement>('[data-featured-collapsed]');
+      const expandedEl   = panel.querySelector<HTMLElement>('[data-featured-expanded]');
+      const listEl       = panel.querySelector<HTMLElement>('[data-posts-list]');
+      const labelOpen    = btn.querySelector<HTMLElement>('[data-collapsed-label]');
+      const labelClose   = btn.querySelector<HTMLElement>('[data-expanded-label]');
+      const icon         = btn.querySelector<SVGSVGElement>('[data-toggle-icon]');
+
+      let open = false;
+
+      btn.addEventListener('click', () => {
+        open = !open;
+
+        if (open) {
+          // ── expand ──
+          collapsedEl?.classList.add('hidden');
+          expandedEl?.classList.remove('hidden');
+
+          if (listEl) {
+            // Temporarily remove the height constraint to measure true scrollHeight
+            listEl.style.maxHeight = 'none';
+            const full = listEl.scrollHeight;
+            listEl.style.maxHeight = '0';
+            // Force a reflow so the transition fires
+            void listEl.offsetHeight;
+            listEl.style.maxHeight = `${full}px`;
+            listEl.style.opacity   = '1';
+          }
+
+          labelOpen?.classList.add('hidden');
+          labelClose?.classList.remove('hidden');
+          if (icon) icon.style.transform = 'rotate(180deg)';
+          btn.setAttribute('aria-expanded', 'true');
+
+        } else {
+          // ── collapse ──
+          expandedEl?.classList.add('hidden');
+          collapsedEl?.classList.remove('hidden');
+
+          if (listEl) {
+            listEl.style.maxHeight = '0';
+            listEl.style.opacity   = '0';
+          }
+
+          labelClose?.classList.add('hidden');
+          labelOpen?.classList.remove('hidden');
+          if (icon) icon.style.transform = 'rotate(0deg)';
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
+  };
+
+  setup();
+  document.addEventListener('astro:after-swap', setup);
+</script>

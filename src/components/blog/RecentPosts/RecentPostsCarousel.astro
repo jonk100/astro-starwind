@@ -1,10 +1,10 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { BlogCardCarousel } from '../BlogCarousel';
-import type { BlogPost, BlogCardVariant } from "../shared/types";
+import type { BlogCardVariant } from "../shared/types";
 
 interface Props {
-  recentPosts: BlogPost[];
+  recentPosts: CollectionEntry<'blog'>[];
 
 }
 
@@ -15,8 +15,8 @@ const { recentPosts } = Astro.props;
 {recentPosts.length > 0 && (
   <section class="py-2 my-8 max-w-5xl mx-auto bg-color-white">
     <h2 class="text-xl font-semibold text-[rgb(var(--purple))]">Recent Articles</h2>
-    <BlogCardCarousel 
-      posts={recentPosts.map(post => ({ ...post.data, slug: post.id }))}
+    <BlogCardCarousel
+      posts={recentPosts as any}
       slidesPerView={2}
     />
   </section>

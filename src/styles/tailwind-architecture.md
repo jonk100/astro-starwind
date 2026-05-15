@@ -79,15 +79,15 @@ Build small composable primitives instead of giant all-in-one components.
 
 Good:
 
-* Stack
-* Cluster
-* Grid
-* Container
-* Section
+- Stack
+- Cluster
+- Grid
+- Container
+- Section
 
 Avoid:
 
-* Massive generic layout wrappers with dozens of props
+- Massive generic layout wrappers with dozens of props
 
 ---
 
@@ -377,10 +377,10 @@ Do not recreate Bootstrap-style abstraction layers.
 
 Astro components should:
 
-* Have one clear responsibility
-* Avoid deeply nested prop systems
-* Prefer slots and composition
-* Prefer modular files
+- Have one clear responsibility
+- Avoid deeply nested prop systems
+- Prefer slots and composition
+- Prefer modular files
 
 ---
 
@@ -429,11 +429,11 @@ Document exported functions and utilities.
 Example:
 
 ```ts
-/**
- * Returns button classes based on variant.
- * @param variant - Button variant key.
- * @returns Tailwind class string.
- */
+/--
+ - Returns button classes based on variant.
+ - @param variant - Button variant key.
+ - @returns Tailwind class string.
+ -/
 ```
 
 ---
@@ -442,17 +442,17 @@ Example:
 
 AI tools working in this repository should:
 
-* Prefer modular extraction
-* Avoid introducing dependencies unless explicitly requested
-* Use Astro + vanilla TypeScript only
-* Avoid React patterns/hooks
-* Keep components composable
-* Extract repeated Tailwind utilities
-* Prefer semantic tokens over arbitrary values
-* Use colocated CSS when complexity increases
-* Prefer readability over cleverness
-* Preserve consistent class ordering
-* Use reusable layout primitives whenever possible
+- Prefer modular extraction
+- Avoid introducing dependencies unless explicitly requested
+- Use Astro + vanilla TypeScript only
+- Avoid React patterns/hooks
+- Keep components composable
+- Extract repeated Tailwind utilities
+- Prefer semantic tokens over arbitrary values
+- Use colocated CSS when complexity increases
+- Prefer readability over cleverness
+- Preserve consistent class ordering
+- Use reusable layout primitives whenever possible
 
 ---
 
@@ -460,12 +460,12 @@ AI tools working in this repository should:
 
 The preferred architecture is:
 
-* Small reusable primitives
-* Semantic tokens
-* Domain-based organization
-* Minimal abstractions
-* Readable utility usage
-* Colocated styles and logic
-* Long-term maintainability over short-term speed
+- Small reusable primitives
+- Semantic tokens
+- Domain-based organization
+- Minimal abstractions
+- Readable utility usage
+- Colocated styles and logic
+- Long-term maintainability over short-term speed
 
 The project should remain understandable months later without requiring framework-specific abstractions or utility libraries.

@@ -5,11 +5,11 @@ import { ScrollReveal } from '@/components/layout';
 interface Props {
   heading: string;
   subheading: string;
-  plans: Array<{
+  plans: ReadonlyArray<{
     title: string;
     price: string;
     period?: string;
-    features: string[];
+    features: ReadonlyArray<string>;
     highlighted?: boolean;
     ctaText?: string;
   }>;

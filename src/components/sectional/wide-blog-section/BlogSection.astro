@@ -15,7 +15,7 @@ interface Props {
   remainingPosts?: CollectionEntry<'blog'>[] | null;
 }
 
-const { featuredPost, remainingPosts } = Astro.props;
+const { featuredPost } = Astro.props;
 
 // Fetch and sort posts by date descending
 const allPosts = (await getCollection('blog'))

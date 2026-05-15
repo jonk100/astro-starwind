@@ -1,36 +1,31 @@
 ---
 import { getCollection } from 'astro:content';
 import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
-import { ThreeColumnGrid, BlogSearch } from '@/components/blog';
+import { BlogSearch } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import BlogHero from '@/components/layout/BlogHero.astro';
+import CategoryPostsSection from '@/components/blog/CategoryPosts/CategoryPostsSection.astro';
+import SuicideCta from '@/components/sectional/SuicideCta.astro';
+import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
+import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
+import { ContactSection } from '@/components/layout';
+import Center from '@/components/layout/primitives/Center.astro';
+import { getCategoryTheme } from '@/components/blog/shared/categoryColors';
 
 export const prerender = true;
 
-export async function getStaticPaths() {
-  const posts = await getCollection('blog');
+// Fetch all posts, sorted newest-first
+const allPosts = (await getCollection('blog'))
+  .filter(p => !p.data.draft)
+  .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
 
-  const categories = new Set<string>();
-  posts.forEach(post => {
-    post.data.categories?.forEach(category => categories.add(category));
-  });
+// Derive unique categories + counts for the search bar
+const categorySet = new Set<string>();
+allPosts.forEach(post => post.data.categories?.forEach(c => categorySet.add(c)));
+const categories = [...categorySet].sort();
 
-  return Array.from(categories).map(category => ({
-    params: { category },
-    props: {
-      posts: posts.filter(post => post.data.categories?.includes(category)),
-    },
-  }));
-}
-
-const { category } = Astro.params;
-const { posts } = Astro.props;
-
-const sortedPosts = posts.sort(
-  (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
-);
-
-const postsData = sortedPosts.map(post => ({
+// Shape posts for BlogSearch
+const allPostsData = allPosts.map(post => ({
   ...post.data,
   slug: post.id,
   content: post.body,
@@ -38,74 +33,98 @@ const postsData = sortedPosts.map(post => ({
 ---
 
 <BlogIndexLayout
-  title={`${category} - ${SITE_TITLE}`}
-  description={`${SITE_DESCRIPTION} - Posts in ${category} category`}
-  showProgress={true}
+  title={`Browse Categories - ${SITE_TITLE}`}
+  description={`Explore all article categories on ${SITE_TITLE}. ${SITE_DESCRIPTION}`}
+  showProgress={false}
   breadcrumbs={[
     { label: 'Home', href: '/' },
     { label: 'Blog', href: '/blog' },
-    { label: 'Categories', href: '/blog/categories' },
-    { label: category, href: `/blog/category/${category}`, current: true },
+    { label: 'Categories', href: '/blog/categories', current: true },
   ]}
 >
+  {/* ── Hero ── */}
   <div slot="hero-search">
     <BlogHero
-      heading={category}
-      subheading={`${sortedPosts.length} ${sortedPosts.length === 1 ? 'post' : 'posts'} in this category`}
-      variant="flush"
+      heading="Browse by Category"
+      subheading={`${categories.length} categories · ${allPosts.length} articles`}
+      variant="card"
     >
-      <div class="flex gap-3 justify-center flex-wrap">
-        
+      <BlogSearch
+        posts={allPostsData}
+        placeholder="Search all articles…"
+        showFilters={true}
+      />
+
+      <div class="flex
+                    gap-3
+                    justify-center
+                    flex-wrap
+                    mt-4">
+        <a
           href="/blog"
-          class="px-5 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
+          class="
+            px-5
+            py-2
+            rounded-lg
+            border
+            border-border
+            text-sm
+            font-medium
+            hover:bg-muted
+            transition-colors
+          "
         >
           ← All Posts
         </a>
-        
-          href="/blog/categories"
+        <a
+          href="/blog/tags"
           class="px-5 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
         >
-          All Categories
+          Browse by Tag
         </a>
       </div>
     </BlogHero>
   </div>
 
-  {postsData.length > 0 ? (
-    <section class="space-y-6">
-      <div class="max-w-2xl mx-auto">
-        <BlogSearch
-          posts={postsData}
-          placeholder={`Search articles in ${category}...`}
-          showFilters={false}
-        />
+  {/* ── Category quick-nav pills ── */}
+  <section class="py-10 border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-6 text-center">
+        Jump to a category
+      </h2>
+      <div class="flex flex-wrap gap-3 justify-center">
+        {categories.map(cat => {
+          const theme = getCategoryTheme(cat);
+          return (
+            <a
+              href={`#cat-${cat.toLowerCase().replace(/\s+/g, '-')}`}
+              class="px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:scale-105 hover:shadow-md transition-all duration-200"
+              style={theme.pillStyle}
+            >
+              {cat}
+            </a>
+          );
+        })}
       </div>
-      <h2 class="text-2xl font-semibold text-[rgb(var(--purple))] text-center">
-        {sortedPosts.length} {sortedPosts.length === 1 ? 'Article' : 'Articles'} Found
-      </h2>
-      <ThreeColumnGrid
-        posts={postsData}
-        cardVariant="default"
-        showImage={true}
-        showTags={true}
-        showAuthor={true}
-        showReadTime={true}
-      />
-    </section>
-  ) : (
-    <div class="text-center py-16 space-y-4">
-      <h2 class="text-2xl font-semibold text-muted-foreground">
-        No posts found in {category}
-      </h2>
-      <p class="text-muted-foreground">
-        Check back later for new content in this category.
-      </p>
-      <a
-        href="/blog/"
-        class="inline-block px-6 py-3 bg-[rgb(var(--accent))] text-white rounded-lg font-medium hover:bg-[rgb(var(--accent-dark))] transition-colors"
-      >
-        Back to Blog
-      </a>
     </div>
-  )}
+  </section>
+
+  {/* ── All-categories post grid ── */}
+  <CategoryPostsSection posts={allPosts} />
+
+  {/* Suicice Line CTA──  */}
+  <SuicideCta />
+
+  {/* ── FAQ ── */}
+  <section class="py-16 bg-muted/30">
+    <FAQSection />
+  </section>
+
+  {/* ── Newsletter ── */}
+  <Center axis="both" class="py-20">
+    <NewsletterSection heading="Never miss an article" />
+  </Center>
+
+  {/* ── Contact ── */}
+  <ContactSection />
 </BlogIndexLayout>

@@ -20,7 +20,7 @@ interface Props {
   maxPosts?: number;
   autoplay?: boolean;
   showArrows?: boolean;
-  slidesPerView?: number;
+  slidesPerView?: 1 | 2 | 3;
   class?: string;
 }
 
@@ -77,9 +77,9 @@ const getItemBasis = (slidesPerView: 1 | 2 | 3): string => {
   return "basis-full";
 };
 
-const itemBasis = getItemBasis(slidesPerView);
+const itemBasis = getItemBasis(slidesPerView as 1 | 2 | 3);
 ---
-<div class={blogCardCarousel({ slidesPerView, class: className })}>
+<div class={blogCardCarousel({ slidesPerView: slidesPerView as 1 | 2 | 3, class: className })}>
   <div class="relative w-full px-20 rounded-xl">
     <Carousel
       opts={carouselOpts}

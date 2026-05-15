@@ -12,15 +12,9 @@ interface Props extends Polymorphic<{ as: HTMLTag }> {
   class?: string;
 }
 
-interface TagColor {
-  tag: string;
-  color: string;
-}
-
 const { as: Element = 'div', featuredPost, class: classList = '', ...rest } = Astro.props;
 
 const tags = featuredPost.data.tags?.slice(0, 8) || [];
-const tagColors: TagColor[] = tags.map((tag: string) => ({ tag, color: getTagColor(tag) }));
 const categories = featuredPost.data.categories?.slice(0, 3) || [];
 const formattedDate = new Date(featuredPost.data.date).toLocaleDateString('en-US', {
   year: 'numeric',
