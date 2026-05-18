@@ -17,23 +17,29 @@ export const homeFeatures = {
 	subheading: "Build better habits with our simple, powerful tools",
 	features: [
 		{
-			title: "Focus",
-			phrase: "Watch your habits take shape",
+			word: { title: "Focus", phrase: "Watch your habits take shape" },
+			action: { title: "Focus", phrase: "Watch your habits take shape" },
+			plea: { title: "Focus", phrase: "Watch your habits take shape" },
+			name: { title: "Focus", phrase: "Watch your habits take shape" },
 			description:
 				"Monitor your daily progress with intuitive visualizations that help you stay motivated and on track.",
 			link: "/app/habit/track",
 		},
 		{
-			title: "Growth",
-			phrase: "Write your way to clarity",
+			word: { title: "Growth", phrase: "Write your way to clarity" },
+			action: { title: "Growth", phrase: "Write your way to clarity" },
+			plea: { title: "Growth", phrase: "Write your way to clarity" },
+			name: { title: "Growth", phrase: "Write your way to clarity" },
 			description:
 				"Journal your thoughts and experiences to gain deeper insights into your patterns and behaviors.",
 			// TODO: confirm final journal route; current tree suggests /app/write/pad
 			link: "/app/write/pad",
 		},
 		{
-			title: "Breathework",
-			phrase: "Find stillness when you need it",
+			word: { title: "Breathework", phrase: "Find stillness when you need it" },
+			action: { title: "Breathework", phrase: "Find stillness when you need it" },
+			plea: { title: "Breathework", phrase: "Find stillness when you need it" },
+			name: { title: "Breathework", phrase: "Find stillness when you need it" },
 			description:
 				"Take mindful breaks with guided breathing exercises designed to reduce stress and improve focus.",
 			link: "/app/relax/happy-place",

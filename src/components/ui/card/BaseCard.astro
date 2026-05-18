@@ -1,0 +1,124 @@
+---
+/**
+ * BaseCard.astro
+ *
+ * A generic, flexible card component that can be used as a foundation
+ * for specialized card types (blog cards, testimonial cards, feature cards, etc.)
+ * Uses slots for maximum flexibility in content structure.
+ */
+
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+interface Props extends Polymorphic<{ as: HTMLTag }> {
+  // Card wrapper props
+  class?: string;
+  style?: string;
+  
+  // Image props (optional)
+  image?: string;
+  imageAlt?: string;
+  imageClass?: string;
+  
+  // Layout props
+  horizontal?: boolean; // If true, image and content are side-by-side
+  imagePosition?: 'left' | 'right'; // For horizontal layout
+  
+  // Styling variants
+  variant?: 'default' | 'elevated' | 'outlined' | 'flat';
+  
+  // Interaction
+  hoverable?: boolean;
+  clickable?: boolean;
+  href?: string;
+}
+
+const {
+  class: className,
+  style,
+  image,
+  imageAlt = '',
+  imageClass,
+  horizontal = false,
+  imagePosition = 'left',
+  variant = 'default',
+  hoverable = true,
+  clickable = false,
+  href,
+  as: Element = href ? 'a' : 'div',
+} = Astro.props;
+
+const Wrapper = href ? Element : 'div';
+const wrapperProps = href ? { href } : {};
+
+// Variant styles
+const variantStyles = {
+  default: 'border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+  elevated: 'border-0 bg-white shadow-lg dark:bg-stone-900',
+  outlined: 'border-2 border-stone-300 bg-transparent dark:border-stone-700',
+  flat: 'border-0 bg-transparent',
+};
+
+// Hover styles
+const hoverStyles = hoverable ? 'transition-all duration-300 hover:shadow-xl hover:-translate-y-1' : '';
+const cursorStyles = clickable || href ? 'cursor-pointer' : '';
+
+// Layout classes
+const layoutClass = horizontal 
+  ? 'flex flex-col md:flex-row'
+  : 'flex flex-col';
+
+const imageOrderClass = horizontal && imagePosition === 'right' ? 'md:order-2' : '';
+const contentOrderClass = horizontal && imagePosition === 'right' ? 'md:order-1' : '';
+---
+
+<Wrapper
+  class:list={[
+    'base-card overflow-hidden rounded-xl',
+    variantStyles[variant],
+    hoverStyles,
+    cursorStyles,
+    layoutClass,
+    className
+  ]}
+  style={style}
+  {...wrapperProps}
+>
+  {/* Image slot - can be overridden or used with image prop */}
+  {image ? (
+    <div class:list={[
+      'flex-shrink-0 overflow-hidden bg-stone-100 dark:bg-stone-800',
+      horizontal ? 'md:w-1/2' : 'w-full aspect-[3/2]',
+      imageOrderClass,
+    ]}>
+      <img
+        src={image}
+        alt={imageAlt}
+        class:list={[
+          'h-full w-full object-cover',
+          imageClass
+        ]}
+        loading="lazy"
+      />
+    </div>
+  ) : (
+    <slot name="image" />
+  )}
+
+  {/* Content slot */}
+  <div class:list={[
+    'flex flex-col p-4 flex-1 min-w-0',
+    contentOrderClass,
+  ]}>
+    <slot />
+  </div>
+</Wrapper>
+
+<style>
+  .base-card {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .base-card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+</style>

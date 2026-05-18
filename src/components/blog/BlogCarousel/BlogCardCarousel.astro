@@ -7,7 +7,7 @@ import {
   CarouselPrevious,
 } from "@/components/starwind/carousel";
 import { tv } from "tailwind-variants";
-import type { BlogPost, BlogCardVariant } from "../shared/types";
+import type { BlogPost, BlogCardVariant } from "../";
 import VerticalBlogCard from "../BlogCard/VerticalBlogCard.astro";
 
 interface Props {
@@ -80,10 +80,27 @@ const getItemBasis = (slidesPerView: 1 | 2 | 3): string => {
 const itemBasis = getItemBasis(slidesPerView as 1 | 2 | 3);
 ---
 <div class={blogCardCarousel({ slidesPerView: slidesPerView as 1 | 2 | 3, class: className })}>
-  <div class="relative w-full px-20 rounded-xl">
+  <div 
+    class
+    ="
+      relative 
+      w-full 
+      px-20 
+      rounded-xl
+    "
+  >
     <Carousel
-      opts={carouselOpts}
-      class="w-full rounded-lg bg-white/10 bg-white shadow-[inset_0_16px_32px_rgba(0,0,0,0.40),inset_0_16px_24px_rgba(0,0,0,0.20),inset_0_0_0_4px_rgba(0,0,0,0.08),inset_0_26px_0_0_rgba(0.30,0,0,0)] p-6"
+      opts=
+      {carouselOpts}
+      class
+      ="
+        w-full
+        rounded-lg
+        bg-white/10
+        bg-white
+        shadow-[inset_0_2px_4px_rgba(255,255,255,0.10),inset_0_6px_16px_rgba(255,255,255,0.18),inset_0_12px_32px_rgba(255,255,255,0.14)]
+        p-6
+      "
     >
       <CarouselContent class="ml-0">
         {displayPosts.map((post: BlogPost) => (

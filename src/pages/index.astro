@@ -1,17 +1,17 @@
 ---
 import Layout from '@/layouts/Site.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
-import { HeroSection } from '@/components/sectional/hero-section';
-import FeaturesSection from '@/components/sectional/features-section/FeaturesSection.astro';
-import { BlogSection } from '@/components/sectional/wide-blog-section';
-import { TestimonialsSection } from '@/components/sectional/wide-testimonial';
-import { PricingSection } from '@/components/sectional/wide-pricing-section';
-import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
-import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
-import { ContactSection } from '@/components/layout';
+import BlogSection from '@/components/sections/blog/BlogSection.astro';
+import TestimonialsSection from '@/components/sections/testimonial/TestimonialsSection.astro';
+import PricingSection from '@/components/sections/pricing/PricingSection.astro';
+import NewsletterSection from '@/components/sections/newsletter/NewsletterSection.astro';
+import FAQSection from '@/components/sections/faq/FAQSection.astro';
+import ContactSection from '@/components/sections/contact/ContactSection.astro';
 import FullCardCluster from '@/components/FullCardCluster.astro';
+import HeroSection from '@/components/sections/hero/HeroSection.astro';
+import FeaturesSection from '@/components/sections/feature/FeaturesSection.astro';
 import Card from '@/components/Card.astro';
 import Center from '@/components/layout/primitives/Center.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { features as FeatureData, testimonials as TestimonialData, pricing as PricingData } from '@/data/consts';
 
 const features = FeatureData;
@@ -56,16 +56,6 @@ export const prerender = false;
 		</FullCardCluster>
 	</div>
 
-	
-
-	/** 
-	 * @todo the heights of the cards are uneven
-	 * @todo there's no space between each cards
-	 * @todo the width of the section doesn't each the sides, which it needs to
-	 * @todo the featured post should be larger
-	 * @todo the featured post's text should be much less of the full width and centered
-	 * @todo the featured post's height should be much higher
-	 */
 	<BlogSection />
 	<TestimonialsSection
 	  heading="Real stories"

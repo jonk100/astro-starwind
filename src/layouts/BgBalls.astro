@@ -1,0 +1,59 @@
+---
+// AnimatedSection.astro
+interface Props {
+  class?: string;
+}
+
+const {
+  class: className = '',
+} = Astro.props;
+---
+
+<section class={`animated-section ${className}`}>
+  <div class="background" aria-hidden="true">
+    <span class="ball"></span>
+    <span class="ball"></span>
+    <span class="ball"></span>
+    <span class="ball"></span>
+  </div>
+
+  <div class="content">
+    <slot />
+  </div>
+</section>
+
+<style>
+  @keyframes move {
+    100% {
+      transform: translate3d(0, 0, 1px) rotate(360deg);
+    }
+  }
+
+  .animated-section {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .background {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ball {
+    position: absolute;
+    width: 20vmin;
+    height: 20vmin;
+    border-radius: 50%;
+    opacity: 0.25;
+    filter: blur(12px);
+    animation: move linear infinite;
+  }
+</style>

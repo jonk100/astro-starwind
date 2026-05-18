@@ -1,16 +1,17 @@
 ---
 import Layout from '@/layouts/Site.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
-import { HeroSection } from '@/components/sectional/hero-section';
-import FeaturesSection from '@/components/sectional/features-section/FeaturesSection.astro';
-import { TestimonialsSection } from '@/components/sectional/wide-testimonial';
-import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
-import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
-import { ContactSection } from '@/components/layout';
-import OurTeam from '@/components/sectional/team-section/OurTeam.astro';
+import HeroSection from '@/components/sections/hero/HeroSection.astro';
+import FeaturesSection from '@/components/sections/feature/FeaturesSection.astro';
+import TestimonialsSection from '@/components/sections/testimonial/TestimonialsSection.astro';
+import NewsletterSection from '@/components/sections/newsletter/NewsletterSection.astro';
+import FAQSection from '@/components/sections/faq/FAQSection.astro';
+import ContactSection from '@/components/sections/contact/ContactSection.astro';
+import MinimalBlogSection from '@/components/sections/blog/MinimalBlogSection.astro';
+import OurTeam from '@/components/sections/team/OurTeam.astro';
 import FullCardCluster from '@/components/FullCardCluster.astro';
 import Card from '@/components/Card.astro';
 import Center from '@/components/layout/primitives/Center.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { features as FeatureData, testimonials as TestimonialData } from '@/data/consts';
 
 const features = FeatureData;
@@ -26,7 +27,7 @@ export const prerender = false;
 	<HeroSection 
 		h="The People Behind Your Journey"
 		p="We're a team of dreamers, doers, and mental health advocates working together to make wellness accessible, joyful, and judgment-free."
-		imgSrc="https://res.cloudinary.com/dikyfam2c/image/upload/v1734536831/flower_gvof2g.webp"
+		imgSrc="https://res.cloudinary.com/dikyfam2c/image/upload/v1778690604/sssssstrictly-positive2_vdyprb_4bd826.jpg"
 		imgAlt="Team collaboration"
 		width={2688}
 		height={1920}
@@ -76,6 +77,10 @@ export const prerender = false;
 			</div>
 		</div>
 	</section>
+
+	<!-- <section class="container"> -->
+		<MinimalBlogSection variant="blog" o="long" i={0} />
+	<!-- </section> -->
 
 	<section class="logo-list-section">
 		<div class="container">
@@ -146,7 +151,7 @@ export const prerender = false;
 
 	.container {
 		max-width: 1200px;
-		margin: 0 auto;
+		margin: 4em auto;
 		padding: 0 2em;
 	}
 

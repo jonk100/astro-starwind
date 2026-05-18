@@ -73,17 +73,8 @@ const blogSearchCombobox = tv({
 </div>
 
 <script>
-  interface BlogPost {
-    title: string;
-    description?: string;
-    date: string | Date;
-    slug: string;
-    author?: string;
-    image?: string;
-    tags?: string[];
-    minutesRead?: string;
-  }
-
+  import type { BlogPost } from '@/components/blog/types';
+  
   class BlogSearchComboboxHandler {
     private select: HTMLElement;
     private searchInput: HTMLInputElement | null = null;

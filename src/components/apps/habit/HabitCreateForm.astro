@@ -1,0 +1,235 @@
+---
+/**
+ * @file src/components/apps/habit/HabitCreateForm.astro
+ * @description Slide-out sheet form for creating a new habit.
+ *
+ * Uses Starwind Sheet for the panel, Input for the name field,
+ * RadioGroup for tracking type selection, and Spinner for loading state.
+ *
+ * On success, dispatches a custom 'habit:created' event so the page
+ * can refresh the grid without a full reload.
+ */
+
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/starwind/sheet';
+import { Button } from '@/components/starwind/button';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { RadioGroup, RadioGroupItem } from '@/components/starwind/radio-group';
+import { Spinner } from '@/components/starwind/spinner';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/starwind/tooltip';
+---
+
+<Sheet>
+  <SheetTrigger asChild>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>
+        Add habit
+      </TooltipContent>
+    </Tooltip>
+  </SheetTrigger>
+
+  <SheetContent side="right">
+    <SheetHeader>
+      <SheetTitle>New Habit</SheetTitle>
+      <SheetDescription>
+        Add a habit to track. You can log it each day from the grid.
+      </SheetDescription>
+    </SheetHeader>
+
+    <form id="habit-create-form" class="flex flex-col gap-6 px-4 py-6">
+
+      <!-- Name -->
+      <div class="grid gap-2">
+        <Label for="habit-name">Habit name</Label>
+        <Input
+          id="habit-name"
+          name="name"
+          type="text"
+          required
+          maxlength="100"
+          placeholder="e.g. Morning meditation"
+        />
+        <p id="habit-name-error" class="hidden text-sm text-red-500"></p>
+      </div>
+
+      <!-- Tracking type -->
+      <div class="grid gap-3">
+        <Label>Tracking type</Label>
+        <RadioGroup
+          id="habit-tracking-type"
+          name="tracking_type"
+          defaultValue="boolean"
+          legend="How do you want to track this habit?"
+        >
+          <div class="flex items-start gap-3">
+            <RadioGroupItem
+              id="type-boolean"
+              value="boolean"
+              name="tracking_type"
+              class="mt-0.5"
+            />
+            <div>
+              <Label for="type-boolean" class="font-medium">Boolean</Label>
+              <p class="text-sm text-muted-foreground">Did you do it? Simple yes or no.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <RadioGroupItem
+              id="type-count"
+              value="count"
+              name="tracking_type"
+              class="mt-0.5"
+            />
+            <div>
+              <Label for="type-count" class="font-medium">Count</Label>
+              <p class="text-sm text-muted-foreground">How many times? e.g. glasses of water.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <RadioGroupItem
+              id="type-duration"
+              value="duration"
+              name="tracking_type"
+              class="mt-0.5"
+            />
+            <div>
+              <Label for="type-duration" class="font-medium">Duration</Label>
+              <p class="text-sm text-muted-foreground">How long? e.g. minutes of exercise.</p>
+            </div>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <!-- Server error -->
+      <p id="habit-form-error" class="hidden rounded-md bg-red-50 px-3 py-2 text-sm text-red-600"></p>
+
+    </form>
+
+    <SheetFooter>
+      <SheetClose asChild>
+        <Button variant="outline" id="habit-form-cancel">Cancel</Button>
+      </SheetClose>
+      <Button variant="default" id="habit-form-submit" type="button">
+        <span id="habit-submit-label">Create habit</span>
+        <Spinner id="habit-submit-spinner" class="hidden size-4" />
+      </Button>
+    </SheetFooter>
+  </SheetContent>
+</Sheet>
+
+<script>
+  import { actions } from 'astro:actions';
+
+  /**
+   * Returns the currently selected tracking_type value from the RadioGroup.
+   * Falls back to 'boolean' if nothing is selected.
+   *
+   * @returns {"boolean" | "count" | "duration"} The selected tracking type.
+   */
+  function getSelectedTrackingType(): "boolean" | "count" | "duration" {
+    const checked = document.querySelector<HTMLInputElement>(
+      'input[name="tracking_type"]:checked'
+    );
+    const value = checked?.value ?? 'boolean';
+    if (value === 'count' || value === 'duration') return value;
+    return 'boolean';
+  }
+
+  /**
+   * Resets the form fields and clears any error messages.
+   */
+  function resetForm() {
+    const nameInput = document.getElementById('habit-name') as HTMLInputElement;
+    const errorMsg = document.getElementById('habit-form-error') as HTMLElement;
+    const nameError = document.getElementById('habit-name-error') as HTMLElement;
+    const booleanRadio = document.getElementById('type-boolean') as HTMLInputElement;
+
+    if (nameInput) nameInput.value = '';
+    if (booleanRadio) booleanRadio.checked = true;
+    if (errorMsg) { errorMsg.textContent = ''; errorMsg.classList.add('hidden'); }
+    if (nameError) { nameError.textContent = ''; nameError.classList.add('hidden'); }
+  }
+
+  /**
+   * Sets the submit button into loading or idle state.
+   *
+   * @param loading - Whether to show the loading state.
+   */
+  function setLoading(loading: boolean) {
+    const submitBtn = document.getElementById('habit-form-submit') as HTMLButtonElement;
+    const label = document.getElementById('habit-submit-label') as HTMLElement;
+    const spinner = document.getElementById('habit-submit-spinner') as HTMLElement;
+
+    if (!submitBtn) return;
+    submitBtn.disabled = loading;
+    label?.classList.toggle('hidden', loading);
+    spinner?.classList.toggle('hidden', !loading);
+  }
+
+  const submitBtn = document.getElementById('habit-form-submit');
+
+  submitBtn?.addEventListener('click', async () => {
+    const nameInput = document.getElementById('habit-name') as HTMLInputElement;
+    const errorMsg = document.getElementById('habit-form-error') as HTMLElement;
+    const nameError = document.getElementById('habit-name-error') as HTMLElement;
+
+    // Clear previous errors
+    errorMsg?.classList.add('hidden');
+    nameError?.classList.add('hidden');
+
+    const name = nameInput?.value.trim();
+
+    // Client-side validation
+    if (!name) {
+      if (nameError) {
+        nameError.textContent = 'Habit name is required.';
+        nameError.classList.remove('hidden');
+      }
+      nameInput?.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    const { data, error } = await actions.habit.create({
+      name,
+      tracking_type: getSelectedTrackingType(),
+    });
+
+    setLoading(false);
+
+    if (error) {
+      if (errorMsg) {
+        errorMsg.textContent = error.message ?? 'Something went wrong. Please try again.';
+        errorMsg.classList.remove('hidden');
+      }
+      return;
+    }
+
+    // Success — close the sheet, reset the form, reload the grid
+    document.getElementById('habit-form-cancel')?.click();
+    resetForm();
+
+    // Reload the page to show the new habit in the grid
+    window.location.reload();
+  });
+</script>

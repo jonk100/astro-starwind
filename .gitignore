@@ -28,6 +28,13 @@ pnpm-debug.log*
 
 # Build outputs
 dist/
+
 # Local Netlify folder
 .netlify
 barrel-builder.config.json
+
+# Chunks & embeddings & prompts from RAG scripts
+.repo-ai/
+
+# RAG scripts
+scripts/repo-ai/

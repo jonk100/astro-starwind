@@ -1,6 +1,6 @@
 ---
 import { tv } from "tailwind-variants";
-import type { BlogPost, BlogCardVariant } from "../shared/types";
+import type { BlogPost, BlogCardVariant } from "../types";
 import VerticalBlogCard from "../BlogCard/VerticalBlogCard.astro";
 
 interface ThreeColumnGridProps {
@@ -27,7 +27,7 @@ const {
 } = Astro.props;
 
 const threeColumnGrid = tv({
-  base: "grid gap-6",
+  base: "grid gap-1",
   variants: {
     responsive: {
       true: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
@@ -53,3 +53,4 @@ const displayPosts = maxPosts ? posts.slice(0, maxPosts) : posts;
     />
   ))}
 </div>
+

@@ -292,7 +292,7 @@ if (user) return Astro.redirect("/");
     formData.delete("confirm"); // Zod doesn't need this, JS already verified it match.
 
     try {
-      const result = await actions.signUp(formData);
+      const result = await actions.auth.signUp(formData);
 
       if (isInputError(result.error)) {
         setLoading(false);

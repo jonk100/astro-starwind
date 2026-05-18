@@ -1,22 +1,59 @@
 ---
-import Layout from '../../../layouts/AppLayout.astro';
-import HabitGrid from '@/components/app/tracker/HabitGrid.astro';
-import { createClient } from '@supabase/supabase-js';
+import Layout from '@/layouts/AppLayout.astro';
+import HabitGrid from '@/components/apps/habit/HabitGrid.astro';
+import { createClient } from '@/lib/supabase';
+import { currentMonth as currentMonthRange, generateDateRange } from '@/lib/habit/utils';
 
 export const prerender = false;
 
-const supabase = createClient(
-  import.meta.env.SUPABASE_URL,
-  import.meta.env.SUPABASE_ANON_KEY
-);
+const supabase = createClient({
+  request: Astro.request,
+  cookies: Astro.cookies,
+});
 
-// Fetch your habits and the logs for the current month
-const { data: habits } = await supabase.from('habits').select('*');
-const { data: logs } = await supabase.from('habit_logs').select('*').gte('entry_date', '2026-05-01').lte('entry_date', '2026-05-31');
+// Redirect to login if not authenticated
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+  return Astro.redirect('/auth/login');
+}
+
+const { from, to } = currentMonthRange();
+// Fetch habits and logs separately — simpler and more reliable
+const { data: habits, error: habitsError } = await supabase
+  .from("habits")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: true });
+
+const { data: logs, error: logsError } = await supabase
+  .from("habit_logs")
+  .select("*")
+  .eq("user_id", user.id)
+  .gte("entry_date", from)
+  .lte("entry_date", to);
+
+// Manually attach logs to habits to match HabitWithLogs shape
+const habitsWithLogs = (habits ?? []).map(habit => ({
+  ...habit,
+  logs: (logs ?? []).filter(log => log.habit_id === habit.id),
+}));
 
 const currentMonth = new Date();
+const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 ---
-<Layout>
-    {/* Pass the real data into the grid */}
-    <HabitGrid slot="header" habits={habits || []} logs={logs || []} currentMonth={currentMonth} />
+
+<Layout title="Habit Tracker" description="Track your habits">
+  <div class="flex flex-col h-screen">
+    <div class="p-4 border-b border-slate-200">
+      <h1 class="text-2xl font-semibold text-slate-800">{monthName}</h1>
+    </div>
+    <div class="flex-1 overflow-auto">
+      <HabitGrid
+        habits={habitsWithLogs ?? []}
+        from={from}
+        to={to}
+        currentMonth={currentMonth}
+      />
+    </div>
+  </div>
 </Layout>

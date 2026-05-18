@@ -1,0 +1,236 @@
+---
+/**
+ * MinimalCard.astro
+ *
+ * A simple, minimal card component for displaying content.
+ * Supports optional image, title, description, and metadata.
+ * Designed to work with different data types (blog, testimonials, features, etc.)
+ */
+
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+type Variant = 'blog' | 'testimonials' | 'features' | 'faqs' | 'docs' | 'resources';
+
+interface Props extends Polymorphic<{ as: HTMLTag }> {
+  // Common props
+  title: string;
+  description?: string;
+  image?: string;
+  imageAlt?: string;
+  href?: string;
+  
+  // Metadata props (optional)
+  category?: string;
+  date?: Date | string;
+  author?: string;
+  source?: string;
+  
+  // Variant prop for different card types
+  variant?: Variant;
+  
+  // Size prop for grid spanning. The styles are defined in the component's CSS.
+  size?: 'default' | 'tall' | 'long';
+  
+  // Styling
+  class?: string;
+  style?: string;
+  categoryStyle?: string;
+}
+
+const {
+  title,
+  description,
+  image,
+  imageAlt = title,
+  href,
+  category,
+  date,
+  author,
+  source,
+  variant,
+  size = 'default',
+  class: className,
+  style,
+  categoryStyle,
+  as: Element = href ? 'a' : 'div',
+} = Astro.props;
+
+/**
+ * Formats a date value into a human-readable string.
+ * @param {Date | string | undefined} d - The date to format.
+ * @returns {string | undefined} The formatted date string, or undefined if no date provided.
+ */
+const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+}) : undefined;
+
+const Wrapper = href ? Element : 'div';
+const wrapperProps = href ? { href } : {};
+---
+
+<Wrapper
+  class:list={[
+    'minimal-card group overflow-hidden rounded-xl', 
+    'border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+    'transition-all duration-300 hover:shadow-2xl hover:-translate-y-1',
+      // [TALL SIZE]: spans 2 rows in the grid
+      size === 'tall' && 'lg:row-span-2 card-tall',
+      // [DEFAULT SIZE]: stacked column layout
+      size === 'default' && 'flex flex-col card-default',
+      // [LONG SIZE]: horizontal row layout at md+, stacked below that
+      size === 'long' && 'flex flex-col md:flex-row lg:col-span-2 card-long',
+      className
+  ]}
+  style={{
+    '--shadow-x': '0px',
+    '--shadow-y': '-5px',
+    // gridColumn removed — handled by lg:col-span-2 class above
+    ...style
+  }}
+  {...wrapperProps}
+>
+  {/* Image */}
+  {image && (
+  <div
+    class:list={[
+      'flex-shrink-0 overflow-hidden bg-stone-100 dark:bg-stone-800',
+      size === 'default' && 'aspect-[3/2] w-full h-1/2',
+      // At small screens: full width stacked. At md+: half width side-by-side
+      size === 'long' && 'aspect-[3/2] w-full md:w-1/2 md:aspect-auto card-image-long rounded-none',
+    ]}
+    style={size === 'long' ? 'height: 100%;' : undefined}
+  >
+      <Image
+        src={image}
+        alt={imageAlt}
+        inferSize
+        class:list={[
+          'h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105 aspect-[3/2]',
+          size === 'long' && 'rounded-[0px]'
+        ]}
+        loading="lazy"
+      />
+    </div>
+  )}
+
+  {/* Content */}
+  <div class:list={[
+    'flex flex-col p-2 flex-1 min-w-0',
+    
+    // Long: center content vertically in the right-hand column
+    size === 'long' && 'justify-center p-4',
+  ]}>
+    {/* Category badge — sits above the title for long cards */}
+    {category && size === 'long' && (
+      <span class="text-xs font-medium uppercase tracking-wide px-2 py-1 rounded-full" style={categoryStyle}>
+        {category}
+      </span>
+    )}
+
+    {/* Title */}
+    <h6 class:list={[
+      'font-semibold leading-tight text-stone-900 dark:text-white group-hover:text-accent transition-colors my-0 py-0',
+      size === 'long' ? 'text-lg line-clamp-3' : 'mb-0 line-clamp-2 text-sm',
+    ]}>{title}</h6>
+
+    {/* Description */}
+    {description && (
+      <p class:list={[
+        'text-stone-600 dark:text-stone-400 leading-relaxed my-0 py-0',
+        size === 'long' ? 'text-sm line-clamp-3 mb-0' : 'text-xs line-clamp-2 my-0',
+      ]}>{description}</p>
+    )}
+
+    {/* Metadata row: author · date for default/tall cards */}
+    {(author || formattedDate) && (size !== 'long') && (
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-400 dark:text-stone-500 my-0 mt-auto">
+        {author && (
+          <span>{typeof author === 'string' ? author : (author as string[]).join(', ')}</span>
+        )}
+        {author && formattedDate && <span aria-hidden="true">·</span>}
+        {formattedDate && <time datetime={new Date(date!).toISOString()}>{formattedDate}</time>}
+      </div>
+    )}
+
+    {/* Bottom row: category (default/tall only) + Read more link */}
+    <div class:list={[
+      'mt-auto flex items-center justify-between font-medium text-stone-900 dark:text-white',
+      size === 'default' && 'text-xs',
+      size === 'long' && 'text-sm font-bold',
+    ]}>
+      {/* Category shown in the footer only for default/tall sizes */}
+      {category && size !== 'long' && (
+        <span class="px-2 py-1 rounded-full truncate" style={categoryStyle}>{category}</span>
+      )}
+
+      {/* Author and date for long cards */}
+      {size === 'long' && (
+        <span class="text-stone-500 dark:text-stone-400 truncate">
+          {author && (
+          <span>{typeof author === 'string' ? author : (author as string[]).join(', ')}</span>
+        )}
+        {author && formattedDate && <span aria-hidden="true">·</span>}
+        {formattedDate && <time datetime={new Date(date!).toISOString()}>{formattedDate}</time>}
+        </span>
+      )}
+
+      {/* Read more link*/}
+      {href && (
+        <div class="flex items-center truncate">
+          <span class="truncate">Read more</span>
+          <svg
+            class:list={[
+              'ml-1 flex-shrink-0 transition-transform group-hover:translate-x-1',
+              size === 'default' ? 'h-3 w-3' : 'h-4 w-4',
+            ]}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      )}
+    </div>
+  </div>
+</Wrapper>
+
+<style>
+  .minimal-card {
+    --dynamic-shadow-x: var(--shadow-x, 0px);
+    --dynamic-shadow-y: var(--shadow-y, -5px);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: box-shadow 0.5s ease, transform 0.3s ease;
+  }
+
+  .minimal-card:hover {
+    box-shadow: 
+      calc(var(--dynamic-shadow-x) + 4px) 
+      calc(var(--dynamic-shadow-y) + 8px) 
+      25px -5px rgb(0 0 0 / 0.15),
+      0 10px 10px -5px rgb(0 0 0 / 0.1);
+  }
+
+  /**
+   * For the long (hero) card, the image div is a flex child with `self-stretch`,
+   * which gives it a computed height from the sibling content column — but
+   * `h-full` (height: 100%) on the <img> inside won't resolve against a
+   * flex-stretch computed height in most browsers without an explicit `height`
+   * declaration on the parent. This rule provides that explicit declaration.
+   */
+  .card-image-long {
+    display: flex;
+    overflow: hidden;
+  }
+
+  .card-default h6, p {
+    margin: 0;
+    padding: 0;
+    margin-block-end: 0.5em;
+  }
+</style>
+

@@ -1,5 +1,120 @@
 # TODO
 
+## PROPOSED CLEAN DIRECTORY STRUCTURE
+
+src/
+├── actions/
+│   ├── auth.ts
+│   ├── habit.ts           ← move habit mutations here
+│   ├── journal.ts
+│   ├── meditation.ts
+│   └── index.ts
+│
+├── assets/               ← unchanged
+│
+├── components/
+│   │
+│   ├── ui/               ← PRIMITIVES ONLY, no domain knowledge
+│   │   ├── card/
+│   │   │   └── Card.astro          ← one card to rule them all
+│   │   ├── icon/
+│   │   │   └── Icon.astro
+│   │   ├── logo/
+│   │   │   └── Logo.astro
+│   │   └── index.ts
+│   │
+│   ├── starwind/         ← leave untouched, third-party system
+│   │
+│   ├── layout/           ← page structure primitives only
+│   │   ├── primitives/   ← keep your existing Center, Cluster, etc.
+│   │   └── index.ts
+│   │
+│   ├── blog/             ← keep as-is, already well-organized
+│   │
+│   ├── header/           ← keep as-is
+│   │
+│   ├── sections/         ← REPLACES both layout/ sections and sectional/
+│   │   ├── hero/
+│   │   │   ├── HeroSection.astro
+│   │   │   ├── HeroText.astro
+│   │   │   ├── HeroImage.astro
+│   │   │   └── HeroAction.astro
+│   │   ├── features/
+│   │   │   ├── FeaturesSection.astro
+│   │   │   └── FeatureCard.astro
+│   │   ├── faq/
+│   │   │   ├── FAQSection.astro
+│   │   │   └── FAQCard.astro
+│   │   ├── pricing/
+│   │   │   ├── PricingSection.astro
+│   │   │   └── PricingCard.astro
+│   │   ├── testimonials/
+│   │   │   ├── TestimonialsSection.astro
+│   │   │   └── TestimonialCard.astro
+│   │   ├── team/
+│   │   │   └── TeamSection.astro
+│   │   ├── contact/
+│   │   │   ├── ContactSection.astro
+│   │   │   └── ContactFormSection.astro
+│   │   ├── newsletter/
+│   │   │   └── NewsletterSection.astro
+│   │   ├── cta/
+│   │   │   ├── CTASection.astro
+│   │   │   └── CrisisLineSection.astro   ← renamed from SuicideCta
+│   │   └── index.ts
+│   │
+│   ├── auth/             ← promote these, they deserve their own home
+│   │   ├── LoginForm.astro
+│   │   ├── SignupForm.astro
+│   │   └── index.ts
+│   │
+│   └── apps/             ← REPLACES src/app/ and src/components/app/
+│       ├── shared/
+│       │   ├── MoodSelector.astro
+│       │   ├── EmptyState.astro
+│       │   ├── ProgressRing.astro
+│       │   └── StreakBadge.astro
+│       ├── habit/
+│       │   ├── HabitGrid.astro       ← move from components/app/tracker/
+│       │   ├── HabitCard.astro
+│       │   ├── HabitForm.astro
+│       │   ├── HabitLog.astro
+│       │   └── index.ts
+│       ├── journal/
+│       │   ├── JournalEditor.astro
+│       │   ├── JournalEntry.astro
+│       │   ├── EntryList.astro
+│       │   ├── PromptCard.astro
+│       │   └── index.ts
+│       └── meditation/
+│           ├── SessionTimer.astro
+│           ├── BreathingGuide.astro
+│           ├── SessionCard.astro
+│           ├── SessionLog.astro
+│           └── index.ts
+│
+├── lib/
+│   ├── supabase.ts           ← one file, delete lib/db/supabase.js
+│   ├── auth.ts               ← session helpers extracted here
+│   ├── habit/
+│   │   ├── queries.ts
+│   │   └── mutations.ts
+│   ├── journal/
+│   │   ├── queries.ts
+│   │   └── mutations.ts
+│   ├── meditation/
+│   │   ├── queries.ts
+│   │   └── mutations.ts
+│   └── utils.ts
+│
+├── layouts/                  ← keep as-is, already clean
+├── pages/                    ← keep as-is
+├── content/                  ← keep as-is
+├── data/                     ← keep as-is
+└── styles/                   ← keep as-is
+
+
+
 ## Site Wireframe Scaffolding
 
 See [wireframe](./docs/pages/site-wireframe.md) for details.
@@ -147,6 +262,31 @@ See [wireframe](./docs/pages/site-wireframe.md) for details.
 - [ ] Configure error logging
 - [ ] Configure backups
 - [ ] Final production QA pass
+
+---
+
+## Directory Reorganization
+
+Based on the proposed clean directory structure in this file, the following tasks need to be completed:
+
+- [ ] Create new directory structure: src/components/ui/, src/components/layout/primitives/, src/components/sections/, src/components/auth/, src/components/apps/, src/lib/habit/, src/lib/journal/, src/lib/meditation/
+- [ ] Move habit-related components to src/components/apps/habit/ (HabitGrid, HabitCard, HabitForm, HabitLog from components/app/tracker/)
+- [ ] Move journal-related components to src/components/apps/journal/ (JournalEditor, JournalEntry, EntryList, PromptCard)
+- [ ] Move meditation-related components to src/components/apps/meditation/ (SessionTimer, BreathingGuide, SessionCard, SessionLog)
+- [ ] Move shared app components to src/components/apps/shared/ (MoodSelector, EmptyState, ProgressRing, StreakBadge)
+- [ ] Move auth components to src/components/auth/ (LoginForm, SignupForm)
+- [ ] Create UI primitives in src/components/ui/ (Card.astro, Icon.astro, Logo.astro)
+- [ ] Consolidate layout primitives into src/components/layout/primitives/ (Center, Cluster, etc.)
+- [ ] Create section components in src/components/sections/ (hero, features, faq, pricing, testimonials, team, contact, newsletter, cta)
+- [ ] Move habit mutations from components to src/actions/habit.ts
+- [ ] Create src/actions/journal.ts and src/actions/meditation.ts
+- [ ] Consolidate Supabase setup: delete lib/db/supabase.js, create src/lib/supabase.ts
+- [ ] Extract auth helpers to src/lib/auth.ts
+- [ ] Create domain-specific query/mutation files in src/lib/habit/, src/lib/journal/, src/lib/meditation/
+- [ ] Create index.ts files for all new directories to export components
+- [ ] Update all import statements throughout the codebase to reflect new file locations
+- [ ] Delete old empty directories after moves are complete
+- [ ] Test the application to ensure all imports resolve correctly
 
 ---
 

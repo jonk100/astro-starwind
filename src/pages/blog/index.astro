@@ -1,19 +1,28 @@
 ---
 import { getCollection } from 'astro:content';
 import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
-import { ThreeColumnGrid, BlogSearch } from '@/components/blog';
+import { ThreeColumnGrid, BlogSearch, type BlogPost } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { RecentPostsCarousel } from '@/components/blog/RecentPosts';
-import BlogHero from '@/components/layout/BlogHero.astro';
+import BlogHero from '@/components/sections/blog/BlogHero.astro';
+import MinimalBlogSection from '@/components/sections/blog/MinimalBlogSection.astro';
+import BgBalls from '@/layouts/BgBalls.astro';
 
 export const prerender = false;
 
+// Get all blog posts sorted by date (newest first)
 const posts = (await getCollection('blog')).sort(
   (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
 );
 
-const recentPosts = posts.slice(1, 7);
+// Extract recent posts (excluding the first one which is featured)
+const recentPosts: BlogPost[] = posts.slice(1, 7).map(post => ({
+  ...post.data,
+  slug: post.id,
+  content: post.body,
+}));
 
+// Prepare all posts data for the search component
 const allPostsData = posts.map(post => ({
   ...post.data,
   slug: post.id,
@@ -30,31 +39,100 @@ const allPostsData = posts.map(post => ({
     { label: 'Blog', href: '/blog', current: true },
   ]}
 >
-  <div slot="hero-search">
-    <BlogHero
-      heading="All Posts"
-      subheading="Explore our latest articles, insights, and stories on technology, design, and development."
-      variant="card"
-    >
-      <BlogSearch
-        posts={allPostsData}
-        placeholder="Search articles..."
-        showFilters={true}
-      />
-    </BlogHero>
-  </div>
-
-  <div
-    slot="main-top"
-    class="w-screen relative left-1/2 -translate-x-1/2 bg-primary dark:bg-slate-900 py-8"
+  <BlogHero
+    heading="All Posts"
+    subheading="Explore our latest articles, insights, and stories on technology, design, and development."
+    variant="card"
+    slot="hero-search"
   >
-    <div class="max-w-5xl mx-auto px-4">
-      <RecentPostsCarousel recentPosts={recentPosts} />
+    <BlogSearch
+      posts={allPostsData}
+      placeholder="Search articles..."
+      showFilters={true}
+    />
+  <div 
+    class="flex
+      gap-3
+      justify-center
+      flex-wrap
+      mt-4
+    "
+  >
+    <a
+      href="/blog"
+      class
+      ="
+        px-5
+        py-2
+        rounded-lg
+        border
+        border-border
+        text-sm
+        font-medium
+        hover:bg-muted
+        transition-colors
+      "
+    >
+      ← All Posts
+    </a>
+    <a
+      href="/blog/tags"
+      class=
+      "
+        px-5
+        py-2
+        rounded-lg
+        border
+        border-border
+        text-sm
+        font-medium
+        hover:bg-muted
+        transition-colors
+      "
+    >
+      Browse by Tag
+    </a>
+  </div>
+  </BlogHero>
+
+
+  <div slot="main-top" class=
+    "flex items-center justify-center h-[100vh] w-screen relative left-1/2
+      -translate-x-1/2 dark:bg-slate-900 py-8 my-auto
+    "
+  >
+    <div class=
+      "max-w-5xl mx-auto px-4"
+    >
+      <RecentPostsCarousel
+        recentPosts={recentPosts}
+      >
+        <BgBalls />
+      </RecentPostsCarousel>
     </div>
+
   </div>
 
-  <section class="space-y-6">
-    <h2 class="text-2xl font-semibold text-[rgb(var(--purple))]">All Articles</h2>
+  <!-- Main Content Section -->
+  <section class=
+    "my-auto space-y-2 mx-auto p-32"
+  >
+    <h2 
+      class="text-4xl font-semibold text-[rgb(var(--purple))]"
+    >
+      More articles:
+    </h2>
+
+    <MinimalBlogSection 
+      variant="blog" 
+      o="long" 
+      i={2}
+      style="width:auto"
+    />
+  </section>
+
+
+  <section class="my-auto space-y-2 mx-auto p-32">
     <ThreeColumnGrid
       posts={allPostsData}
       cardVariant="colorful"
@@ -64,4 +142,6 @@ const allPostsData = posts.map(post => ({
       showReadTime={true}
     />
   </section>
+
+
 </BlogIndexLayout>

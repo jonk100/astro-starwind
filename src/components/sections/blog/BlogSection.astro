@@ -1,0 +1,51 @@
+---
+/** 
+* src/components/sectional/blog-section/BlogSection.astro
+* - Fullscreen blog section component that displays a grid of blog posts.
+*/
+import FeaturedPost from './FeaturedPost.astro';
+import { getCollection } from 'astro:content';
+import { Stack, Center, ScrollReveal } from '@/components/layout';
+import FullscreenGrid from './FullscreenGrid.astro';
+import { HeroText } from '../hero';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  featuredPost?: CollectionEntry<'blog'> | null;
+  remainingPosts?: CollectionEntry<'blog'>[] | null;
+}
+
+const { featuredPost } = Astro.props;
+
+// Fetch and sort posts by date descending
+const allPosts = (await getCollection('blog'))
+.filter(post => !post.data.draft)
+.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// If no featured post is passed, use the first post in the collection
+const finalFeaturedPost = featuredPost || allPosts[0];
+const finalRemainingPosts = featuredPost
+  ? allPosts.filter(post => post.id !== featuredPost.id).slice(0, 8)
+  : allPosts.slice(1, 9);
+
+---
+<Center axis="x" class="bg-linear-to-r from-emerald-950 to-gray-950">
+    <Stack gap="lg">
+      <Stack gap="sm" class="text-bigger text-red-200">
+        <HeroText
+          h="Latest Insights"
+          p=""
+          class="bg-linear-to-b from-bg-foreground to-bg-red-950/20 my-0 p-8 text-red-200"
+        />
+        </Stack>
+        {finalFeaturedPost && (
+          <ScrollReveal axis="y" distance="40px">
+            <FeaturedPost featuredPost={finalFeaturedPost} />
+          </ScrollReveal>
+        )}
+        <FullscreenGrid posts={finalRemainingPosts} />
+        <a href="/blog" class="inline-block py-4 border-2 border-stone-900 dark:border-white text-lg font-black hover:bg-accent hover:border-accent hover:text-white transition-all rounded-2xl transform hover:scale-105">
+          Browse the Archives
+        </a>
+    </Stack>
+  </Center>

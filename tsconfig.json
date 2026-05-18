@@ -18,6 +18,7 @@
       "!svg/*": [
         "./src/assets/svg/*"
       ]
-    }
+    },
+    "ignoreDeprecations": "5.0"
   }
 }

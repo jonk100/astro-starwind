@@ -8,6 +8,7 @@ import Footer from '../layouts/Footer.astro';
 import '../styles/global.css';
 import type { User } from '@supabase/supabase-js';
 import { Stack } from '@/components/layout';
+import BgBalls from './BgBalls.astro';
 
 interface Props {
 	title: string;
@@ -19,66 +20,55 @@ const { title, description, user: userProp } = Astro.props;
 const user = userProp ?? Astro.locals.user;
 ---
 <html lang="en">
+  <!-- Head and head slot -->
 	<head>
-		<Head 
-    title={title} description={description} />
-
+		<Head title={title} description={description} />
+    <slot name="head" />
 	</head>
-	<body>
-    <header class="layout-header sticky top-0 z-50">
-      <Header user={user} />
-      <slot name="header" />
-    </header>
-      <slot name="hero" class="hero-section" />
-          <main>
 
-          <Stack>
-          <slot name="main-top" />
+  <body class="layout-body">
 
-          </Stack>
+    <!-- Header and header slot -->
+    <Header user={user} />
+    <slot name="header" />
+    
+    <!-- Hero and hero slot -->
+    <slot name="hero" class="hero-section" />
 
-          <slot />
-          
-          <Stack>
-          <slot name="main-bottom" />
-        </Stack>
+    <!-- Main content with 3 slots -->
+    <main>
+      <BgBalls>
+      <Stack>
+        <slot name="main-top" />
+      </Stack>
+      <slot />
+      <Stack>
+        <slot name="main-bottom" />
+      </Stack>
       </main>
+
+    <!-- Zero slot -->
     <slot name="zero" />
+    
+    <!-- Footer and footer slot -->
     <footer class="mt-auto">
       <Footer />
       <slot name="footer" />
+
     </footer>
 	</body>
 </html>
 
 <style>
   @reference "../styles/global.css";
-  html, body {
-    height: 100%;
-    margin: 0;
-  }
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  .site-header-region {
-    flex-shrink: 0;
-  }
-  header {
-    flex-shrink: 0;
-  }
-  main {
-    flex: 1 0 auto;
-  }
-  footer {
-    flex-shrink: 0;
-  }
+
   .hero-section {
     animation: bgIn 3s ease-in-out;
     /* background-color: var(--color-background); */
   }
+
   .section-container {
     @apply mx-auto;
   }
+
 </style>

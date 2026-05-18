@@ -10,9 +10,12 @@
  *   - The expanded list background is tinted with the category colour
  */
 import type { CollectionEntry } from 'astro:content';
-import { formatDate } from '@/components/blog/shared/utils';
+import { formatDate } from '@/components/blog/utils';
 import { getCategoryTheme } from '@/components/blog/shared/categoryColors';
 import type { CategoryTheme } from '@/components/blog/shared/categoryColors';
+import { Image } from 'astro:assets';
+
+export const prerender = false;
 
 interface Props {
   posts: CollectionEntry<'blog'>[];
@@ -75,35 +78,30 @@ const panels: Panel[] = [...categoryMap.entries()]
               <h2 class="text-sm font-semibold text-white truncate leading-none">
                 {category}
               </h2>
-              <span class="text-[0.7rem] text-white/70 shrink-0 leading-none">
+              <span class="text-xs text-white/70 shrink-0 leading-none">
                 {total} {total === 1 ? 'post' : 'posts'}
               </span>
             </a>
-            <a
-              href={`/blog/category/${category}`}
-              class="text-xs font-medium text-white/80 hover:text-white transition-colors shrink-0 ml-3"
-            >
+
+            <a href={`/blog/category/${category}`} class="text-xs font-medium text-white/80 hover:text-white transition-colors shrink-0 ml-3">
               View all →
             </a>
           </div>
 
           {/* ── Featured post – COLLAPSED (horizontal) ── */}
-          <a
-            href={`/blog/${featured.id}`}
-            class="group flex hover:bg-muted/30 transition-colors duration-200"
-            data-featured-collapsed
-          >
-            {featured.data.image ? (
-              <div class="shrink-0 w-36 sm:w-44 overflow-hidden">
-                <img
-                  src={featured.data.image}
-                  alt={featured.data.title}
-                  class="w-full h-full object-cover min-h-36 transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-            ) : (
-              <div
-                class="shrink-0 w-36 sm:w-44 min-h-36 flex items-center justify-center text-4xl select-none"
+
+            <a href={`/blog/${featured.id}`} class="group flex hover:bg-muted/30 transition-colors duration-200" data-featured-collapsed>
+              {featured.data.image ? (
+                <div class="shrink-0 w-36 sm:w-44 overflow-hidden">
+                  <Image inferSize
+                    src={featured.data.image}
+                    alt={featured.data.title}
+                    class="w-full h-full object-cover min-h-36 transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              ) : (
+                <div
+                  class="shrink-0 w-36 sm:w-44 min-h-36 flex items-center justify-center text-4xl select-none"
                 style={`background: rgba(${theme.tintRgb}, 0.15)`}
               >
                 📰
@@ -112,7 +110,7 @@ const panels: Panel[] = [...categoryMap.entries()]
             <div class="flex flex-col justify-between p-4 flex-1 min-w-0">
               <div>
                 <span
-                  class="inline-block text-[0.6rem] font-black uppercase tracking-widest mb-1.5"
+                  class="inline-block text-xs font-black uppercase tracking-widest mb-1.5"
                   style={`color: ${theme.accentColor}`}
                 >
                   Latest
@@ -120,13 +118,13 @@ const panels: Panel[] = [...categoryMap.entries()]
                 <h3 class="font-semibold text-base leading-snug line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors duration-200">
                   {featured.data.title}
                 </h3>
-                {featured.data.description && (
-                  <p class="mt-1.5 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                    {featured.data.description}
+                <div class="mt-1.5 min-h-[2.8rem]">
+                  <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                    {featured.data.description || ''}
                   </p>
-                )}
+                </div>
               </div>
-              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-3 text-xs text-muted-foreground">
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-3 text-sm text-muted-foreground">
                 {featured.data.author && (
                   <Fragment>
                     <span class="font-medium">{featured.data.author}</span>
@@ -147,14 +145,10 @@ const panels: Panel[] = [...categoryMap.entries()]
           </a>
 
           {/* ── Featured post – EXPANDED (cinematic banner) ── */}
-          <a
-            href={`/blog/${featured.id}`}
-            class="group hidden relative overflow-hidden"
-            data-featured-expanded
-          >
+          <a href={`/blog/${featured.id}`} class="group hidden relative overflow-hidden" data-featured-expanded>
             <div class="relative w-full h-56 overflow-hidden">
               {featured.data.image ? (
-                <img
+                <Image inferSize
                   src={featured.data.image}
                   alt={featured.data.title}
                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -199,102 +193,99 @@ const panels: Panel[] = [...categoryMap.entries()]
             </div>
           </a>
 
-          {/* ── Collapsed posts list (revealed on expand) ── */}
-          {nextFour.length > 0 && (
-            <div
-              class="overflow-hidden border-t border-border"
-              style={`background: rgba(${theme.tintRgb}, 0.06); max-height: 0; opacity: 0; transition: max-height 0.45s ease, opacity 0.3s ease;`}
-              data-posts-list
-            >
-              <ul class="flex flex-col divide-y divide-border/60">
-                {nextFour.map(post => (
-                  <li>
-                    <a
-                      href={`/blog/${post.id}`}
-                      class="group flex items-center gap-3 px-4 py-3.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200"
-                    >
-                      {post.data.image ? (
-                        <div class="shrink-0 w-14 h-12 rounded-lg overflow-hidden">
-                          <img
-                            src={post.data.image}
-                            alt={post.data.title}
-                            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          class="shrink-0 w-14 h-12 rounded-lg flex items-center justify-center text-lg select-none"
-                          style={`background: rgba(${theme.tintRgb}, 0.2)`}
-                        >
-                          📄
-                        </div>
-                      )}
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors duration-200 leading-snug">
-                          {post.data.title}
-                        </p>
-                        <div class="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                          <time datetime={new Date(post.data.date).toISOString()}>
-                            {formatDate(post.data.date)}
-                          </time>
-                          {post.data.minutesRead && (
-                            <Fragment>
-                              <span aria-hidden="true">·</span>
-                              <span>{post.data.minutesRead}</span>
-                            </Fragment>
-                          )}
-                        </div>
-                      </div>
-                      <span
-                        class="shrink-0 text-muted-foreground/40 group-hover:text-[rgb(var(--purple))] group-hover:translate-x-0.5 transition-all duration-200 text-sm"
-                        aria-hidden="true"
-                      >
-                        →
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-
-              {overflow > 0 && (
-                <div class="px-4 py-3.5 border-t border-border/60 text-center">
-                  <a
-                    href={`/blog/category/${category}`}
-                    class="text-xs font-semibold text-muted-foreground hover:text-[rgb(var(--purple))] transition-colors"
-                  >
-                    + {overflow} more {overflow === 1 ? 'post' : 'posts'} in {category}
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Toggle button ── */}
-          {nextFour.length > 0 && (
-            <button
-              type="button"
-              class="w-full py-3 flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground border-t border-border hover:bg-muted/40 transition-colors duration-200 shrink-0"
-              data-toggle-btn
-              aria-expanded="false"
-            >
-              <span data-collapsed-label>
-                {nextFour.length} more {nextFour.length === 1 ? 'post' : 'posts'}
-              </span>
-              <span data-expanded-label class="hidden">Show less</span>
-              <svg
-                data-toggle-icon
-                class="size-3.5 transition-transform duration-300"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+          {/* ── Post list + toggle, or empty footer ── */}
+          {nextFour.length > 0 ? (
+            <Fragment>
+              <div
+                class="overflow-hidden border-t border-border"
+                style={`background: rgba(${theme.tintRgb}, 0.06); max-height: 0; opacity: 0; transition: max-height 0.45s ease, opacity 0.3s ease;`}
+                data-posts-list
               >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
+                <ul class="list-none flex flex-col divide-y divide-border/60">
+                  {nextFour.map(post => (
+                    <li>
+                      <a href={`/blog/${post.id}`} class="group flex items-center gap-3 px-4 py-3.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200">
+                        {post.data.image ? (
+                          <div class="shrink-0 w-14 h-12 rounded-lg overflow-hidden">
+                            <Image inferSize
+                              src={post.data.image}
+                              alt={post.data.title}
+                              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            class="shrink-0 w-14 h-12 rounded-lg flex items-center justify-center text-lg select-none"
+                            style={`background: rgba(${theme.tintRgb}, 0.2)`}
+                          >
+                            📄
+                          </div>
+                        )}
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors duration-200 leading-snug">
+                            {post.data.title}
+                          </p>
+                          <div class="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                            <time datetime={new Date(post.data.date).toISOString()}>
+                              {formatDate(post.data.date)}
+                            </time>
+                            {post.data.minutesRead && (
+                              <Fragment>
+                                <span aria-hidden="true">·</span>
+                                <span>{post.data.minutesRead}</span>
+                              </Fragment>
+                            )}
+                          </div>
+                        </div>
+                        <span
+                          class="shrink-0 text-muted-foreground/40 group-hover:text-[rgb(var(--purple))] group-hover:translate-x-0.5 transition-all duration-200 text-sm"
+                          aria-hidden="true"
+                        >
+                          →
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+
+                {overflow > 0 && (
+                  <div class="px-4 py-3.5 border-t border-border/60 text-center">
+                    <a href={`/blog/category/${category}`} class="text-xs font-semibold text-muted-foreground hover:text-[rgb(var(--purple))] transition-colors">
+                      + {overflow} more {overflow === 1 ? 'post' : 'posts'} in {category}
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                class="w-full py-3 flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground border-t border-border hover:bg-muted/40 transition-colors duration-200 shrink-0"
+                data-toggle-btn
+                aria-expanded="false"
+              >
+                <span data-collapsed-label>
+                  {nextFour.length} more {nextFour.length === 1 ? 'post' : 'posts'}
+                </span>
+                <span data-expanded-label class="hidden">Show less</span>
+                <svg
+                  data-toggle-icon
+                  class="size-3.5 transition-transform duration-300"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+            </Fragment>
+          ) : (
+            <div class="w-full py-3 flex items-center justify-center border-t border-border shrink-0">
+              <span class="text-xs text-muted-foreground/50 italic">No other posts</span>
+            </div>
           )}
 
         </div>
@@ -308,7 +299,7 @@ const panels: Panel[] = [...categoryMap.entries()]
   const setup = () => {
     document.querySelectorAll<HTMLElement>('[data-category-panel]').forEach(panel => {
       const btn          = panel.querySelector<HTMLButtonElement>('[data-toggle-btn]');
-      if (!btn) return; // single-post category, no toggle needed
+      if (!btn) return; // single-post category — no toggle needed
 
       const collapsedEl  = panel.querySelector<HTMLElement>('[data-featured-collapsed]');
       const expandedEl   = panel.querySelector<HTMLElement>('[data-featured-expanded]');

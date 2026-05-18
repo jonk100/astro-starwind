@@ -12,8 +12,8 @@ import { Badge } from "@/components/starwind/badge";
 import { Button } from "@/components/starwind/button";
 import { Image } from "@/components/starwind/image";
 import { tv } from "tailwind-variants";
-import type { BlogPost, BlogCardVariant, BlogCardSize } from "../shared/types";
-import { formatDate } from "../shared/utils";
+import type { BlogPost, BlogCardVariant, BlogCardSize } from "../";
+import { formatDate } from "../utils";
 
 interface Props {
   post: BlogPost;
@@ -27,6 +27,7 @@ interface Props {
   class?: string;
 }
 
+// Destructure props with default values
 const {
   post,
   variant = "default",
@@ -39,6 +40,7 @@ const {
   class: className,
 } = Astro.props;
 
+// Tailwind Variants configuration
 const verticalBlogCard = tv({
   base: "group hover:shadow-lg transition-all duration-300",
   variants: {
@@ -82,21 +84,20 @@ const getCardColor = (post: BlogPost): string => {
   if (tags.includes("educational") || tags.includes("cognitive")) {
     return "from-cyan-50 to-blue-100 dark:from-cyan-950 dark:to-blue-950";
   }
-
   return "from-gray-50 to-slate-100 dark:from-gray-950 dark:to-slate-950";
 };
 
+// Get card color for colorful variant
 const cardColorClass = variant === "colorful" ? getCardColor(post) : "";
 const cardSize = size === "sm" ? "sm" : "default";
 const isFeatured = post.tags?.includes("featured") ?? false;
+const imageUrl = Array.isArray(post.image) ? post.image[0] : post.image;
 
 /** Composed class string for the Card element. */
 const cardClass = [
   verticalBlogCard({ variant, size, class: className }),
   variant === "colorful" ? `bg-gradient-to-br ${cardColorClass}` : "",
-]
-  .filter(Boolean)
-  .join(" ");
+].filter(Boolean).join(" ");
 ---
 
 {
@@ -108,12 +109,12 @@ const cardClass = [
         
       >
         {showImage && post.image && (
-          <div class="relative overflow-hidden mb-auto rounded-none tranistion-all duration-300">
+          <div class="relative overflow-hidden mb-auto rounded-none transition-all duration-300">
             <Image
-              src={post.image}
+              src={imageUrl}
               alt={post.title}
               inferSize
-              class="top-0 w-full mt-0 mb-autoaspect-[16/10] min-h-[220px] max-h-[220px] rounded-none object-cover transition-transform duration-300 group-hover:scale-105"
+              class="w-full aspect-[16/10] object-cover transition-transform duration-300 group-hover:scale-105"
             />
             {variant === "featured" && (
               <div class="absolute">
@@ -185,10 +186,13 @@ const cardClass = [
         {showImage && post.image && (
           <div class="relative overflow-hidden rounded-t-lg">
             <Image
-              src={post.image}
+              src={imageUrl}
               alt={post.title}
               inferSize
-              class="w-full aspect-[16/10] object-cover transition-transform duration-300 group-hover:scale-105"
+              class=
+              "
+                w-full aspect-[16/10] object-cover transition-transform duration-300 group-hover:scale-105
+              "
             />
             {variant === "featured" && (
               <div class="absolute top-3 right-3">

@@ -1,0 +1,263 @@
+---
+import Layout from "@/layouts/Site.astro";
+import { createClient } from '@/lib/supabase';
+
+export const prerender = false;
+
+const supabase = createClient({
+  request: Astro.request,
+  cookies: Astro.cookies,
+});
+
+// Redirect to login if not authenticated
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+  return Astro.redirect('/auth/login');
+}
+
+const title = "Journal";
+const description = "A calm place to think. Pan around, write freely, style as you go.";
+---
+
+<Layout {title} {description}>
+  <section class="journal">
+    <header class="journal__bar">
+      <div class="journal__title">{title}</div>
+      <div class="journal__hint">Double-click text to style • Drag to pan • Pinch/zoom later</div>
+    </header>
+
+    <div id="canvas" class="canvas" aria-label="Journal canvas">
+      <div class="sheet">
+        <div
+          id="editor"
+          class="editor"
+          contenteditable="true"
+          spellcheck="true"
+          data-placeholder="Start writing…"
+        ></div>
+      </div>
+
+      <div id="styleMenu" class="style-menu" hidden>
+        <button data-style="p">Body</button>
+        <button data-style="h1">Heading</button>
+        <button data-style="h2">Subhead</button>
+        <button data-style="quote">Quote</button>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    const canvas = document.getElementById("canvas");
+    const editor = document.getElementById("editor");
+    const menu = document.getElementById("styleMenu");
+
+    // 1) Pan behavior (drag canvas, but allow text selection when interacting with editor)
+    let isPanning = false;
+    let startX = 0, startY = 0;
+    let startScrollLeft = 0, startScrollTop = 0;
+
+    canvas.addEventListener("pointerdown", (e) => {
+      // If you clicked inside the editor, don’t start panning immediately.
+      // This keeps typing/selection fluid.
+      if (e.target === editor || editor.contains(e.target)) return;
+
+      isPanning = true;
+      canvas.setPointerCapture(e.pointerId);
+      startX = e.clientX;
+      startY = e.clientY;
+      startScrollLeft = canvas.scrollLeft;
+      startScrollTop = canvas.scrollTop;
+      canvas.classList.add("is-panning");
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (!isPanning) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      canvas.scrollLeft = startScrollLeft - dx;
+      canvas.scrollTop = startScrollTop - dy;
+    });
+
+    canvas.addEventListener("pointerup", () => {
+      isPanning = false;
+      canvas.classList.remove("is-panning");
+    });
+
+    // 2) Show style menu on double click (near selection)
+    editor.addEventListener("dblclick", () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      if (!rect) return;
+
+      // position menu relative to viewport, but account for canvas scroll by using fixed
+      menu.style.left = `${Math.min(rect.left, window.innerWidth - 220)}px`;
+      menu.style.top = `${Math.max(12, rect.top - 48)}px`;
+      menu.hidden = false;
+    });
+
+    // 3) Apply one of 4 styles to selection
+    // Minimal implementation: wraps selection in a span with a class.
+    // For headings, you generally want block-level behavior; we’ll fake it by wrapping and applying display:block.
+    function wrapSelection(className) {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+
+      const span = document.createElement("span");
+      span.className = className;
+
+      // Extract contents and wrap
+      const contents = range.extractContents();
+      span.appendChild(contents);
+      range.insertNode(span);
+
+      // Reselect
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      sel.addRange(newRange);
+    }
+
+    menu.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-style]");
+      if (!btn) return;
+
+      const style = btn.dataset.style;
+      if (style === "p") wrapSelection("t-p");
+      if (style === "h1") wrapSelection("t-h1");
+      if (style === "h2") wrapSelection("t-h2");
+      if (style === "quote") wrapSelection("t-quote");
+
+      menu.hidden = true;
+      editor.focus();
+    });
+
+    // Hide menu if you click outside
+    document.addEventListener("pointerdown", (e) => {
+      if (menu.hidden) return;
+      if (menu.contains(e.target)) return;
+      // If user is selecting text, don’t immediately hide
+      if (editor.contains(e.target)) return;
+      menu.hidden = true;
+    });
+  </script>
+
+  <style>
+    /* Layout */
+    .journal {
+      height: calc(100dvh - 6rem); /* tweak depending on your Layout */
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .journal__bar {
+      display: flex;
+      gap: 1rem;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgb(var(--border));
+      background: rgb(var(--background));
+    }
+
+    .journal__title {
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .journal__hint {
+      font-size: 0.95rem;
+      color: rgb(var(--muted-foreground));
+    }
+
+    /* Canvas: scroll both axes like a whiteboard */
+    .canvas {
+      position: relative;
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      background:
+        radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0) 0 0 / 24px 24px,
+        rgb(var(--background));
+      cursor: grab;
+
+      /* Make room to pan: huge internal area */
+      padding: 12rem;
+    }
+
+    .canvas.is-panning { cursor: grabbing; }
+
+    /* Sheet: the “paper” */
+    .sheet {
+      width: min(920px, 100%);
+      min-height: 70dvh;
+      background: rgb(255 255 255);
+      color: rgb(20 20 20);
+      border-radius: 16px;
+      box-shadow:
+        0 10px 30px rgba(0,0,0,0.10),
+        0 1px 0 rgba(0,0,0,0.06);
+      padding: 2.25rem 2.25rem;
+      margin: 0 auto;
+    }
+
+    /* Editor surface */
+    .editor {
+      outline: none;
+      min-height: 50dvh;
+      line-height: 1.7;
+      font-size: 1.05rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .editor:empty::before {
+      content: attr(data-placeholder);
+      color: rgba(0,0,0,0.4);
+    }
+
+    /* Style menu */
+    .style-menu {
+      position: fixed;
+      z-index: 50;
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 12px;
+      background: rgba(20,20,20,0.92);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .style-menu button {
+      border: 0;
+      border-radius: 10px;
+      padding: 0.45rem 0.65rem;
+      background: rgba(255,255,255,0.10);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .style-menu button:hover { background: rgba(255,255,255,0.18); }
+
+    /* The 4 text styles */
+    .t-p { }
+    .t-h1 { font-size: 1.8rem; font-weight: 800; display: inline; }
+    .t-h2 { font-size: 1.35rem; font-weight: 750; display: inline; }
+    .t-quote {
+      display: inline;
+      padding-left: 0.6rem;
+      border-left: 3px solid rgba(0,0,0,0.25);
+      color: rgba(0,0,0,0.75);
+      font-style: italic;
+    }
+
+    /* Dark mode: keep sheet “paper” still bright unless you want dark paper */
+    :global(.dark) .sheet {
+      background: rgb(250 250 250);
+      color: rgb(20 20 20);
+    }
+  </style>
+</Layout>

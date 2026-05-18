@@ -183,6 +183,10 @@
     {
       "name": "switch",
       "version": "1.3.2"
+    },
+    {
+      "name": "alert-dialog",
+      "version": "1.0.4"
     }
   ]
 }

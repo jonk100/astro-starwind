@@ -100,3 +100,19 @@ export const getTagColor = (tag: string) => {
   };
   return tagColors[tag] || '';
 };
+
+export const getCategoryColors = (category: string) => {
+  const categoryColors: { [key: string]: string } = {
+    'mental health': 'background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border-color: #3b82f6;',
+    'mindfulness': 'background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: #10b981;',
+    'stress management': 'background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; border-color: #f59e0b;',
+    'anxiety': 'background: linear-gradient(135deg, #ef4444, #ec4899); color: white; border-color: #ef4444;',
+    'self-care': 'background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border-color: #8b5cf6;',
+    'educational': 'background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border-color: #06b6d4;',
+    'cognitive': 'background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-color: #6366f1;',
+    'emotional regulation': 'background: linear-gradient(135deg, #ec4899, #db2777); color: white; border-color: #ec4899;',
+    'sleep': 'background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; border-color: #3b82f6;',
+    'well-being': 'background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; border-color: #14b8a6;'
+  };
+  return categoryColors[category] || '';
+};

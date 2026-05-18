@@ -30,7 +30,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (isAuthPath && user) {
     // If logged in, don't let them go back to the login page
-    return redirect("/app/habit/month-tracker");
+    return redirect("/app/habit/track");
   }
 
   return next();

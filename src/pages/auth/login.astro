@@ -284,7 +284,7 @@ try {
     const next     = (formData.get("next") as string) || "/";
 
     try {
-      const result = await actions.signIn(formData);
+      const result = await actions.auth.signIn(formData);
 
       // isInputError() narrows to Zod validation failures — these get
       // rendered inline on the relevant field rather than in the banner.

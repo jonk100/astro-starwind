@@ -1,0 +1,231 @@
+---
+/**
+ * MinimalBlogSection.astro
+ *
+ * A section component that displays a grid of MinimalBlogCard components with tab filtering.
+ * Supports different data types via the variant prop.
+ */
+
+import { getCollection } from 'astro:content';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/starwind/tabs';
+import MinimalBlogCard from '@/components/blog/MinimalBlogCard.astro';
+import type { CollectionEntry } from 'astro:content';
+import { getCategoryColors } from '@/lib/utils';
+
+type Variant = 'blog' | 'testimonials' | 'features' | 'faqs' | 'docs' | 'resources';
+
+type VariantData = {
+  blog: CollectionEntry<'blog'>;
+  testimonials: any;
+  features: any;
+  faqs: any;
+  docs: any;
+  resources: any;
+};
+
+interface Props {
+  variant?: Variant;
+  class?: string;
+  style?: string;
+  cardClass?: string;
+  cardStyle?: string;
+  o?: 'tall' | 'long';
+  i?: number;
+}
+
+const { variant = 'blog', class: className, style, cardClass, cardStyle, o, i } = Astro.props;
+
+// Fetch data based on variant
+let items: VariantData[typeof variant][] = [];
+let categories: string[] = [];
+
+if (variant === 'blog') {
+  const allPosts = await getCollection('blog');
+  items = allPosts
+    .filter(post => !post.data.draft)
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+  
+  // Always limit to 7 for 4x2 grid with one long card (spans 2 columns)
+  items = items.slice(0, 7);
+
+  // Extract categories and count posts per category
+  const categoryCount = new Map<string, number>();
+  items.forEach(post => {
+    post.data.categories?.forEach((cat: string) => {
+      categoryCount.set(cat, (categoryCount.get(cat) || 0) + 1);
+    });
+  });
+
+  // Sort categories by count (descending) and limit to 4 for single row
+  categories = Array.from(categoryCount.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([cat]) => cat);
+}
+
+
+// Filter items by category
+const getFilteredItems = (category: string) => {
+  if (category === 'all') return items;
+  return items.filter(item => 
+    item.data.categories?.includes(category)
+  );
+};
+---
+
+<section
+  class:list={['minimal-card-section', className]}
+  style={style}
+>
+  {/* Tabs */}
+  <Tabs defaultValue="all" class="w-full">
+    <TabsList class="mb-0 flex flex-wrap gap-2 border-b border-stone-200 dark:border-stone-800 pb-0 w-full">
+      <TabsTrigger
+        value="all"
+        class="px-4 py-2 text-sm font-medium transition-colors data-[state=active]:text-accent data-[state=active]:border-b-2 data-[state=active]:border-accent"
+      >
+        All Posts
+      </TabsTrigger>
+      {categories.map((category: string) => (
+        <TabsTrigger
+          value={category}
+          class="px-4 py-2 text-sm font-medium transition-colors data-[state=active]:text-accent data-[state=active]:border-b-2 data-[state=active]:border-accent"
+          style={getCategoryColors(category)}
+        >
+          {category}
+        </TabsTrigger>
+      ))}
+    </TabsList>
+
+    {/* Tab Content */}
+    <TabsContent value="all" data-tab-index="0">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:auto-rows-fr cards-grid" data-active-tab="all">
+        {items.map((item: VariantData[typeof variant], index: number) => (
+          <MinimalBlogCard
+            variant={variant}
+            size={i === index && o ? o : 'default'}
+            title={item.data.title}
+            description={item.data.description}
+            image={item.data.image}
+            imageAlt={item.data.title}
+            category={item.data.categories?.[0]}
+            categoryStyle={item.data.categories?.[0] ? getCategoryColors(item.data.categories[0]) : undefined}
+            date={item.data.date}
+            author={item.data.author || item.data.authors}
+            href={`/${variant}/${item.id}`}
+            class={cardClass}
+            style={cardStyle}
+          />
+        ))}
+      </div>
+    </TabsContent>
+
+    {categories.map((category: string, tabIndex: number) => (
+      <TabsContent value={category} data-tab-index={tabIndex + 1}>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:auto-rows-fr cards-grid" data-active-tab={category}>
+          {getFilteredItems(category).slice(0, 7).map((item: VariantData[typeof variant], index: number) => (
+            <MinimalBlogCard
+              variant={variant}
+              size={i === index && o ? o : 'default'}
+              title={item.data.title}
+              description={item.data.description}
+              image={item.data.image}
+              imageAlt={item.data.title}
+              category={item.data.categories?.[0]}
+              categoryStyle={item.data.categories?.[0] ? getCategoryColors(item.data.categories[0]) : undefined}
+              date={item.data.date}
+              author={item.data.author || item.data.authors}
+              href={`/${variant}/${item.id}`}
+              class={cardClass}
+              style={cardStyle}
+            />
+          ))}
+        </div>
+      </TabsContent>
+    ))}
+  </Tabs>
+</section>
+
+<style>
+  .minimal-card-section [data-tabs-trigger] {
+    border-bottom: 1px solid transparent;
+    color: #64748b;
+  }
+
+  .minimal-card-section [data-tabs-trigger][data-state="active"] {
+    border-bottom-color: 1px solid var(--color-secondary);
+    color: #0f172a;
+  }
+
+  .dark .minimal-card-section [data-tabs-trigger][data-state="active"] {
+    color: #f8fafc;
+  }
+
+  .minimal-card-section [data-tabs-trigger]:hover {
+    background-color: white;
+    color: #0f172a;
+  }
+
+  .dark .minimal-card-section [data-tabs-trigger]:hover {
+    color: #f8fafc;
+  }
+</style>
+
+<script>
+  const setupShadowAnimation = () => {
+    const tabsList = document.querySelector('[data-tabs-list]');
+    if (!tabsList) return;
+
+    const triggers = Array.from(tabsList.querySelectorAll('[data-tabs-trigger]'));
+    const cardGrids = document.querySelectorAll('.cards-grid');
+
+    const updateShadows = (activeIndex: number) => {
+      const totalTabs = triggers.length;
+      const normalizedPosition = activeIndex / (totalTabs - 1 || 1);
+      
+      // Calculate shadow offset based on tab position
+      // Left tab = shadow from left, Right tab = shadow from right
+      const xOffset = (normalizedPosition - 0.5) * 20; // -10px to 10px
+      const yOffset = -5; // Always slightly upward
+
+      cardGrids.forEach(grid => {
+        const cards = grid.querySelectorAll('.minimal-card');
+        cards.forEach(card => {
+          (card as HTMLElement).style.setProperty('--shadow-x', `${xOffset}px`);
+          (card as HTMLElement).style.setProperty('--shadow-y', `${yOffset}px`);
+        });
+      });
+    };
+
+    // Find initially active tab
+    const activeTrigger = tabsList.querySelector('[data-state="active"]');
+    if (activeTrigger) {
+      const activeIndex = triggers.indexOf(activeTrigger as HTMLElement);
+      updateShadows(activeIndex);
+    }
+
+    // Listen for tab changes
+    triggers.forEach((trigger, index) => {
+      trigger.addEventListener('click', () => {
+        updateShadows(index);
+      });
+    });
+  };
+
+  setupShadowAnimation();
+  document.addEventListener('astro:after-swap', setupShadowAnimation);
+</script>
+
+<style>
+  .minimal-card-section {
+		max-width: 1280px;
+		margin: 4em auto;
+		padding: 0 2em;
+	}
+  @media (max-width: 767px) {
+    .cards-grid > * {
+      grid-column: span 1 !important;
+      grid-row: span 1 !important;
+    }
+  }
+</style>

@@ -1,4 +1,3 @@
-export { default as ContactSection } from './ContactSection.astro';
 export { default as CTASection } from './CTASection.astro';
 export { default as FAQSection } from './FAQSection.astro';
 export { default as FeaturesSection } from './FeaturesSection.astro';

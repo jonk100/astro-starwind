@@ -5,9 +5,9 @@ import { BlogSearch } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import BlogHero from '@/components/layout/BlogHero.astro';
 import CategoryPostsSection from '@/components/blog/CategoryPosts/CategoryPostsSection.astro';
-import SuicideCta from '@/components/sectional/SuicideCta.astro';
-import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
-import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
+import SuicideCta from '@/components/sections/SuicideCta.astro';
+import FAQSection from '@/components/sections/faq-section/FAQSection.astro';
+import NewsletterSection from '@/components/sections/misc-section/NewsletterSection.astro';
 import { ContactSection } from '@/components/layout';
 import Center from '@/components/layout/primitives/Center.astro';
 import { getCategoryTheme } from '@/components/blog/shared/categoryColors';
@@ -49,40 +49,58 @@ const allPostsData = allPosts.map(post => ({
       subheading={`${categories.length} categories · ${allPosts.length} articles`}
       variant="card"
     >
-      <BlogSearch
-        posts={allPostsData}
-        placeholder="Search all articles…"
-        showFilters={true}
-      />
+    <BlogSearch
+      posts={allPostsData}
+      placeholder="Search all articles…"
+      showFilters={true}
+    />
 
-      <div class="flex
-                    gap-3
-                    justify-center
-                    flex-wrap
-                    mt-4">
-        <a
-          href="/blog"
-          class="
-            px-5
-            py-2
-            rounded-lg
-            border
-            border-border
-            text-sm
-            font-medium
-            hover:bg-muted
-            transition-colors
-          "
-        >
-          ← All Posts
-        </a>
-        <a
-          href="/blog/tags"
-          class="px-5 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
-        >
-          Browse by Tag
-        </a>
-      </div>
+    <div 
+      class
+      ="
+        flex
+        gap-3
+        justify-center
+        flex-wrap
+        mt-4
+      "
+    >
+      <a
+        href="/blog"
+        class
+        ="
+          px-5
+          py-2
+          rounded-lg
+          border
+          border-border
+          text-sm
+          font-medium
+          hover:bg-muted
+          transition-colors
+        "
+      >
+        ← All Posts
+      </a>
+      <a
+        href="/blog/tags"
+        class
+        ="
+          px-5
+          py-2
+          rounded-lg
+          border
+          border-border
+          text-sm
+          font-medium
+          hover:bg-muted
+          transition-colors
+        "
+      >
+        Browse by Tag
+      </a>
+    </div
+    >
     </BlogHero>
   </div>
 

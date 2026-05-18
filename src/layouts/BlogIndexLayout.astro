@@ -34,30 +34,35 @@ import '@/styles/starwind.css';
 	<body class="layout-body">
 
     <!-- Header Slot -->
-    <header class="layout-header sticky top-0 z-50">
+    <!-- <header class="layout-header sticky top-0 z-50"> -->
       <Header user={user} />
       <slot name="header" />
-    </header>
+    <!-- </header> -->
+
+    <!-- Breadcrumbs in top left -->
     {showBreadcrumbs && (
-      <div class="relative top-0 left-0 z-10 text-color-foreground font-size-lg m-0 p-0">
+      <div class="fixed top-16 left-0 z-10 text-color-foreground font-size-lg m-0 p-0">
         <BlogBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
     )}
     
     <!-- Hero / Search Slot -->
-     <div class="relative"> 
-      <div class="min-h-[90vh] bg-rose-200 my-auto flex items-center justify-center">
+      <div class="min-h-[95vh] bg-rose-200/80 flex items-center justify-center justify-space-between">
         <div class="w-full">
           <slot name="hero-search" />
         </div>
       </div>
-    </div>  
+
+      <!-- Main Content -->
       <main>
-        <div class="max-w-5xl mx-auto px-4 bg-transparent">
+        <div class="mx-auto px-4 bg-transparent">
           <slot name="main-top" />
         </div>
-        <div class="layout-main-content relative">
+        <div class="mx-auto layout-main-content relative bg-transparent">
           <slot />
+        </div>
+        <div class="max-w-5xl mx-auto px-4 bg-transparent">
+          <slot name="main-bottom" />
         </div>
       </main>
 

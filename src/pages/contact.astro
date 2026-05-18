@@ -1,12 +1,12 @@
 ---
 import Layout from '@/layouts/Site.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
-import { HeroSection } from '@/components/sectional/hero-section';
-import NewsletterSection from '@/components/sectional/misc-section/NewsletterSection.astro';
-import FAQSection from '@/components/sectional/faq-section/FAQSection.astro';
+import HeroSection from '@/components/sections/hero/HeroSection.astro';
+import NewsletterSection from '@/components/sections/newsletter/NewsletterSection.astro';
+import FAQSection from '@/components/sections/faq/FAQSection.astro';
 import Center from '@/components/layout/primitives/Center.astro';
-import SuicideCta from '@/components/sectional/SuicideCta.astro';
-import ContactFormSection from '@/components/sectional/contact-form-section/ContactFormSection.astro';
+import SuicideCta from '@/components/sections/SuicideCta.astro';
+import ContactFormSection from '@/components/sections/contact/ContactFormSection.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 
 export const prerender = false;
 ---

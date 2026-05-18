@@ -10,7 +10,7 @@
 
 :root {
 	--accent-light: oklch(76.541% 0.12703 2.206);
-	--accent: oklch(60.29% 0.19884 8.905);
+	--accent: #dc3a68;
 	--accent-dark: oklch(43.825% 0.14944 9.895);
 	
 	--primary-5: var(--gr-5);
@@ -49,7 +49,7 @@
 	--purple-3: rgb(180, 0, 200);
 	--purple-2: rgb(160, 0, 180);
 	--purple-1: rgb(135, 0, 148);
-	--purple: rgb(128, 0, 128);
+	--purple: #800080;
 	--purple1: rgb(105, 0, 105);
 	--purple2: rgb(90, 0, 90);
 	--purple3: rgb(75, 0, 75);
@@ -62,7 +62,7 @@
 	--yellow-3: rgb(255, 255, 190);
 	--yellow-2: rgb(255, 255, 160);
 	--yellow-1: rgb(255, 255, 130);
-	--yw: rgb(255, 255, 100);
+	--yw: #ffff64;
 	--yellow1: rgb(255, 255, 50);
 	--yellow2: rgb(225, 225, 25);
 	--yellow3: rgb(200, 200, 0);
@@ -75,7 +75,7 @@
 	--green-3: rgb(140, 255, 160);
 	--green-2: rgb(80, 255, 150);
 	--green-1: rgb(40, 210, 140);
-	--green: rgb(0, 180, 110);
+	--green: #00b46e;
 	--green1: rgb(0, 170, 90);
 	--green2: rgb(0, 145, 60);
 	--green3: rgb(0, 110, 40);
@@ -88,7 +88,7 @@
 	--gr-3: rgb(90, 245, 215);
 	--gr-2: rgb(40, 235, 210);
 	--gr-1: rgb(0, 225, 200);
-	--gr: rgb(0, 210, 190);
+	--gr: #00d2be;
 	--gr1: rgb(0, 190, 160);
 	--gr2: rgb(0, 150, 125);
 	--gr3: rgb(0, 125, 100);
@@ -99,7 +99,7 @@
 	--blue-3: rgb(80, 160, 220);
 	--blue-2: rgb(40, 140, 200);
 	--blue-1: rgb(0, 120, 200);
-	--blue: rgb(0, 123, 255);
+	--blue: #007bff;
 	--blue1: rgb(0, 140, 220);
 	--blue2: rgb(0, 110, 190);
 	--blue3: rgb(0, 80, 180);
