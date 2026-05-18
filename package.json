@@ -14,7 +14,7 @@
     "typecheck": "astro check",
     "lint": "eslint .",
     "test": "vitest",
-    "db:types": "pnpx supabase gen types typescript --project-id ujinnhvpmxlqgiihhcvn > src/types/supabase.ts"
+    "db:types": "pnpx supabase gen types typescript --linked > src/types/supabase.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",

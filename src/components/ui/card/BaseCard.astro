@@ -40,12 +40,14 @@ const {
   imageClass,
   horizontal = false,
   imagePosition = 'left',
-  variant = 'default',
   hoverable = true,
   clickable = false,
   href,
   as: Element = href ? 'a' : 'div',
 } = Astro.props;
+
+// Ensure variant is a keyof variantStyles to satisfy TS indexing
+const variant = (Astro.props.variant ?? 'default') as keyof typeof variantStyles;
 
 const Wrapper = href ? Element : 'div';
 const wrapperProps = href ? { href } : {};
@@ -86,8 +88,8 @@ const contentOrderClass = horizontal && imagePosition === 'right' ? 'md:order-1'
   {/* Image slot - can be overridden or used with image prop */}
   {image ? (
     <div class:list={[
-      'flex-shrink-0 overflow-hidden bg-stone-100 dark:bg-stone-800',
-      horizontal ? 'md:w-1/2' : 'w-full aspect-[3/2]',
+      'shrink-0 overflow-hidden bg-stone-100 dark:bg-stone-800',
+      horizontal ? 'md:w-1/2' : 'w-full aspect-3/2',
       imageOrderClass,
     ]}>
       <img

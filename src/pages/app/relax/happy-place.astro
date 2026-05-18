@@ -1,7 +1,22 @@
 ---
 import AppLayout from '@/layouts/AppLayout.astro';
+import { createClient } from '@/lib/supabase';
+
+export const prerender = false;
+
+const supabase = createClient({
+  request: Astro.request,
+  cookies: Astro.cookies,
+});
+
+// Redirect to login if not authenticated
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+  return Astro.redirect('/auth/login');
+}
+
 ---
 
-<AppLayout>
+<AppLayout user={user} title="Happy Place" description="Your personal space to relax and unwind">
     <h1>Happy Place</h1>
 </AppLayout>

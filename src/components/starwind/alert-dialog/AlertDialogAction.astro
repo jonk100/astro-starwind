@@ -1,7 +1,7 @@
 ---
 import type { HTMLAttributes } from "astro/types";
 
-import { ButtonVariants } from "@/components/starwind/button";
+// ButtonVariants removed: build class string directly instead
 
 type Props = HTMLAttributes<"button"> & {
   /**
@@ -31,10 +31,7 @@ if (Astro.slots.has("default")) {
   ) : (
     <button
       type="button"
-      class={ButtonVariants.button({
-        variant: "default",
-        class: `starwind-alert-dialog-action ${className || ""}`,
-      })}
+      class={`starwind-alert-dialog-action ${className || ""}`}
       {...rest}
       data-slot="alert-dialog-action"
     >

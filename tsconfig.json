@@ -17,7 +17,10 @@
       ],
       "!svg/*": [
         "./src/assets/svg/*"
-      ]
+      ],
+      "!design/*": [
+        "./src/styles/design/*"
+      ],
     },
     "ignoreDeprecations": "5.0"
   }

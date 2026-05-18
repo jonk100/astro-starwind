@@ -3,12 +3,12 @@ import ChevronRight from "@tabler/icons/outline/chevron-right.svg";
 import type { HTMLAttributes } from "astro/types";
 import { tv, type VariantProps } from "tailwind-variants";
 
-import { button } from "@/components/starwind/button";
+import { Button } from "@/components/starwind/button";
 
 import PaginationLink from "./PaginationLink.astro";
 
 type Props = HTMLAttributes<"a"> & {
-  size?: VariantProps<typeof button>["size"];
+  size?: VariantProps<typeof Button>["size"];
 };
 
 export const paginationNext = tv({ base: "group gap-1" });

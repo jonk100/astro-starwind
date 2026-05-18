@@ -1,0 +1,63 @@
+---
+import { typography } from '!design/tokens/typography';
+import { sectionHeaderVariants, type SectionHeaderVariant } from '!design/variants/SectionHeader.variants';
+
+export interface Props {
+  heading?: string;
+  subheading?: string;
+  variant?: SectionHeaderVariant;
+  align?: 'left' | 'center' | 'right';
+  headingSize?: keyof typeof typography.heading;
+  subheadingSize?: keyof typeof typography.subheading;
+  headingClass?: string;
+  subheadingClass?: string;
+}
+
+const {
+  heading = '',
+  subheading = '',
+  variant = 'section',
+  align,
+  headingSize = 'lg',
+  subheadingSize = 'lg',
+  headingClass = '',
+  subheadingClass = '',
+} = Astro.props;
+
+const config = sectionHeaderVariants[variant];
+const resolvedAlign = align ?? config.align;
+const resolvedHeadingSize = headingSize ?? config.heading;
+const resolvedSubheadingSize = subheadingSize ?? config.subheading;
+
+const alignMap = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+} as const;
+
+const wrapperClass = [
+  config.spacing,
+  alignMap[resolvedAlign],
+].join(' ');
+---
+
+<div class={wrapperClass}>
+  {/* FIX: Use array notation for class:list to properly combine token arrays and string props */}
+  <h2 class:list={[typography.heading[resolvedHeadingSize], headingClass]}>
+    <slot name="heading">
+      {heading}
+    </slot>
+  </h2>
+
+  {
+    (subheading || Astro.slots.has('subheading')) && (
+      <p class:list={[typography.subheading[resolvedSubheadingSize], subheadingClass]}>
+        <slot name="subheading">
+          {subheading}
+        </slot>
+      </p>
+    )
+  }
+
+  <slot />
+</div>

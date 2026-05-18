@@ -2,87 +2,65 @@
 import FeatureCard from './FeatureCard.astro';
 import { ScrollReveal } from '@/components/layout';
 import type { Feature } from '@/data/types/features.types';
-/**
- * FeaturesSection
- * - displays feature cards or feature list content in a grid
- * @param heading - The heading of the section
- * @param subheading - The subheading of the section
- * @param features - The features to display (with variant support)
- * @param variant - The copy variant to use (word, action, plea, name)
- * @param class - Additional classes to apply to the section
- *
- * Features
- * -
- */
+import SectionHeader from '../shared/SectionHeader.astro';
+import { type SectionHeaderVariant } from '!design/variants/SectionHeader.variants';
 
 interface Props {
-  heading: string;
-  subheading: string;
+  heading?: string;
+  subheading?: string;
   features: readonly Feature[];
   variant?: 'word' | 'action' | 'plea' | 'name';
+  headerVariant?: SectionHeaderVariant;
+  headingColor?: string;
+  subheadingColor?: string;
   class?: string;
 }
 
-const { heading, subheading, features, variant = 'word', class: className = '' } = Astro.props;
+const { 
+  heading = "Three ways to grow", 
+  subheading = "Build better habits with our simple, powerful tools", 
+  headingColor = "", 
+  subheadingColor = "", 
+  features, 
+  variant = 'word',
+  headerVariant = 'section',
+  class: className = ''
+} = Astro.props;
 
-// Transform features based on variant
 const transformedFeatures = features.map(feature => ({
-  title: feature[variant].title,
-  phrase: feature[variant].phrase,
+  title: feature[variant]?.title ?? '',
+  phrase: feature[variant]?.phrase ?? '',
   description: feature.description,
   link: feature.link,
 }));
 
-/** The three schemes to cycle through, applied to cards in order. */
 const schemes = ['light', 'dark', 'primary'] as const;
 ---
 
 <section class={`py-12 ${className}`}>
-  <div class="mx-0">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-    <div class="text-center my-6 py-6">
-      <h2 class="text-4xl md:text-5xl font-bold my-4 text-stone-900 dark:text-stone-50">
-        {heading}
-      </h2>
-      <p class="text-3xl font-medium text-red-500 dark:text-stone-400 m-auto max-w-3xl my-4">
-        {subheading}
-      </p>
-    </div>
+    <SectionHeader 
+      variant={headerVariant}
+      headingClass={headingColor}
+      subheadingClass={subheadingColor}
+      heading={heading}
+      subheading={subheading}
+    />
 
-
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:gap-16 md:gap-4 padding">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:gap-16 md:gap-4 mt-8">
       {transformedFeatures.map((feature, i) => (
-        <ScrollReveal>
-        <FeatureCard
-          title={feature.title}
-          phrase={feature.phrase}
-          description={feature.description}
-          link={feature.link}
-          scheme={schemes[i % schemes.length]}
-          class="hover:border-accent min-w-280px max-w-320px"
-        />
+        <ScrollReveal key={i}>
+          <FeatureCard
+            title={feature.title}
+            phrase={feature.phrase}
+            description={feature.description}
+            link={feature.link}
+            scheme={schemes[i % schemes.length]}
+            class="hover:border-accent min-w-[280px] max-w-[320px] mx-auto"
+          />
         </ScrollReveal>
       ))}
     </div>
-
   </div>
 </section>
-
-<style>
-  .scroll-reveal:nth-child(1) {
-    transition-delay: 50ms;
-  }
-
-  .scroll-reveal:nth-child(2) {
-    transition-delay: 150ms;
-  }
-
-  .scroll-reveal:nth-child(3) {
-    transition-delay: 250ms;
-  }
-
-  .clamp-padding {
-    padding: clamp(2rem, 10vw - .125vw, 1rem);
-    margin: clamp(3rem, 10vw - .75vw, .5rem);
-  }
-</style>

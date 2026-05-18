@@ -1,6 +1,6 @@
 ---
 import Layout from '@/layouts/Site.astro';
-import BlogSection from '@/components/sections/blog/BlogSection.astro';
+import BlogSection from '@/components/sections/blog/BlogSectionWithFeaturedPost.astro';
 import TestimonialsSection from '@/components/sections/testimonial/TestimonialsSection.astro';
 import PricingSection from '@/components/sections/pricing/PricingSection.astro';
 import NewsletterSection from '@/components/sections/newsletter/NewsletterSection.astro';
@@ -37,15 +37,17 @@ export const prerender = false;
 	/>
 
 	<hr style="box-shadow: 2em;"/>
+
 	<FeaturesSection
-		heading="Three ways to grow"
-		subheading="Build better habits with our simple, powerful tools"
 		features={features}
 		variant="plea"
+		headingColor="text-red-500"
 	/>
+
 	<Center axis="both" class="h-[100vh]">
 		<NewsletterSection heading="Never miss an update" class="h-em "/>
 	</Center>
+
 	<div>
 		<FullCardCluster columns={3} schemeMode="alternate">
 			<Card title="Something dark" tag="Essay" />
@@ -57,17 +59,20 @@ export const prerender = false;
 	</div>
 
 	<BlogSection />
+
 	<TestimonialsSection
-	  heading="Real stories"
-	  subheading="People who have changed their lives with Mindful Habits Studio."
+		bgClass="bg-primary/60"
 	  testimonials={testimonials}
 	/>
+
 	<FAQSection />
+
 	<PricingSection
-	  heading="Simple pricing"
-	  subheading="Choose the plan that fits your journey"
+		bgClass="bg-secondary/60"
+		subheadingColor="text-red-500"
 	  plans={plans}
 	/>
+
 	<ContactSection />
 	<div>
 	<NewsletterSection heading="Stay in the loop" class="h-em "/>

@@ -7,7 +7,7 @@ export * from './hero/hero-action.astro';
 export * from './hero/hero-image.astro';
 export * from './hero/hero-text.astro';
 export * from './newsletter/NewsletterSection.astro';
-export * from './blog/BlogSection.astro';
+export * from './blog/BlogSectionWithFeaturedPost.astro';
 export * from './blog/FeaturedPost.astro';
 export * from './blog/FullscreenGrid.astro';
 export * from './blog/blog-card.astro';

@@ -1,4 +1,4 @@
-import type { BlogPost, RelatedPostsOptions } from './types';
+import type { BlogPost, RelatedPostsOptions } from '../types';
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;

@@ -1,10 +1,15 @@
 ---
 import PricingCard from './PricingCard.astro';
+import SectionHeader from '../shared/SectionHeader.astro';
+import { type SectionHeaderVariant } from '!design/variants/SectionHeader.variants';
 import { ScrollReveal } from '@/components/layout';
 
 interface Props {
-  heading: string;
-  subheading: string;
+  heading?: string;
+  subheading?: string;
+  headingColor?: string;
+  subheadingColor?: string;
+  headerVariant?: SectionHeaderVariant;
   plans: ReadonlyArray<{
     title: string;
     price: string;
@@ -13,24 +18,37 @@ interface Props {
     highlighted?: boolean;
     ctaText?: string;
   }>;
+  bgClass?: string;
+  maxWidth?: string;
   class?: string;
 }
 
-const { heading, subheading, plans, class: className = '' } = Astro.props;
+const { 
+  heading = "Simple pricing", 
+  subheading = "Choose the plan that fits your journey", 
+  headingColor, 
+  subheadingColor, 
+  headerVariant = 'section', 
+  plans, 
+  bgClass = '',
+  maxWidth = 'max-w-7xl',
+  class: className = '' 
+} = Astro.props;
 
 const schemes = ['light', 'dark', 'primary'] as const;
 ---
 
-<section class={`py-10 w-full bg-amber-200 ${className}`}>
-  <div class="mx-0">
-    <div class="text-center my-6 py-6">
-      <h2 class="text-4xl md:text-5xl font-bold my-4 text-stone-900 dark:text-stone-50">
-        {heading}
-      </h2>
-      <p class="text-3xl font-medium text-red-500 dark:text-stone-400 m-auto max-w-3xl my-4">
-        {subheading}
-      </p>
-    </div>
+<!-- 1. Outer container tracks full-bleed background colors -->
+<section class={`w-full ${bgClass} ${className}`}>
+  {/* 2. Inner container constrains content layouts horizontally */}
+  <div class={`mx-auto ${maxWidth} px-4 sm:px-6 lg:px-8 py-10 min-h-screen`}>
+    <SectionHeader 
+      variant={headerVariant}
+      headingClass={headingColor}
+      subheadingClass={subheadingColor}
+      heading={heading}
+      subheading={subheading}
+    />
 
     <div class="grid grid-cols-1 md:grid-cols-3 lg:gap-16 md:gap-4 padding">
       {plans.map((plan, i) => (
@@ -43,7 +61,7 @@ const schemes = ['light', 'dark', 'primary'] as const;
             highlighted={plan.highlighted}
             ctaText={plan.ctaText}
             scheme={schemes[i % schemes.length]}
-            class="min-w-[280px] max-w-[320px]"
+            class="min-w-70 max-w-[320px]"
           />
         </ScrollReveal>
       ))}

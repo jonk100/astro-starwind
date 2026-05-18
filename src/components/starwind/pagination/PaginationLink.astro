@@ -2,14 +2,14 @@
 import type { HTMLAttributes } from "astro/types";
 import type { VariantProps } from "tailwind-variants";
 
-import { button } from "@/components/starwind/button";
+import { Button } from "@/components/starwind/button";
 
 type Props = HTMLAttributes<"a"> &
-  Omit<VariantProps<typeof button>, "variant"> & {
+  Omit<VariantProps<typeof Button>, "variant"> & {
     isActive?: boolean;
   };
 
-export const paginationLink = button;
+export const paginationLink = Button;
 
 const { class: className, isActive, size = "icon", ...rest } = Astro.props;
 ---

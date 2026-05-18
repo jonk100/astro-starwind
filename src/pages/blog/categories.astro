@@ -1,16 +1,16 @@
 ---
-import { getCollection } from 'astro:content';
-import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
-import { BlogSearch } from '@/components/blog';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
-import BlogHero from '@/components/layout/BlogHero.astro';
-import CategoryPostsSection from '@/components/blog/CategoryPosts/CategoryPostsSection.astro';
-import SuicideCta from '@/components/sections/SuicideCta.astro';
-import FAQSection from '@/components/sections/faq-section/FAQSection.astro';
-import NewsletterSection from '@/components/sections/misc-section/NewsletterSection.astro';
-import { ContactSection } from '@/components/layout';
-import Center from '@/components/layout/primitives/Center.astro';
+import { getCollection } from 'astro:content';
 import { getCategoryTheme } from '@/components/blog/shared/categoryColors';
+import BlogSearch from '@/components/blog/Search/BlogSearch.astro';
+import CategoryPostsSection from '@/components/blog/CategoryPosts/CategoryPostsSection.astro';
+import Center from '@/components/layout/primitives/Center.astro';
+import SuicideCta from '@/components/sections/SuicideCta.astro';
+import BlogHero from '@/components/sections/blog/BlogHero.astro';
+import ContactSection from '@/components/sections/contact/ContactSection.astro';
+import FAQSection from '@/components/sections/faq/FAQSection.astro';
+import NewsletterSection from '@/components/sections/newsletter/NewsletterSection.astro';
+import BlogIndexLayout from '@/layouts/BlogIndexLayout.astro';
 
 export const prerender = true;
 
@@ -130,7 +130,7 @@ const allPostsData = allPosts.map(post => ({
   {/* ── All-categories post grid ── */}
   <CategoryPostsSection posts={allPosts} />
 
-  {/* Suicice Line CTA──  */}
+  {/* Suicide Line CTA──  */}
   <SuicideCta />
 
   {/* ── FAQ ── */}

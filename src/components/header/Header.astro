@@ -13,7 +13,7 @@ interface Props {
 const { user } = Astro.props;
 ---
 
-<header class="layout-header sticky top-0 z-50">
+<header class="layout-header sticky top-0 z-50 bg-secondary/60 backdrop-blur-sm border-b border-secondary/80">
   <HeaderLogo />
   <div class="header-right">
     <Menu user={user} />
@@ -33,7 +33,6 @@ const { user } = Astro.props;
     justify-content: space-around;
     padding: 1rem 2rem;
     margin: auto;
-    background-color: lab(96.34% -12.13 -5.72 / 0.905);
     box-shadow: var(--shadow-sm);
     border-bottom: 1px solid var(--border);
   }

@@ -1,8 +1,6 @@
 ---
 import type { HTMLAttributes } from "astro/types";
-import { tv } from "tailwind-variants";
-
-import { ButtonVariants } from "@/components/starwind/button";
+// Note: ButtonVariants not exported from button module; use plain classes
 
 type Props = HTMLAttributes<"button"> & {
   /**
@@ -32,10 +30,7 @@ if (Astro.slots.has("default")) {
   ) : (
     <button
       type="button"
-      class={ButtonVariants.button({
-        variant: "outline",
-        class: `starwind-alert-dialog-close ${className || ""}`,
-      })}
+      class:list={["starwind-alert-dialog-close", className]}
       {...rest}
       data-slot="alert-dialog-cancel"
     >
