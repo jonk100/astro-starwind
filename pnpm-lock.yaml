@@ -96,6 +96,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.59.3
         version: 8.59.3(eslint@10.3.0(jiti@2.7.0))(typescript@6.0.3)
+      '@typescript-eslint/typescript-estree':
+        specifier: ^8.59.3
+        version: 8.59.3(typescript@6.0.3)
       astro-agent-optimised:
         specifier: ^0.1.0
         version: 0.1.0(astro@6.3.2(@netlify/blobs@10.7.6)(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.3)(tsx@4.21.0)(yaml@2.9.0))

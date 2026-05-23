@@ -1,0 +1,31 @@
+---
+import type { HabitWithLogs, HabitLog } from '@/lib/habit/types';
+import { buildLogMap, generateDateRange } from '@/lib/habit/utils';
+import HabitNameCell from './HabitNameCell.astro';
+import HabitDayCell from './HabitDayCell.astro';
+import { TableRow } from '@/components/starwind/table/';
+
+interface Props {
+  habits: HabitWithLogs[];
+  dates: string[];
+}
+
+const { habits, dates } = Astro.props;
+---
+
+{habits.map(habit => {
+  const logMap = buildLogMap(habit.logs);
+  return (
+    <TableRow class="hover:bg-slate-50 transition-colors">
+      <HabitNameCell habit={habit} />
+      {dates.map(date => {
+        const log: HabitLog | undefined = logMap.get(date);
+        const isDone = log !== undefined;
+
+        return (
+          <HabitDayCell habit={habit} date={date} isDone={isDone} log={log} />
+        );
+      })}
+    </TableRow>
+  );
+})}

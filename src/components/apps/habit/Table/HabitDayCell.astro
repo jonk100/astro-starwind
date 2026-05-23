@@ -1,0 +1,118 @@
+---
+import { TableCell } from '@/components/starwind/table';
+import type { HabitWithLogs, HabitLog } from '@/lib/habit/types';
+import { buildLogMap, generateDateRange } from '@/lib/habit/utils';
+
+interface Props {
+  habit: HabitWithLogs;
+  date: string;
+  isDone: boolean;
+  log: HabitLog | undefined;
+}
+
+const { habit, date, isDone, log } = Astro.props;
+---
+
+<TableCell
+  class={`habit-cell p-0 border-b border-l border-slate-200 cursor-pointer ${isDone ? 'is-completed' : ''}`}
+  data-habit-id={habit.id}
+  data-date={date}
+  data-type={habit.tracking_type}
+  data-log-id={log?.id ?? ''}
+>
+  <div class="cell-trigger h-12 w-full flex items-center justify-center hover:bg-blue-50">
+    <div class="status-indicator h-6 w-6 rounded border-2 border-slate-200 transition-all flex items-center justify-center text-[10px] text-white font-bold">
+      {isDone && habit.tracking_type !== 'boolean' ? log!.value : ''}
+    </div>
+  </div>
+</TableCell>
+
+
+
+<style>
+  .habit-cell.is-completed .status-indicator {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    transform: scale(1.1);
+  }
+
+  .habit-cell:hover .status-indicator {
+    border-color: #3b82f6;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions';
+  import { toast } from '@/components/starwind/toast';
+
+  /**
+   * Handles clicking a habit cell to toggle completion for that day.
+   *
+   * Optimistic UI — the cell updates immediately. The action runs in the
+   * background. On failure the cell reverts and a toast error is shown.
+   *
+   * On success, if the action returns a streak milestone, we call
+   * window.showStreakBanner() which is registered by StreakBanner.astro.
+   */
+  document.querySelectorAll<HTMLElement>('.habit-cell').forEach(cell => {
+    cell.addEventListener('click', async () => {
+      const habitId   = cell.getAttribute('data-habit-id')!;
+      const habitName = cell.getAttribute('data-habit-name')!;
+      const date      = cell.getAttribute('data-date')!;
+      const isCompleted = cell.classList.contains('is-completed');
+
+      if (isCompleted) {
+        const logId = cell.getAttribute('data-log-id')!;
+
+        // Optimistic: remove immediately
+        cell.classList.remove('is-completed');
+        const prevLogId = logId;
+        cell.setAttribute('data-log-id', '');
+
+        const { error } = await actions.habit.deleteLog({
+          id: logId,
+          habit_id: habitId,
+          entry_date: date,
+        });
+
+        if (error) {
+          // Rollback
+          cell.classList.add('is-completed');
+          cell.setAttribute('data-log-id', prevLogId);
+          toast.error('Could not remove log', { description: 'Please try again.' });
+        }
+
+      } else {
+        // Optimistic: mark done immediately
+        cell.classList.add('is-completed');
+
+        const { data, error } = await actions.habit.upsertLog({
+          habit_id: habitId,
+          entry_date: date,
+          value: 1,
+        });
+
+        if (error) {
+          // Rollback
+          cell.classList.remove('is-completed');
+          toast.error('Could not save log', { description: 'Please try again.' });
+          return;
+        }
+
+        // Store the real log id for future delete
+        if (data) {
+          cell.setAttribute('data-log-id', data.id);
+        }
+
+        // Show streak milestone banner if one was hit
+        const streak = data?.streak;
+        if (streak?.milestone) {
+          const showBanner = (window as any).showStreakBanner;
+          if (typeof showBanner === 'function') {
+            showBanner(habitName, streak.currentStreak);
+          }
+        }
+      }
+    });
+  });
+</script>

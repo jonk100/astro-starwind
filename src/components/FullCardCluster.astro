@@ -18,22 +18,7 @@
  *                            for a given set of cards, no hydration flash).
  *   "uniform"              — all cards share the value of `defaultScheme`.
  *
- * Usage
- * ─────
- * ```astro
- * ---
- * import FullCardCluster from "@/components/FullCardCluster.astro";
- * import Card            from "@/components/Card.astro";
- * ---
  *
- * <FullCardCluster columns={3} schemeMode="alternate">
- *   <Card title="Something dark" tag="Essay" />
- *   <Card title="Something light" image="/hero.jpg" tag="Review" />
- *   <Card title="Another dark" href="/read/slug">
- *     A line or two of body copy dropped in via the default slot.
- *   </Card>
- * </FullCardCluster>
- * ```
  *
  * @prop {number}  [columns=3]              - Grid column count at desktop widths.
  * @prop {"alternate"|"random"|"uniform"} [schemeMode="alternate"]

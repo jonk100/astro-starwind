@@ -47,7 +47,7 @@ const { user } = Astro.props;
     </DropdownTrigger>
     <DropdownContent class="min-w-48 flex flex-col">
       <DropdownItem as="a" href="/apps/habit/track" class="menu-item">Habit Tracker</DropdownItem>
-      <DropdownItem as="a" href="/app/write/journal" class="menu-item">Journal</DropdownItem>
+      <DropdownItem as="a" href="/app/write" class="menu-item">Journal</DropdownItem>
       <DropdownItem as="a" href="/app/relax/meditation" class="menu-item">Meditation Guide</DropdownItem>
     </DropdownContent>
   </Dropdown>
@@ -60,12 +60,23 @@ const { user } = Astro.props;
     private dropdown: HTMLElement | null;
     private isOpen: boolean = false;
 
+    /**
+     * This is the constructor for the UserNavHandler class.
+     * It initializes the event listeners and sets up the dropdown state.
+     * @param trigger 
+     * @param dropdown 
+     */
     constructor(trigger: HTMLElement, dropdown: HTMLElement) {
       this.trigger = trigger;
       this.dropdown = dropdown;
       this.setupEventListeners();
     }
 
+    /**
+     * This method sets up the event listeners for the UserNavHandler class.
+     * It adds event listeners for clicking the trigger, pressing the enter or space key, and clicking outside the dropdown.
+     * It also adds event listeners for closing the dropdown on escape key and clicking outside the dropdown.
+     */
     private setupEventListeners(): void {
       this.trigger?.addEventListener('click', () => this.toggle());
       this.trigger?.addEventListener('keydown', (e) => this.handleKeydown(e));
@@ -81,6 +92,12 @@ const { user } = Astro.props;
       });
     }
 
+    /**
+     * This method handles keydown events for the UserNavHandler class.
+     * It checks if the key pressed is enter or space, and if so, it prevents the default behavior 
+     * and calls the toggle method. The toggle method is responsible for toggling the dropdown state.
+     * It also checks if the key pressed is arrow down or arrow up, and if so, it prevents the default behavior and calls the toggle method.
+     */
     private handleKeydown(e: KeyboardEvent): void {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();

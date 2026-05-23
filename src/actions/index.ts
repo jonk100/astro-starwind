@@ -8,8 +8,10 @@
 
 import { auth } from "./auth.actions";
 import { habit } from "./habit.actions";
+import { write } from "./write.actions";
 
 export const server = {
   auth,
   habit,
+  write,
 };

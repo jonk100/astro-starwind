@@ -1,0 +1,1046 @@
+--- File: HabitCreateForm.astro ---
+---
+/**
+ * @file src/components/apps/habit/HabitCreateForm.astro
+ * @description Slide-out sheet form for creating a new habit.
+ *
+ * Uses Starwind Sheet for the panel, Input for the name field,
+ * RadioGroup for tracking type selection, and Spinner for loading state.
+ *
+ * On success, dispatches a custom 'habit:created' event so the page
+ * can refresh the grid without a full reload.
+ */
+
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/starwind/sheet';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { RadioGroup, RadioGroupItem } from '@/components/starwind/radio-group';
+import { Spinner } from '@/components/starwind/spinner';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/starwind/tooltip';
+import Button from '@/components/starwind/button/Button.astro';
+import NewHabitButton from './Table/NewHabitButton.astro';
+
+interface Props {
+  user: any;
+}
+
+const { user } = Astro.props;
+---
+
+<Sheet>
+  <SheetTrigger asChild>
+    <NewHabitButton user={user} />
+  </SheetTrigger>
+
+  <SheetContent side="right">
+    <SheetHeader>
+      <SheetTitle>New Habit</SheetTitle>
+      <SheetDescription>
+        Add a habit to track. You can log it each day from the grid.
+      </SheetDescription>
+    </SheetHeader>
+
+    <form id="habit-create-form" class="flex flex-col gap-6 px-4 py-6">
+
+      <!-- Name -->
+      <div class="grid gap-2">
+        <Label for="habit-name">Habit name</Label>
+        <Input
+          id="habit-name"
+          name="name"
+          type="text"
+          required
+          maxlength="100"
+          placeholder="e.g. Morning meditation"
+        />
+        <p id="habit-name-error" class="hidden text-sm text-red-500"></p>
+      </div>
+
+      <!-- Tracking type -->
+      <div class="grid gap-3">
+        <Label>Tracking type</Label>
+        <RadioGroup
+          id="habit-tracking-type"
+          name="tracking_type"
+          defaultValue="boolean"
+          legend="How do you want to track this habit?"
+        >
+          <div class="flex items-start gap-3">
+            <RadioGroupItem
+              id="type-boolean"
+              value="boolean"
+              name="tracking_type"
+              class="mt-0.5"
+            />
+            <div>
+              <Label for="type-boolean" class="font-medium">Boolean</Label>
+              <p class="text-sm text-muted-foreground">Did you do it? Simple yes or no.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <RadioGroupItem
+              id="type-count"
+              value="count"
+              name="tracking_type"
+              class="mt-0.5"
+            />
+            <div>
+              <Label for="type-count" class="font-medium">Count</Label>
+              <p class="text-sm text-muted-foreground">How many times? e.g. glasses of water.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <RadioGroupItem
+              id="type-duration"
+              value="duration"
+              name="tracking_type"
+              class="mt-0.5"
+            />
+            <div>
+              <Label for="type-duration" class="font-medium">Duration</Label>
+              <p class="text-sm text-muted-foreground">How long? e.g. minutes of exercise.</p>
+            </div>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <!-- Server error -->
+      <p id="habit-form-error" class="hidden rounded-md bg-red-50 px-3 py-2 text-sm text-red-600"></p>
+
+    </form>
+
+    <SheetFooter>
+      <SheetClose asChild>
+        <Button variant="outline" id="habit-form-cancel">Cancel</Button>
+      </SheetClose>
+      <Button variant="default" id="habit-form-submit" type="button">
+        <span id="habit-submit-label">Create habit</span>
+        <Spinner id="habit-submit-spinner" class="hidden size-4" />
+      </Button>
+    </SheetFooter>
+  </SheetContent>
+</Sheet>
+
+<script>
+  import { actions } from 'astro:actions';
+
+  /**
+   * Returns the currently selected tracking_type value from the RadioGroup.
+   * Falls back to 'boolean' if nothing is selected.
+   *
+   * @returns {"boolean" | "count" | "duration"} The selected tracking type.
+   */
+  function getSelectedTrackingType(): "boolean" | "count" | "duration" {
+    const checked = document.querySelector<HTMLInputElement>(
+      'input[name="tracking_type"]:checked'
+    );
+    const value = checked?.value ?? 'boolean';
+    if (value === 'count' || value === 'duration') return value;
+    return 'boolean';
+  }
+
+  /**
+   * Resets the form fields and clears any error messages.
+   */
+  function resetForm() {
+    const nameInput = document.getElementById('habit-name') as HTMLInputElement;
+    const errorMsg = document.getElementById('habit-form-error') as HTMLElement;
+    const nameError = document.getElementById('habit-name-error') as HTMLElement;
+    const booleanRadio = document.getElementById('type-boolean') as HTMLInputElement;
+
+    if (nameInput) nameInput.value = '';
+    if (booleanRadio) booleanRadio.checked = true;
+    if (errorMsg) { errorMsg.textContent = ''; errorMsg.classList.add('hidden'); }
+    if (nameError) { nameError.textContent = ''; nameError.classList.add('hidden'); }
+  }
+
+  /**
+   * Sets the submit button into loading or idle state.
+   *
+   * @param loading - Whether to show the loading state.
+   */
+  function setLoading(loading: boolean) {
+    const submitBtn = document.getElementById('habit-form-submit') as HTMLButtonElement;
+    const label = document.getElementById('habit-submit-label') as HTMLElement;
+    const spinner = document.getElementById('habit-submit-spinner') as HTMLElement;
+
+    if (!submitBtn) return;
+    submitBtn.disabled = loading;
+    label?.classList.toggle('hidden', loading);
+    spinner?.classList.toggle('hidden', !loading);
+  }
+
+  const submitBtn = document.getElementById('habit-form-submit');
+
+  submitBtn?.addEventListener('click', async () => {
+    const nameInput = document.getElementById('habit-name') as HTMLInputElement;
+    const errorMsg = document.getElementById('habit-form-error') as HTMLElement;
+    const nameError = document.getElementById('habit-name-error') as HTMLElement;
+
+    // Clear previous errors
+    errorMsg?.classList.add('hidden');
+    nameError?.classList.add('hidden');
+
+    const name = nameInput?.value.trim();
+
+    // Client-side validation
+    if (!name) {
+      if (nameError) {
+        nameError.textContent = 'Habit name is required.';
+        nameError.classList.remove('hidden');
+      }
+      nameInput?.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    const { data, error } = await actions.habit.create({
+      name,
+      tracking_type: getSelectedTrackingType(),
+    });
+
+    setLoading(false);
+
+    if (error) {
+      if (errorMsg) {
+        errorMsg.textContent = error.message ?? 'Something went wrong. Please try again.';
+        errorMsg.classList.remove('hidden');
+      }
+      return;
+    }
+
+    // Success — close the sheet, reset the form, reload the grid
+    document.getElementById('habit-form-cancel')?.click();
+    resetForm();
+
+    // Reload the page to show the new habit in the grid
+    window.location.reload();
+  });
+</script>
+
+--- File: HeaderRow.astro ---
+---
+const currentMonth = new Date();
+const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+---
+<div class="p-4 border-b border-slate-200 flex flex-row gap-4">
+  <h1 class="text-2xl font-semibold text-slate-800">{monthName}</h1>
+</div>
+
+--- File: EmptyTableState.astro ---
+---
+import HabitCreateForm from './HabitCreateForm.astro';
+
+interface Props {
+  user: any;
+}
+
+const { user } = Astro.props;
+---
+<div class="flex flex-col items-center justify-center h-full text-center">
+  <div class="mb-4 text-5xl">🌱</div>
+  <h2 class="mb-2 text-xl font-semibold text-slate-700">No habits yet</h2>
+  <p class="text-sm text-slate-400">
+    Add your first habit using the + button below to start tracking your progress.
+  </p>
+  <HabitCreateForm user={user} />
+</div>
+
+--- File: StreakBanner.astro ---
+---
+/**
+ * @file src/components/apps/habit/StreakBanner.astro
+ * @description Animated celebration banner for habit streak milestones.
+ *
+ * Hidden by default using the grid-template-rows: 0fr collapse trick.
+ * IMPORTANT: this requires a direct child with min-height: 0 (streak-banner__outer)
+ * wrapping all visible content — padding on the collapsing element itself
+ * prevents it reaching true zero height.
+ *
+ * Revealed by calling window.showStreakBanner(habitName, streakCount).
+ * Auto-dismisses after 5 seconds or immediately on close button click.
+ * 
+ * Script structure:
+ * 1. getMilestoneCopy() — returns copy for a given streak count.
+ * 2. runParticleBurst() — animates confetti particles on the canvas.
+ * 3. Queue setup + window.showStreakBanner(sync, top-level) — queues calls
+ * 4. One DOMContentLoaded event — wires up the banner elements, assigns _showBanner,
+ *    attaches the close listener, and flushes the queue.
+ * 
+ */
+import CloseBannerButton from './CloseBannerButton.astro';
+---
+
+<div
+  id="streak-banner"
+  aria-live="polite"
+  aria-atomic="true"
+  role="status"
+  class="streak-banner"
+>
+  <!--
+    Required inner wrapper for grid-row collapse.
+    min-height: 0 allows the row to fully collapse to zero.
+    Padding must live here, NOT on the outer .streak-banner.
+  -->
+  <div class="streak-banner__outer">
+    <canvas id="streak-canvas" class="streak-canvas" aria-hidden="true"></canvas>
+
+    <div class="streak-banner__content">
+      <span id="streak-banner-emoji" class="streak-banner__emoji" aria-hidden="true"></span>
+      <div class="streak-banner__text">
+        <strong id="streak-banner-headline" class="streak-banner__headline"></strong>
+        <span id="streak-banner-sub" class="streak-banner__sub"></span>
+      </div>
+      <CloseBannerButton />
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ── Outer shell — no padding, no overflow visible ── */
+  .streak-banner {
+    position: fixed;
+    top: 0;
+    display: grid;
+    grid-template-rows: 0fr;   /* collapsed by default */
+    transition: grid-template-rows 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 100%;
+    z-index: 100;
+    /* Background on the outer so gradient is visible at full height */
+    background: linear-gradient(135deg, #1e40af 0%, #7c3aedad 60%, #db277879 100%);
+  }
+
+  .streak-banner.is-visible {
+    grid-template-rows: 1fr;   /* expanded */
+  }
+
+  /* ── Inner wrapper — min-height: 0 is the magic ingredient ── */
+  .streak-banner__outer {
+    min-height: 0;
+    overflow: hidden;
+    position: relative;  /* contains the absolutely-positioned canvas */
+  }
+
+  /* ── Particle canvas — fills the inner wrapper ── */
+  .streak-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* ── Visible content row ── */
+  .streak-banner__content {
+    position: relative;  /* sits above canvas */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem 1.25rem;
+    color: #fff;
+  }
+
+  /* ── Emoji ── */
+  .streak-banner__emoji {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  .streak-banner.is-visible .streak-banner__emoji {
+    animation: streak-pulse 1.25s ease-out both;
+  }
+
+  @keyframes streak-pulse {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.5); }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+
+  /* ── Text block ── */
+  .streak-banner__text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .streak-banner__headline {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .streak-banner__sub {
+    font-size: 0.8rem;
+    opacity: 0.85;
+  }
+
+
+</style>
+
+<script>
+  // Extend the global Window interface
+declare global {
+  interface Window {
+    showStreakBanner: (habitName: string, streak: number) => void;
+  }
+}
+
+// Define interfaces
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  color: string;
+  alpha: number;
+  decay: number;
+}
+
+interface BannerCall {
+  habitName: string;
+  streak: number;
+}
+
+interface MilestoneCopy {
+  emoji: string;
+  headline: string;
+  sub: string;
+}
+
+interface ParticleBurst {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  particles: Particle[];
+  runParticleBurst(canvas: HTMLCanvasElement): void;
+}
+
+interface StreakBanner {
+  showStreakBanner(habitName: string, streak: number): void;
+}
+
+interface StreakBannerConstructor {
+  new (habitName: string, streak: number): StreakBanner;
+}
+
+// Function to get milestone copy
+function getMilestoneCopy(streak: number, habitName: string): MilestoneCopy {
+  if (streak >= 100) return { emoji: '🏆', headline: `${streak}-day streak on ${habitName}!`, sub: "Absolutely legendary. You've made this part of who you are." };
+  if (streak >= 50) return { emoji: '💎', headline: `${streak} days straight — ${habitName}!`, sub: "That's elite-level consistency. Keep going." };
+  if (streak >= 30) return { emoji: '⚡', headline: `${streak}-day streak! ${habitName}!`, sub: "A whole month without breaking the chain. Remarkable." };
+  if (streak >= 20) return { emoji: '🚀', headline: `${streak} days in a row — ${habitName}!`, sub: "You've built real momentum. Don't stop now." };
+  if (streak >= 10) return { emoji: '🔥', headline: `${streak}-day streak on ${habitName}!`, sub: "Double digits. That's a proper habit forming." };
+  if (streak >= 5) return { emoji: '⭐', headline: `5-day streak — ${habitName}!`, sub: "Five days straight. You're building something real." };
+  return { emoji: '✨', headline: `3-day streak on ${habitName}!`, sub: "Three in a row — the streak has begun." };
+}
+
+// Particle burst animation
+function runParticleBurst(canvas: HTMLCanvasElement): void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+
+  const colors = ['#fbbf24', '#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#fff'];
+  const particles: Particle[] = [];
+
+  for (let i = 0; i < 60; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 3.5;
+    particles.push({
+      x: canvas.width * (0.2 + Math.random() * 0.6),
+      y: canvas.height / 2,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      radius: 2 + Math.random() * 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1,
+      decay: 0.018 + Math.random() * 0.012,
+    });
+  }
+
+  function frame() {
+    ctx!.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.12;
+      p.alpha -= p.decay;
+      if (p.alpha > 0) {
+        alive = true;
+        ctx!.save();
+        ctx!.globalAlpha = p.alpha;
+        ctx!.fillStyle = p.color;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx!.fill();
+        ctx!.restore();
+      }
+    }
+    if (alive) {
+      requestAnimationFrame(frame);
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+// Queue for pending calls
+const pendingCalls: BannerCall[] = [];
+
+/**
+ * Internal banner display implementation.
+ * Assigned after DOMContentLoaded.
+ */
+let _showBanner:
+  | ((habitName: string, streak: number) => void)
+  | null = null;
+
+/**
+ * Public global API.
+ */
+window.showStreakBanner = function (
+  habitName: string,
+  streak: number
+): void {
+  if (_showBanner) {
+    _showBanner(habitName, streak);
+  } else {
+    pendingCalls.push({ habitName, streak });
+  }
+};
+
+// DOM wiring
+document.addEventListener('DOMContentLoaded', () => {
+  const banner = document.getElementById('streak-banner');
+  const emojiEl = document.getElementById('streak-banner-emoji');
+  const headlineEl = document.getElementById('streak-banner-headline');
+  const subEl = document.getElementById('streak-banner-sub');
+  const closeBtn = document.getElementById('streak-banner-close');
+  const canvas = document.getElementById('streak-canvas');
+
+  let dismissTimer: number | null = null;
+
+  // Define the actual implementation of showStreakBanner
+  _showBanner = function(habitName: string, streak: number): void {
+    if (!banner || !emojiEl || !headlineEl || !subEl || !closeBtn || !canvas) return;
+
+    if (dismissTimer) {
+      clearTimeout(dismissTimer);
+    }
+
+    const copy = getMilestoneCopy(streak, habitName);
+    emojiEl.textContent = copy.emoji;
+    headlineEl.textContent = copy.headline;
+    subEl.textContent = copy.sub;
+
+    banner.classList.add('is-visible');
+    // Wait for transition
+    setTimeout(() => {
+      runParticleBurst(canvas as HTMLCanvasElement);
+    }, 420);
+    dismissTimer = window.setTimeout(() => {
+      banner.classList.remove('is-visible');
+    }, 5000);
+  };
+
+  // Close button event
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      if (banner) banner.classList.remove('is-visible');
+      if (dismissTimer) {
+        clearTimeout(dismissTimer);
+        dismissTimer = null;
+      }
+    });
+  }
+
+  // Process any calls made before DOMContentLoaded
+  for (const call of pendingCalls) {
+    _showBanner?.(call.habitName, call.streak);
+  }
+  pendingCalls.length = 0;
+});
+
+export {}; // To ensure this is a module
+</script>
+
+--- File: CloseBannerButton.astro ---
+---
+import Button from '@/components/starwind/button/Button.astro';
+---
+
+<Button
+  id="streak-banner-close"
+  class="streak-banner__close"
+  aria-label="Dismiss streak celebration"
+  type="button"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</Button>
+
+<style>
+  /* ── Close button ── */
+  .streak-banner__close {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--red);
+    /* padding: 0.25rem; */
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.35s, background 0.35s;
+    line-height: 1;
+  }
+
+  .streak-banner__close:hover {
+    background: rgba(255, 255, 255, 0.351);
+  }
+  </style>
+
+--- File: TableHeaderRow.astro ---
+---
+import { TableHeader, TableRow, TableHead } from '@/components/starwind/table';
+import { currentMonth as currentMonthRange } from '@/lib/habit/utils';
+import { createClient } from '@/lib/supabase';
+import HabitCreateForm from '../HabitCreateForm.astro';
+
+interface Props {
+  dates: string[];
+  user: any;
+}
+
+const supabase = createClient({
+  request: Astro.request,
+  cookies: Astro.cookies,
+});
+
+const { dates, user } = Astro.props;
+
+const id = user.id;
+
+const { from, to } = currentMonthRange();
+// Fetch habits and logs separately — simpler and more reliable
+const { data: habits, error: habitsError } = await supabase
+  .from("habits")
+  .select("*")
+  .eq("user_id", id)
+  .order("created_at", { ascending: true });
+
+const { data: logs, error: logsError } = await supabase
+  .from("habit_logs")
+  .select("*")
+  .eq("user_id", id)
+  .gte("entry_date", from)
+  .lte("entry_date", to);
+
+---
+
+<TableHeader>
+  <TableRow class="bg-slate-50">
+    <TableHead class="px-4 py-2 text-left border-b border-slate-200 min-w-[220px]">
+      <div class="flex items-center justify-between gap-2 font-bold">
+        Habit
+        <HabitCreateForm user={user} />
+      </div>
+    </TableHead>
+    {dates.map(date => (
+      <TableHead class="text-center border-b border-l border-slate-200 text-xs">
+        {date.split('-')[2]}
+      </TableHead>
+    ))}
+  </TableRow>
+</TableHeader>
+
+--- File: NewHabitButton.astro ---
+---
+import Button from '@/components/starwind/button/Button.astro';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/starwind/tooltip';
+---
+<Tooltip>
+  <TooltipTrigger asChild>
+    <Button 
+      variant="outline"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="black" stroke="black" stroke-width="4">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+    </Button>
+  </TooltipTrigger>
+  <TooltipContent>
+    Add habit
+  </TooltipContent>
+</Tooltip>
+
+--- File: HabitTableRow.astro ---
+---
+import type { HabitWithLogs, HabitLog } from '@/lib/habit/types';
+import { buildLogMap, generateDateRange } from '@/lib/habit/utils';
+import HabitNameCell from './HabitNameCell.astro';
+import HabitDayCell from './HabitDayCell.astro';
+import { TableRow } from '@/components/starwind/table/';
+
+interface Props {
+  habits: HabitWithLogs[];
+  dates: string[];
+}
+
+const { habits, dates } = Astro.props;
+---
+
+{habits.map(habit => {
+  const logMap = buildLogMap(habit.logs);
+  return (
+    <TableRow class="hover:bg-slate-50 transition-colors">
+      <HabitNameCell habit={habit} />
+      {dates.map(date => {
+        const log: HabitLog | undefined = logMap.get(date);
+        const isDone = log !== undefined;
+
+        return (
+          <HabitDayCell habit={habit} date={date} isDone={isDone} log={log} />
+        );
+      })}
+    </TableRow>
+  );
+})}
+
+--- File: HabitNameCell.astro ---
+---
+import DeleteHabit from './DeleteHabit.astro';
+import { TableCell } from '@/components/starwind/table';
+import type { HabitWithLogs } from '@/lib/habit/types';
+
+interface Props {
+  habit: HabitWithLogs;
+}
+
+const { habit } = Astro.props;
+---
+<TableCell class="p-4 border-b border-slate-200">
+  <div class="flex items-start justify-between gap-2 group">
+    <div>
+      <span class="font-medium text-slate-700 text-align-left">{habit.name}</span>
+      <div class="text-xs text-slate-400 capitalize">{habit.tracking_type}</div>
+    </div>
+    <DeleteHabit habit={habit} />
+  </div>
+</TableCell>
+
+--- File: HabitGrid.astro ---
+---
+/**
+ * @file src/components/apps/habit/HabitGrid.astro
+ * @description Monthly habit tracking grid.
+ *
+ * Renders a table of habits with one column per day in the date range.
+ * Each cell is clickable — toggling completion optimistically and syncing
+ * to the server via Astro Actions in the background.
+ *
+ * Delete uses an AlertDialog confirmation before calling actions.habit.delete.
+ * Empty state is shown when no habits exist yet.
+ */
+import type { HabitWithLogs, HabitLog } from '@/lib/habit/types';
+import { generateDateRange } from '@/lib/habit/utils';
+import {
+  Table, TableBody
+} from '@/components/starwind/table';
+import EmptyTableState from '../EmptyTableState.astro';
+import TableHeaderRow from './TableHeaderRow.astro';
+import HabitTableRow from './HabitTableRow.astro';
+interface Props {
+  habits: HabitWithLogs[];
+  from: string;
+  to: string;
+  user: any;
+}
+
+const { habits, from, to, user } = Astro.props;
+
+// Generate the date axis once
+const dates = generateDateRange(from, to);
+---
+
+{habits.length === 0 ? (
+  <!--  Empty State  -->
+  <EmptyTableState user={user} />
+) : (
+  <!--  Grid  -->
+  <div class="flex flex-col h-full">
+    <div class="habit-tracker-container p-4 overflow-x-auto flex-1">
+      <Table class="min-w-full border-collapse border border-slate-200">
+        <TableHeaderRow dates={dates} user={user} />
+        <TableBody>
+          <HabitTableRow habits={habits} dates={dates} />
+        </TableBody>
+      </Table>
+    </div>
+  </div>
+)}
+
+
+--- File: HabitDayCell.astro ---
+---
+import { TableCell } from '@/components/starwind/table';
+import type { HabitWithLogs, HabitLog } from '@/lib/habit/types';
+import { buildLogMap, generateDateRange } from '@/lib/habit/utils';
+
+interface Props {
+  habit: HabitWithLogs;
+  date: string;
+  isDone: boolean;
+  log: HabitLog | undefined;
+}
+
+const { habit, date, isDone, log } = Astro.props;
+---
+
+<TableCell
+  class={`habit-cell p-0 border-b border-l border-slate-200 cursor-pointer ${isDone ? 'is-completed' : ''}`}
+  data-habit-id={habit.id}
+  data-date={date}
+  data-type={habit.tracking_type}
+  data-log-id={log?.id ?? ''}
+>
+  <div class="cell-trigger h-12 w-full flex items-center justify-center hover:bg-blue-50">
+    <div class="status-indicator h-6 w-6 rounded border-2 border-slate-200 transition-all flex items-center justify-center text-[10px] text-white font-bold">
+      {isDone && habit.tracking_type !== 'boolean' ? log!.value : ''}
+    </div>
+  </div>
+</TableCell>
+
+
+
+<style>
+  .habit-cell.is-completed .status-indicator {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    transform: scale(1.1);
+  }
+
+  .habit-cell:hover .status-indicator {
+    border-color: #3b82f6;
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions';
+  import { toast } from '@/components/starwind/toast';
+
+  /**
+   * Handles clicking a habit cell to toggle completion for that day.
+   *
+   * Optimistic UI — the cell updates immediately. The action runs in the
+   * background. On failure the cell reverts and a toast error is shown.
+   *
+   * On success, if the action returns a streak milestone, we call
+   * window.showStreakBanner() which is registered by StreakBanner.astro.
+   */
+  document.querySelectorAll<HTMLElement>('.habit-cell').forEach(cell => {
+    cell.addEventListener('click', async () => {
+      const habitId   = cell.getAttribute('data-habit-id')!;
+      const habitName = cell.getAttribute('data-habit-name')!;
+      const date      = cell.getAttribute('data-date')!;
+      const isCompleted = cell.classList.contains('is-completed');
+
+      if (isCompleted) {
+        const logId = cell.getAttribute('data-log-id')!;
+
+        // Optimistic: remove immediately
+        cell.classList.remove('is-completed');
+        const prevLogId = logId;
+        cell.setAttribute('data-log-id', '');
+
+        const { error } = await actions.habit.deleteLog({
+          id: logId,
+          habit_id: habitId,
+          entry_date: date,
+        });
+
+        if (error) {
+          // Rollback
+          cell.classList.add('is-completed');
+          cell.setAttribute('data-log-id', prevLogId);
+          toast.error('Could not remove log', { description: 'Please try again.' });
+        }
+
+      } else {
+        // Optimistic: mark done immediately
+        cell.classList.add('is-completed');
+
+        const { data, error } = await actions.habit.upsertLog({
+          habit_id: habitId,
+          entry_date: date,
+          value: 1,
+        });
+
+        if (error) {
+          // Rollback
+          cell.classList.remove('is-completed');
+          toast.error('Could not save log', { description: 'Please try again.' });
+          return;
+        }
+
+        // Store the real log id for future delete
+        if (data) {
+          cell.setAttribute('data-log-id', data.id);
+        }
+
+        // Show streak milestone banner if one was hit
+        const streak = data?.streak;
+        if (streak?.milestone) {
+          const showBanner = (window as any).showStreakBanner;
+          if (typeof showBanner === 'function') {
+            showBanner(habitName, streak.currentStreak);
+          }
+        }
+      }
+    });
+  });
+</script>
+
+--- File: DeleteHabit.astro ---
+---
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, DialogClose } from '@/components/starwind/dialog';
+import type { HabitWithLogs } from '@/lib/habit/types';
+import DeleteButton from './DeleteButton.astro';
+
+interface Props {
+  habit: HabitWithLogs;
+}
+
+const { habit } = Astro.props;
+---
+
+<Dialog>
+  <DialogTrigger asChild>
+    <DeleteButton habit={habit} />
+    <!-- <button
+      class="delete-trigger opacity-50 group-hover:opacity-100 transition-opacity rounded p-1 text-slate-400 hover:text-red-500 hover:bg-red-50"
+      aria-label={`Delete ${habit.name}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        <path d="M10 11v6M14 11v6" />
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      </svg>
+    </button> -->
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>{`Delete ${habit.name}?`}</DialogTitle>
+      <DialogDescription>
+        <p>This will permanently delete this habit and all its log entries. This action cannot be undone.</p>
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <DialogClose asChild>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          Cancel
+        </button>
+      </DialogClose>
+      <button
+        type="button"
+        class="delete-confirm inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+        data-habit-id={habit.id}
+        data-habit-name={habit.name}
+      >
+        Delete habit
+      </button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+
+<script>
+  import { actions } from 'astro:actions';
+  import { toast } from '@/components/starwind/toast';
+  // ─── Habit Delete ─────────────────────────────────────────────────────────────
+
+  /**
+   * Handles clicking the confirm button inside the delete AlertDialog.
+   *
+   * Uses toast.promise() to show loading, success, and error states
+   * automatically while the delete action runs, then reloads the page.
+   */
+  document.querySelectorAll<HTMLElement>('.delete-confirm').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const habitId = btn.getAttribute('data-habit-id')!;
+      const habitName = btn.getAttribute('data-habit-name')!;
+
+      await toast.promise(
+        actions.habit.delete({ id: habitId }),
+        {
+          loading: { title: 'Deleting...', description: `Removing "${habitName}"` },
+          success: { title: 'Habit deleted', description: `"${habitName}" has been removed.` },
+          error: { title: 'Could not delete', description: 'Please try again.' },
+        }
+      );
+
+      // Reload to remove the row from the grid
+      window.location.reload();
+    });
+  });
+</script>
+
+--- File: DeleteButton.astro ---
+---
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/starwind/tooltip';
+import Button from '@/components/starwind/button/Button.astro';
+import type { Habit } from '@/lib/habit/types';
+
+interface Props {
+  habit: Habit;
+}
+
+const { habit } = Astro.props;
+---
+<Tooltip>
+  <TooltipTrigger asChild>
+    <Button
+      variant="outline"
+      class="delete-trigger opacity-50 group-hover:opacity-100 transition-opacity rounded p-1 text-slate-400 hover:text-red-500 hover:bg-red-50"
+      aria-label={`Delete ${habit.name}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        <path d="M10 11v6M14 11v6" />
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      </svg>
+    </Button>
+  </TooltipTrigger>
+    <TooltipContent>
+    Delete Habit
+  </TooltipContent>
+</Tooltip>
+

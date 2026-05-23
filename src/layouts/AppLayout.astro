@@ -1,10 +1,11 @@
 ---
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
-import BaseHead from './BaseHead.astro';
 import Footer from './Footer.astro';
-import Header from '../components/header/Header.astro';
 import type { User } from '@supabase/supabase-js';
 import { Toaster } from '@/components/starwind/toast';
+import Layout from './Layout.astro';
+
+export const prerender = false;
 
 interface Props {
 	title: string;
@@ -12,36 +13,40 @@ interface Props {
 	user?: User;
 };
 
+
+
 const { title = `App - ${SITE_TITLE}`, description = SITE_DESCRIPTION, user: userProp } = Astro.props;
 const user = userProp ?? Astro.locals.user;
-
-import '@/styles/global.css';
-import '@/styles/starwind.css';
 ---
 
-<html lang="en">
-	<head>
-		<BaseHead title={title} description={description} />
-    <slot name="head" />
-	</head>
+<Layout title={title} description={description}>
+  <head>
+    <slot name="head" slot="head"/>
+  </head>
   <Toaster position="bottom-right" />
 
 	<body class="app-body">
-    <header class="app-header sticky top-0 z-50">
-      <Header user={user} />
-      <slot name="header" />
-    </header>
-    
-    <main class="app-main">
-      <div class="app-main-content">
+    <slot name="header" slot="header"/>
+    <main class="app--main-top">
+      <slot name="hero" slot="hero"/>
+      <container class="app--main-top-slot">
+        <slot name="main-top" slot="main-top"/>
+      </container>
+      
+      <container class="app--main-content-slot">
         <slot />
-      </div>
+      </container>
+      
+
+      <container class="app--main-bottom-slot">
+        <slot name="main-bottom" slot="main-bottom"/>
+      </container>
+
+      <container class="app--zero-slot">
+        <slot name="zero" slot="zero"/>
+      </container>
+      <footer class="app--footer-slot">
+        <slot name="footer" slot="footer"/>
+      </footer>
     </main>
-
-    <footer class="app-footer">
-      <slot name="footer" />
-      <Footer />
-    </footer>
-	</body>
-
-</html>
+</Layout>

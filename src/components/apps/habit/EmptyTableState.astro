@@ -1,0 +1,17 @@
+---
+import HabitCreateForm from './HabitCreateForm.astro';
+
+interface Props {
+  user: any;
+}
+
+const { user } = Astro.props;
+---
+<div class="flex flex-col items-center justify-center h-full text-center">
+  <div class="mb-4 text-5xl">🌱</div>
+  <h2 class="mb-2 text-xl font-semibold text-slate-700">No habits yet</h2>
+  <p class="text-sm text-slate-400">
+    Add your first habit using the + button below to start tracking your progress.
+  </p>
+  <HabitCreateForm user={user} />
+</div>

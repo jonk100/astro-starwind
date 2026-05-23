@@ -1,0 +1,86 @@
+---
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, DialogClose } from '@/components/starwind/dialog';
+import type { HabitWithLogs } from '@/lib/habit/types';
+import DeleteButton from './DeleteButton.astro';
+
+interface Props {
+  habit: HabitWithLogs;
+}
+
+const { habit } = Astro.props;
+---
+
+<Dialog>
+  <DialogTrigger asChild>
+    <DeleteButton habit={habit} />
+    <!-- <button
+      class="delete-trigger opacity-50 group-hover:opacity-100 transition-opacity rounded p-1 text-slate-400 hover:text-red-500 hover:bg-red-50"
+      aria-label={`Delete ${habit.name}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        <path d="M10 11v6M14 11v6" />
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      </svg>
+    </button> -->
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>{`Delete ${habit.name}?`}</DialogTitle>
+      <DialogDescription>
+        <p>This will permanently delete this habit and all its log entries. This action cannot be undone.</p>
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <DialogClose asChild>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          Cancel
+        </button>
+      </DialogClose>
+      <button
+        type="button"
+        class="delete-confirm inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+        data-habit-id={habit.id}
+        data-habit-name={habit.name}
+      >
+        Delete habit
+      </button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+
+<script>
+  import { actions } from 'astro:actions';
+  import { toast } from '@/components/starwind/toast';
+  // ─── Habit Delete ─────────────────────────────────────────────────────────────
+
+  /**
+   * Handles clicking the confirm button inside the delete AlertDialog.
+   *
+   * Uses toast.promise() to show loading, success, and error states
+   * automatically while the delete action runs, then reloads the page.
+   */
+  document.querySelectorAll<HTMLElement>('.delete-confirm').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const habitId = btn.getAttribute('data-habit-id')!;
+      const habitName = btn.getAttribute('data-habit-name')!;
+
+      await toast.promise(
+        actions.habit.delete({ id: habitId }),
+        {
+          loading: { title: 'Deleting...', description: `Removing "${habitName}"` },
+          success: { title: 'Habit deleted', description: `"${habitName}" has been removed.` },
+          error: { title: 'Could not delete', description: 'Please try again.' },
+        }
+      );
+
+      // Reload to remove the row from the grid
+      window.location.reload();
+    });
+  });
+</script>

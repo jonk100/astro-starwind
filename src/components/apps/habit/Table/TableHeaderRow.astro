@@ -1,0 +1,52 @@
+---
+import { TableHeader, TableRow, TableHead } from '@/components/starwind/table';
+import { currentMonth as currentMonthRange } from '@/lib/habit/utils';
+import { createClient } from '@/lib/supabase';
+import HabitCreateForm from '../HabitCreateForm.astro';
+
+interface Props {
+  dates: string[];
+  user: any;
+}
+
+const supabase = createClient({
+  request: Astro.request,
+  cookies: Astro.cookies,
+});
+
+const { dates, user } = Astro.props;
+
+const id = user.id;
+
+const { from, to } = currentMonthRange();
+// Fetch habits and logs separately — simpler and more reliable
+const { data: habits, error: habitsError } = await supabase
+  .from("habits")
+  .select("*")
+  .eq("user_id", id)
+  .order("created_at", { ascending: true });
+
+const { data: logs, error: logsError } = await supabase
+  .from("habit_logs")
+  .select("*")
+  .eq("user_id", id)
+  .gte("entry_date", from)
+  .lte("entry_date", to);
+
+---
+
+<TableHeader>
+  <TableRow class="bg-slate-50">
+    <TableHead class="px-4 py-2 text-left border-b border-slate-200 min-w-[220px]">
+      <div class="flex items-center justify-between gap-2 font-bold">
+        Habit
+        <HabitCreateForm user={user} />
+      </div>
+    </TableHead>
+    {dates.map(date => (
+      <TableHead class="text-center border-b border-l border-slate-200 text-xs">
+        {date.split('-')[2]}
+      </TableHead>
+    ))}
+  </TableRow>
+</TableHeader>

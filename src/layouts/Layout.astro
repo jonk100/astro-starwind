@@ -1,7 +1,7 @@
 ---
 import BaseHead from './BaseHead.astro';
 import Footer from './Footer.astro';
-// import Header from '../components/header/Header.astro';
+import Header from '../components/header/Header.astro';
 import Navigation from '@/components/header/Navigation.astro';
 
 interface Props {
@@ -25,17 +25,20 @@ import '@/styles/starwind.css';
 
 	<body class="layout-body">
     <header class="layout-header sticky top-0 z-50">
-      <!-- <Header user={user} /> -->
-      <Navigation user={user} />
+      <Header user={user} />
       <slot name="header" />
     </header>
+    <container class="app--hero-slot">
+      <slot name="hero" />
+    </container>
     
-    <main class="layout-main" style={mainWidth != null ? `max-width: ${mainWidth}px` : undefined}>
-      <!-- <div class="layout-main-content"> -->
+    <main class="main--base-layout"></main>
       <slot />
-      <!-- </div> -->
     </main>
-
+    
+    <container class="app--hero-slot">
+      <slot name="zero" />
+    </container>
     <footer class="layout-footer">
       <slot name="footer" />
       <Footer />

@@ -1,0 +1,37 @@
+---
+import Button from '@/components/starwind/button/Button.astro';
+---
+
+<Button
+  id="streak-banner-close"
+  class="streak-banner__close"
+  aria-label="Dismiss streak celebration"
+  type="button"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</Button>
+
+<style>
+  /* ── Close button ── */
+  .streak-banner__close {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--red);
+    /* padding: 0.25rem; */
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.35s, background 0.35s;
+    line-height: 1;
+  }
+
+  .streak-banner__close:hover {
+    background: rgba(255, 255, 255, 0.351);
+  }
+  </style>

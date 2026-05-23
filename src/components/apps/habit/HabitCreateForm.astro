@@ -20,29 +20,24 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/starwind/sheet';
-import { Button } from '@/components/starwind/button';
 import { Input } from '@/components/starwind/input';
 import { Label } from '@/components/starwind/label';
 import { RadioGroup, RadioGroupItem } from '@/components/starwind/radio-group';
 import { Spinner } from '@/components/starwind/spinner';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/starwind/tooltip';
+import Button from '@/components/starwind/button/Button.astro';
+import NewHabitButton from './Table/NewHabitButton.astro';
+
+interface Props {
+  user: any;
+}
+
+const { user } = Astro.props;
 ---
 
 <Sheet>
   <SheetTrigger asChild>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </button>
-      </TooltipTrigger>
-      <TooltipContent>
-        Add habit
-      </TooltipContent>
-    </Tooltip>
+    <NewHabitButton user={user} />
   </SheetTrigger>
 
   <SheetContent side="right">

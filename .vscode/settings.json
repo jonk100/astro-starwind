@@ -27,5 +27,6 @@
         "supabase",
         "tabler",
         "virtuals"
-    ]
+    ],
+    "editor.foldingStrategy": "indentation"
 }

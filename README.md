@@ -1,18 +1,19 @@
-# Astro Starwind Blog
+# RemindMatters
 
-A modern, high-performance blog built with Astro and Starwind UI components.
+A modern full-stack application built with Astro, Supabase, and Starwind UI components.
 
 Features:
 
+- ✅ **Supabase Integration** - Authentication, database, and real-time features
 - ✅ **Starwind UI Components** - Professional UI components with Pro blocks
-- ✅ **100/100 Lighthouse Performance** - Optimized for speed and accessibility
+- ✅ **Cloudinary Integration** - Image optimization and CDN delivery
 - ✅ **TypeScript Support** - Full type safety with Astro Check
-- ✅ **SEO Optimized** - Canonical URLs, Open Graph data, and meta tags
 - ✅ **Content Management** - Markdown & MDX support with content collections
 - ✅ **RSS & Sitemap** - Automatic RSS feed and sitemap generation
 - ✅ **Responsive Design** - Mobile-first responsive layout
 - ✅ **Modern Tooling** - Tailwind CSS v4, pnpm, and ES6 modules
-- ✅ **CI/CD Pipeline** - Automated testing, linting, and security auditing
+- ✅ **Testing** - Vitest for unit testing
+- ✅ **Linting** - ESLint with Astro and TypeScript support
 
 ## 🚀 Project Structure
 

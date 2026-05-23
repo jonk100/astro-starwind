@@ -116,3 +116,4 @@ export const getCategoryColors = (category: string) => {
   };
   return categoryColors[category] || '';
 };
+

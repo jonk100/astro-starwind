@@ -1,0 +1,49 @@
+---
+/**
+ * @file src/components/apps/habit/HabitGrid.astro
+ * @description Monthly habit tracking grid.
+ *
+ * Renders a table of habits with one column per day in the date range.
+ * Each cell is clickable — toggling completion optimistically and syncing
+ * to the server via Astro Actions in the background.
+ *
+ * Delete uses an AlertDialog confirmation before calling actions.habit.delete.
+ * Empty state is shown when no habits exist yet.
+ */
+import type { HabitWithLogs, HabitLog } from '@/lib/habit/types';
+import { generateDateRange } from '@/lib/habit/utils';
+import {
+  Table, TableBody
+} from '@/components/starwind/table';
+import EmptyTableState from '../EmptyTableState.astro';
+import TableHeaderRow from './TableHeaderRow.astro';
+import HabitTableRow from './HabitTableRow.astro';
+interface Props {
+  habits: HabitWithLogs[];
+  from: string;
+  to: string;
+  user: any;
+}
+
+const { habits, from, to, user } = Astro.props;
+
+// Generate the date axis once
+const dates = generateDateRange(from, to);
+---
+
+{habits.length === 0 ? (
+  <!--  Empty State  -->
+  <EmptyTableState user={user} />
+) : (
+  <!--  Grid  -->
+  <div class="flex flex-col h-full">
+    <div class="habit-tracker-container p-4 overflow-x-auto flex-1">
+      <Table class="min-w-full border-collapse border border-slate-200">
+        <TableHeaderRow dates={dates} user={user} />
+        <TableBody>
+          <HabitTableRow habits={habits} dates={dates} />
+        </TableBody>
+      </Table>
+    </div>
+  </div>
+)}

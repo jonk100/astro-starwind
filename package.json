@@ -14,7 +14,8 @@
     "typecheck": "astro check",
     "lint": "eslint .",
     "test": "vitest",
-    "db:types": "pnpx supabase gen types typescript --linked > src/types/supabase.ts"
+    "db:types": "pnpx supabase gen types typescript --linked > src/types/supabase.ts",
+    "rai": "tsx scripts/repo-ai/repo-ai.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
@@ -48,6 +49,7 @@
     "@nuasite/agent-summary": "^0.38.0",
     "@types/node": "^25.7.0",
     "@typescript-eslint/parser": "^8.59.3",
+    "@typescript-eslint/typescript-estree": "^8.59.3",
     "astro-agent-optimised": "^0.1.0",
     "astro-meta-engine": "^1.0.0",
     "eslint": "^10.3.0",

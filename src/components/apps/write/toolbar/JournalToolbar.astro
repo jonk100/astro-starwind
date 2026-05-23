@@ -1,0 +1,294 @@
+---
+/**
+ * @file src/components/apps/journal/toolbar/JournalToolbar.astro
+ * @description Minimal top toolbar for the Write app.
+ *
+ * Displays contextual actions for the currently open document:
+ * - Document title (read-only display — editing happens in the canvas)
+ * - Save status indicator (Saved / Saving… / Unsaved changes)
+ * - Pin toggle
+ * - Delete document
+ *
+ * When no document is open, only the app title is shown.
+ *
+ * This component is intentionally thin. Heavy document actions (block
+ * transforms, slash commands) belong in the editor canvas, not here.
+ */
+
+interface Props {
+  /** The ID of the currently open document, or null if none is open. */
+  activeDocumentId: string | null;
+  /** The authenticated user object from Astro.locals. */
+  user: any;
+}
+
+const { activeDocumentId } = Astro.props;
+---
+
+<header class="toolbar" role="banner">
+
+  <!-- Left: App identity -->
+  <div class="toolbar--left">
+    <span class="toolbar--app-name">Write</span>
+  </div>
+
+  <!-- Centre: Save status (only shown when a doc is open) -->
+  {activeDocumentId && (
+    <div class="toolbar--center">
+      <span
+        id="save-status"
+        class="save-status"
+        aria-live="polite"
+        aria-label="Save status"
+        data-status="saved"
+      >
+        Saved
+      </span>
+    </div>
+  )}
+
+  <!-- Right: Document actions (only shown when a doc is open) -->
+  {activeDocumentId && (
+    <div class="toolbar--right">
+
+      <!-- Pin toggle -->
+      <button
+        id="toolbar--pin-button"
+        class="toolbar--button"
+        type="button"
+        aria-label="Pin document"
+        aria-pressed="false"
+        data-document-id={activeDocumentId}
+        title="Pin document"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="17" x2="12" y2="22" />
+          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+        </svg>
+      </button>
+
+      <!-- Delete document -->
+      <button
+        id="toolbar--delete-button"
+        class="toolbar--button toolbar--button--danger"
+        type="button"
+        aria-label="Delete document"
+        data-document-id={activeDocumentId}
+        title="Delete document"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6M14 11v6" />
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+        </svg>
+      </button>
+
+    </div>
+  )}
+
+</header>
+
+<style>
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    padding: 0 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    flex-shrink: 0;
+    gap: 1rem;
+  }
+
+  /* ── Left ── */
+  .toolbar--left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .toolbar--app-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* ── Centre ── */
+  .toolbar--center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .save-status {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    transition: color 0.2s, opacity 0.2s;
+  }
+
+  .save-status[data-status="saving"] {
+    color: var(--color-accent);
+    opacity: 0.8;
+  }
+
+  .save-status[data-status="saved"] {
+    color: var(--color-text-muted);
+  }
+
+  .save-status[data-status="error"] {
+    color: var(--color-danger, #ef4444);
+  }
+
+  /* ── Right ── */
+  .toolbar--right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .toolbar--button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  .toolbar--button:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .toolbar--button[aria-pressed="true"] {
+    color: var(--color-accent);
+  }
+
+  .toolbar--button--danger:hover {
+    background-color: color-mix(in srgb, var(--color-danger, #ef4444) 10%, transparent);
+    color: var(--color-danger, #ef4444);
+  }
+</style>
+
+<script>
+  import { actions } from "astro:actions";
+
+  // ── Save status ────────────────────────────────────────────────────────────
+
+  /**
+   * Updates the save status indicator in the toolbar.
+   *
+   * The editor canvas dispatches a custom "editor:save-status" event
+   * with a detail of "saving", "saved", or "error". This listener
+   * reflects that state in the toolbar text and data-status attribute.
+   *
+   * @param status - The current save state.
+   * @param message - Optional override message to display.
+   */
+  function setSaveStatus(status: "saving" | "saved" | "error", message?: string) {
+    const el = document.getElementById("save-status");
+    if (!el) return;
+
+    const labels: Record<string, string> = {
+      saving: "Saving…",
+      saved: "Saved",
+      error: "Save failed",
+    };
+
+    el.setAttribute("data-status", status);
+    el.textContent = message ?? labels[status] ?? status;
+  }
+
+  window.addEventListener("editor:save-status", (e: Event) => {
+    const detail = (e as CustomEvent<{ status: "saving" | "saved" | "error" }>).detail;
+    setSaveStatus(detail.status);
+  });
+
+  // ── Pin toggle ─────────────────────────────────────────────────────────────
+
+  /**
+   * Handles the pin button click.
+   * Toggles the pinned state on the current document and updates the
+   * button's aria-pressed attribute to reflect the new state.
+   */
+  function initPinButton() {
+    const btn = document.getElementById("toolbar--pin-button") as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const documentId = btn.getAttribute("data-document-id");
+    if (!documentId) return;
+
+    btn.addEventListener("click", async () => {
+      const currentlyPinned = btn.getAttribute("aria-pressed") === "true";
+      const newPinned = !currentlyPinned;
+
+      // Optimistic UI
+      btn.setAttribute("aria-pressed", String(newPinned));
+
+      const { error } = await actions.write.pinDocument({
+        document_id: documentId,
+        pinned: newPinned,
+      });
+
+      if (error) {
+        // Rollback
+        btn.setAttribute("aria-pressed", String(currentlyPinned));
+        console.error("Failed to pin document:", error.message);
+      }
+    });
+  }
+
+  // ── Delete document ────────────────────────────────────────────────────────
+
+  /**
+   * Handles the delete button click.
+   * Shows a native confirm dialog before calling the delete action.
+   * On success, navigates back to the write app root (no open document).
+   */
+  function initDeleteButton() {
+    const btn = document.getElementById("toolbar--delete-button") as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const documentId = btn.getAttribute("data-document-id");
+    if (!documentId) return;
+
+    btn.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        "Delete this document? This cannot be undone."
+      );
+      if (!confirmed) return;
+
+      btn.setAttribute("disabled", "true");
+
+      const { error } = await actions.write.deleteDocument({ id: documentId });
+
+      if (error) {
+        btn.removeAttribute("disabled");
+        console.error("Failed to delete document:", error.message);
+        return;
+      }
+
+      // Navigate back to the write root with no document selected
+      window.location.href = "/app/write";
+    });
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initPinButton();
+    initDeleteButton();
+  });
+</script>
