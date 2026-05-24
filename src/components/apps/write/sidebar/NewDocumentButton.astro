@@ -1,0 +1,56 @@
+---
+import Button from '@/components/starwind/button/Button.astro';
+
+interface Props {
+  /** The ID of the currently open document, or null if none is open. */
+  activeDocumentId: string | null;
+  /** The authenticated user object from Astro.locals. */
+  user: any;
+}
+---
+
+<!-- New Document button -->
+<div class="sidebar-actions">
+  <button
+    id="new-document-btn"
+    class="new-doc-btn"
+    type="button"
+    aria-label="Create new document"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+    New Document
+  </button>
+</div>
+
+<script>
+  import { actions } from "astro:actions";
+ 
+  function initNewDocumentButton() {
+    const btn = document.getElementById("new-document-btn");
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+      btn.setAttribute("disabled", "true");
+      btn.textContent = "Creating…";
+
+      const { data, error } = await actions.write.createDocument({});
+
+      if (error || !data) {
+        btn.removeAttribute("disabled");
+        btn.textContent = "New Document";
+        console.error("Failed to create document:", error?.message);
+        return;
+      }
+
+      // Navigate to the new document — the page will server-render its empty state
+      window.location.href = `/app/write?doc=${data.id}`;
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initNewDocumentButton();
+  });
+</script>

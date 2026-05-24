@@ -1,0 +1,100 @@
+---
+import Button from '@/components/starwind/button/Button.astro';
+
+interface Props {
+  /** The ID of the currently open document, or null if none is open. */
+  activeDocumentId: string | null;
+  user: any;
+}
+
+const { activeDocumentId, user } = Astro.props;
+---
+
+<!-- Delete document -->
+<Button
+  id="toolbar--delete-button"
+  class="toolbar--button toolbar--button--danger"
+  type="button"
+  aria-label="Delete document"
+  data-document-id={activeDocumentId}
+  title="Delete document"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6M14 11v6" />
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+  </svg>
+</Button>
+
+<style>
+  .toolbar--button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  .toolbar--button:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .toolbar--button[aria-pressed="true"] {
+    color: var(--color-accent);
+  }
+
+  .toolbar--button--danger:hover {
+    background-color: color-mix(in srgb, var(--color-danger, #ef4444) 10%, transparent);
+    color: var(--color-danger, #ef4444);
+  }
+</style>
+
+<script>
+  import { actions } from "astro:actions";
+  // ── Delete document ────────────────────────────────────────────────────────
+
+  /**
+   * Handles the delete button click.
+   * Shows a native confirm dialog before calling the delete action.
+   * On success, navigates back to the write app root (no open document).
+   */
+  function initDeleteButton() {
+    const btn = document.getElementById("toolbar--delete-button") as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const documentId = btn.getAttribute("data-document-id");
+    if (!documentId) return;
+
+    btn.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        "Delete this document? This cannot be undone."
+      );
+      if (!confirmed) return;
+
+      btn.setAttribute("disabled", "true");
+
+      const { error } = await actions.write.deleteDocument({ id: documentId });
+
+      if (error) {
+        btn.removeAttribute("disabled");
+        console.error("Failed to delete document:", error.message);
+        return;
+      }
+
+      // Navigate back to the write root with no document selected
+      window.location.href = "/app/write";
+    });
+  }
+
+    document.addEventListener("DOMContentLoaded", () => {
+    initDeleteButton();
+  });
+</script>

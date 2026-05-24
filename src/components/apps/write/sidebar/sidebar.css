@@ -1,0 +1,212 @@
+:root {
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.875rem;
+  }
+
+  /* ── Search ── */
+  .sidebar-search {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.8125rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-input:focus {
+    border-color: var(--color-accent);
+  }
+
+  /* ── Actions ── */
+  .sidebar-actions {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .new-doc-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    padding: 0.4rem 0.625rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .new-doc-btn:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  /* ── Body / Folders ── */
+  .sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+
+  .sidebar-folder {
+    margin-bottom: 0.25rem;
+  }
+
+  .folder-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    padding: 0.35rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.15s;
+  }
+
+  .folder-toggle:hover {
+    color: var(--color-text);
+  }
+
+  .folder-toggle--static {
+    cursor: default;
+  }
+
+  .folder-chevron {
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+
+  .folder-toggle[aria-expanded="false"] .folder-chevron {
+    transform: rotate(-90deg);
+  }
+
+  .folder-icon {
+    font-size: 0.875rem;
+  }
+
+  .folder-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .folder-count {
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  /* ── Document list ── */
+  .folder-doc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .doc-item {
+    position: relative;
+  }
+
+  .doc-item.is-pinned .doc-title::before {
+    content: "📌";
+    font-size: 0.8em;
+    margin-right: 6px;
+    opacity: 0.8;
+  }
+  .doc-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding:  var(--space-2) var(--space-4)  var(--space-2)  var(--space-6);
+    text-decoration: none;
+    color: var(--color-text);
+    border-radius: 0;
+    transition: background-color 0.2s;
+  }
+
+  .doc-link:hover {
+    background-color: var(--red-3);
+    animation: shake 1s ease;
+  }
+
+  .doc-link.is-active {
+    background-color: var(--red-2);
+    color: var(--bg2);
+  }
+
+  .doc-title {
+    font-size: var(--fs-xxl);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .doc-meta {
+    font-size: var(--fs-md);
+    color: var(--fg8);
+  }
+
+  .doc-link.is-active .doc-meta {
+    color: var(--fg);
+    opacity: 0.7;
+  }
+
+  .doc-empty {
+    padding: 0.35rem 1rem 0.35rem 2rem;
+    font-size: var(--fs-md);
+    color: var(--fg5);
+    font-style: italic;
+  }
+
+  /* ── Empty state ── */
+  .sidebar-empty {
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+    color: var(--);
+    font-size: var(--fslg);
+    line-height: var(lh-tight);
+  }
+
+  /* ── Search results ── */
+  .search-results {
+    position: absolute;
+    top: 200px;
+    left: 350px;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    background-color: var(--bg);
+    padding: var(--space-2) 0;
+    list-style: none;
+    margin: 0;
+  }
+
+  .search-results.hidden {
+    display: none;
+  }
+}

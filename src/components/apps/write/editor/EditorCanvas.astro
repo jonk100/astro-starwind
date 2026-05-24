@@ -16,65 +16,37 @@
  */
 
 import type { Block } from "@/lib/journal/types";
+import { blockTag, blockClass } from "@/lib/journal/types";
+import './editorCanvas.css';
 
 interface Props {
-  /** The UUID of the document to edit, or null if no document is open. */
   documentId: string | null;
-  /** The document title. Empty string if no document is open. */
   title: string;
-  /** The parsed block array for initial render. Empty array for new documents. */
   blocks: Block[];
+  user: any;
 }
 
 const { documentId, title, blocks } = Astro.props;
-
-/**
- * Maps a block type to the HTML element tag used to render it.
- * Headings use semantic h2 elements; all others use div.
- *
- * @param type - The BlockType string from the block object.
- * @returns The HTML tag name to render.
- */
-function blockTag(type: Block["type"]): string {
-  if (type === "heading") return "h2";
-  return "div";
-}
-
-/**
- * Returns the CSS class list for a given block type.
- * Used to apply visual styles per block variant.
- *
- * @param type - The BlockType string from the block object.
- * @returns A space-separated class string.
- */
-function blockClass(type: Block["type"]): string {
-  const base = "editor-block";
-  return `${base} editor-block--${type}`;
-}
 ---
 
 <div
   class="editor-canvas"
   id="editor-canvas"
-  data-document-id={documentId ?? ""}
+  data-document-id={documentId}
+  data-user-id={Astro.props.user?.id}
 >
-
-  {!documentId ? (
-
-    <!-- Empty state: no document selected -->
+  { !documentId ? (
+    // Empty state: no document selected
     <div class="canvas-empty">
       <p class="canvas-empty-heading">Nothing open.</p>
       <p class="canvas-empty-body">
         Select a document from the sidebar or create a new one to start writing.
       </p>
     </div>
-
   ) : (
-
-    <!-- Document editor -->
+    // Document editor
     <div class="editor-inner" id="editor-inner">
-
-      <!-- Title -->
+      {/* Title */}
       <div
         id="editor-title"
         class="editor-title"
@@ -85,17 +57,18 @@ function blockClass(type: Block["type"]): string {
         spellcheck="true"
         data-placeholder="Untitled"
         data-document-id={documentId}
-      >{title}</div>
+      >
+        {title}
+      </div>
 
-      <!-- Block list -->
+      {/* Block list */}
       <div
         id="editor-blocks"
         class="editor-block-list"
         aria-label="Document content"
       >
         {blocks.length === 0 ? (
-
-          <!-- First block: empty paragraph for new documents -->
+          // First block: empty paragraph for new documents
           <div
             class="editor-block editor-block--paragraph"
             contenteditable="true"
@@ -106,204 +79,47 @@ function blockClass(type: Block["type"]): string {
             data-block-type="paragraph"
             data-placeholder="Start writing…"
           ></div>
-
         ) : (
-
+          // Fixed: Removed the extra wrapping curly braces around blocks.map
           blocks.map((block) => {
-            const Tag = blockTag(block.type);
+            const Tag = blockTag(block);
+            const isSeparator = block.type === "separator";
+            
             return (
               <Tag
                 class={blockClass(block.type)}
-                contenteditable={block.type !== "separator" ? "true" : undefined}
-                role={block.type !== "separator" ? "textbox" : undefined}
-                aria-multiline={block.type !== "separator" ? "true" : undefined}
-                spellcheck={block.type !== "separator" ? "true" : undefined}
+                contenteditable={!isSeparator ? "true" : undefined}
+                role={!isSeparator ? "textbox" : undefined}
+                aria-multiline={!isSeparator ? "true" : undefined}
+                spellcheck={!isSeparator ? "true" : undefined}
                 data-block-id={block.id}
                 data-block-type={block.type}
                 data-placeholder={block.type === "paragraph" ? "Start writing…" : undefined}
               >
-                {block.type !== "separator" ? block.content : null}
+                {!isSeparator && block.content}
               </Tag>
             );
           })
-
         )}
       </div>
-
     </div>
-
   )}
-
 </div>
 
-<style>
-  /* ── Canvas shell ── */
-  .editor-canvas {
-    min-height: 100%;
-    display: flex;
-    justify-content: center;
-    padding: 4rem 2rem 8rem;
-    background-color: var(--color-bg);
-  }
 
-  .editor-inner {
-    width: 100%;
-    max-width: 68ch;
-  }
-
-  /* ── Empty state ── */
-  .canvas-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    height: 60vh;
-    text-align: center;
-  }
-
-  .canvas-empty-heading {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--color-text);
-  }
-
-  .canvas-empty-body {
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-    max-width: 32ch;
-    line-height: 1.6;
-  }
-
-  /* ── Title ── */
-  .editor-title {
-    font-size: 2.25rem;
-    font-weight: 700;
-    line-height: 1.2;
-    color: var(--color-text);
-    margin-bottom: 2rem;
-    outline: none;
-    border: none;
-    caret-color: var(--color-accent);
-    word-break: break-word;
-  }
-
-  .editor-title:empty::before {
-    content: attr(data-placeholder);
-    color: var(--color-text-muted);
-    pointer-events: none;
-  }
-
-  /* ── Block list ── */
-  .editor-block-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-  }
-
-  /* ── Shared block styles ── */
-  .editor-block {
-    outline: none;
-    border: none;
-    background: transparent;
-    color: var(--color-text);
-    caret-color: var(--color-accent);
-    word-break: break-word;
-    min-height: 1.6em;
-    line-height: 1.75;
-    font-size: 1.0625rem;
-    padding: 0.125rem 0;
-    transition: opacity 0.15s;
-  }
-
-  .editor-block:empty::before {
-    content: attr(data-placeholder);
-    color: var(--color-text-muted);
-    pointer-events: none;
-  }
-
-  /* ── Block type variants ── */
-  .editor-block--heading {
-    font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1.3;
-    margin-top: 1.5rem;
-    margin-bottom: 0.25rem;
-    color: var(--color-text);
-  }
-
-  .editor-block--quote {
-    border-left: 3px solid var(--color-accent);
-    padding-left: 1.25rem;
-    color: var(--color-text-muted);
-    font-style: italic;
-    margin: 0.5rem 0;
-  }
-
-  .editor-block--callout {
-    background-color: var(--color-surface);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    margin: 0.5rem 0;
-    font-size: 0.9375rem;
-  }
-
-  .editor-block--code {
-    font-family: var(--font-mono, monospace);
-    font-size: 0.875rem;
-    background-color: var(--color-surface);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    margin: 0.5rem 0;
-    white-space: pre-wrap;
-    color: var(--color-accent);
-  }
-
-  .editor-block--checklist {
-    padding-left: 1.75rem;
-    position: relative;
-  }
-
-  .editor-block--checklist::before {
-    content: "☐";
-    position: absolute;
-    left: 0;
-    color: var(--color-text-muted);
-    font-size: 1rem;
-  }
-
-  .editor-block--separator {
-    border: none;
-    border-top: 1px solid var(--color-border);
-    margin: 1.5rem 0;
-    height: 0;
-    min-height: 0;
-    pointer-events: none;
-  }
-
-  .editor-block--prompt {
-    color: var(--color-accent);
-    font-style: italic;
-    opacity: 0.75;
-    font-size: 1rem;
-  }
-</style>
 
 <script>
   import { initEditor } from "./editorCanvas";
 
-  /**
-   * Boot the editor once the DOM is ready.
-   * The canvas element carries the document ID via data-document-id,
-   * which the editor module reads to know which document to save to.
-   */
+  // Runs cleanly on the client DOM
   document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("editor-canvas");
     if (!canvas) return;
 
     const documentId = canvas.getAttribute("data-document-id");
-    if (!documentId) return; // No document open — nothing to init
+    if (!documentId) return; 
 
+    // Initialize the engine cleanly
     initEditor(documentId);
   });
 </script>

@@ -1,0 +1,489 @@
+---
+/**
+ * @file src/components/apps/journal/toolbar/BlockTypeSelector.astro
+ * @description Toolbar dropdown for transforming the currently-focused block
+ * into a different block type.
+ */
+
+interface Props {
+  activeDocumentId: string | null;
+}
+
+const { activeDocumentId } = Astro.props;
+
+/**
+ * Available block types.
+ */
+const BLOCK_TYPES = [
+  { value: "paragraph", label: "Paragraph", icon: "P" },
+  { value: "heading", label: "Heading", icon: "H" },
+  { value: "quote", label: "Quote", icon: "Q" },
+  { value: "checklist", label: "Checklist", icon: "[x]" },
+  { value: "code", label: "Code", icon: "</>" },
+  { value: "callout", label: "Callout", icon: "!" },
+  { value: "separator", label: "Divider", icon: "---" },
+];
+---
+
+{activeDocumentId && (
+  <div class="block-type-selector" id="block-type-selector">
+    <button
+      id="block-type-trigger"
+      class="block-type-trigger"
+      type="button"
+      aria-haspopup="listbox"
+      aria-expanded="false"
+      aria-label="Change block type"
+      title="Change block type"
+    >
+      <span id="block-type-label" class="block-type-label">
+        Paragraph
+      </span>
+
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="10"
+        height="10"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+
+    <ul
+      id="block-type-menu"
+      class="block-type-menu"
+      role="listbox"
+      aria-label="Block type options"
+      hidden
+    >
+      {BLOCK_TYPES.map((blockType) => (
+        <li
+          class="block-type-option"
+          role="option"
+          aria-selected="false"
+          data-block-type={blockType.value}
+          tabindex="-1"
+        >
+          <span class="block-type-option-icon" aria-hidden="true">
+            {blockType.icon}
+          </span>
+
+          <span class="block-type-option-label">
+            {blockType.label}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
+<style>
+  .block-type-selector {
+    position: relative;
+  }
+
+  .block-type-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    height: 28px;
+    padding: 0.25rem 0.5rem;
+
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+
+    background: transparent;
+
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+  }
+
+  .block-type-trigger:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+
+  .block-type-label {
+    min-width: 5ch;
+    text-align: left;
+  }
+
+  .block-type-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 200;
+
+    min-width: 145px;
+    margin: 0;
+    padding: 0.25rem;
+
+    list-style: none;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    background-color: var(--color-surface);
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .block-type-menu[hidden] {
+    display: none;
+  }
+
+  .block-type-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    padding: 0.35rem 0.6rem;
+
+    border-radius: 5px;
+
+    color: var(--color-text);
+    font-size: 0.8125rem;
+
+    cursor: pointer;
+
+    transition: background-color 0.1s;
+  }
+
+  .block-type-option:hover,
+  .block-type-option:focus {
+    background-color: var(--color-surface-hover);
+    outline: none;
+  }
+
+  .block-type-option[aria-selected="true"] {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .block-type-option-icon {
+    width: 2rem;
+
+    flex-shrink: 0;
+
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-family: var(--font-mono, monospace);
+    text-align: center;
+  }
+</style>
+
+<script>
+  /**
+   * Initialises the block type selector.
+   */
+  function initBlockTypeSelector(): void {
+    const selector = document.getElementById("block-type-selector");
+
+    const trigger =
+      document.getElementById(
+        "block-type-trigger"
+      ) as HTMLButtonElement | null;
+
+    const menu =
+      document.getElementById(
+        "block-type-menu"
+      ) as HTMLUListElement | null;
+
+    const label =
+      document.getElementById(
+        "block-type-label"
+      ) as HTMLElement | null;
+
+    if (!selector || !trigger || !menu || !label) {
+      console.warn("[BlockTypeSelector] Missing required DOM nodes.");
+
+      return;
+    }
+
+    const _selector = selector;
+    const _trigger = trigger;
+    const _menu = menu;
+    const _label = label;
+
+    /**
+     * Human-readable labels keyed by block type.
+     */
+    const LABELS: Record<string, string> = {
+      paragraph: "Paragraph",
+      heading: "Heading",
+      quote: "Quote",
+      checklist: "Checklist",
+      code: "Code",
+      callout: "Callout",
+      separator: "Divider",
+    };
+
+    /**
+     * Prevent stale sync events briefly after selection.
+     */
+    let suppressSyncUntil = 0;
+
+    /**
+     * Opens the dropdown.
+     */
+    function openMenu(): void {
+      console.log("[BlockTypeSelector] openMenu");
+
+      _menu.hidden = false;
+
+      _trigger.setAttribute("aria-expanded", "true");
+    }
+
+    /**
+     * Closes the dropdown.
+     */
+    function closeMenu(): void {
+      console.log("[BlockTypeSelector] closeMenu");
+
+      _menu.hidden = true;
+
+      _trigger.setAttribute("aria-expanded", "false");
+    }
+
+    /**
+     * Toggle menu visibility.
+     */
+    _trigger.addEventListener("click", () => {
+      console.log(
+        "[BlockTypeSelector] trigger click",
+        {
+          menuHidden: _menu.hidden,
+        }
+      );
+
+      _menu.hidden ? openMenu() : closeMenu();
+    });
+
+    /**
+     * Close menu when clicking outside.
+     */
+    document.addEventListener("click", (event: MouseEvent) => {
+      if (!_selector.contains(event.target as Node)) {
+        console.log(
+          "[BlockTypeSelector] outside click"
+        );
+
+        closeMenu();
+      }
+    });
+
+    /**
+     * Close on Escape.
+     */
+    document.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        console.log(
+          "[BlockTypeSelector] escape pressed"
+        );
+
+        closeMenu();
+      }
+    });
+
+    /**
+     * Prevent dropdown options from stealing editor focus.
+     */
+    _menu.addEventListener("mousedown", (event: MouseEvent) => {
+      console.log(
+        "[BlockTypeSelector] prevent menu focus steal",
+        {
+          activeElement: document.activeElement,
+        }
+      );
+
+      event.preventDefault();
+    });
+
+    /**
+     * Handle block type selection.
+     */
+    _menu.addEventListener("click", (event: MouseEvent) => {
+      const option = (
+        event.target as HTMLElement
+      ).closest<HTMLElement>("[data-block-type]");
+
+      console.log(
+        "[BlockTypeSelector] menu click",
+        {
+          target: event.target,
+          option,
+          activeElement: document.activeElement,
+        }
+      );
+
+      if (!option) {
+        console.warn(
+          "[BlockTypeSelector] no option found"
+        );
+
+        return;
+      }
+
+      const blockType = option.getAttribute("data-block-type");
+
+      if (!blockType) {
+        console.warn(
+          "[BlockTypeSelector] missing data-block-type"
+        );
+
+        return;
+      }
+
+      console.log(
+        "[BlockTypeSelector] selected block type",
+        {
+          blockType,
+          previousLabel: _label.textContent,
+          activeElement: document.activeElement,
+        }
+      );
+
+      suppressSyncUntil = Date.now() + 100;
+
+      console.log(
+        "[BlockTypeSelector] suppress sync until",
+        suppressSyncUntil
+      );
+
+      _label.textContent = LABELS[blockType] ?? blockType;
+
+      _menu
+        .querySelectorAll<HTMLElement>("[aria-selected]")
+        .forEach((element) => {
+          element.setAttribute("aria-selected", "false");
+        });
+
+      option.setAttribute("aria-selected", "true");
+
+      console.log(
+        "[BlockTypeSelector] dispatch editor:set-block-type",
+        {
+          blockType,
+        }
+      );
+
+      window.dispatchEvent(
+        new CustomEvent("editor:set-block-type", {
+          detail: { blockType },
+        })
+      );
+
+      console.log(
+        "[BlockTypeSelector] after dispatch",
+        {
+          activeElement: document.activeElement,
+        }
+      );
+
+      closeMenu();
+    });
+
+    /**
+     * Sync toolbar label with active editor block.
+     */
+    function syncLabel(blockType: string): void {
+      console.log(
+        "[BlockTypeSelector] syncLabel",
+        {
+          blockType,
+          suppressSyncUntil,
+          now: Date.now(),
+          activeElement: document.activeElement,
+        }
+      );
+
+      if (Date.now() < suppressSyncUntil) {
+        console.warn(
+          "[BlockTypeSelector] sync suppressed"
+        );
+
+        return;
+      }
+
+      _label.textContent = LABELS[blockType] ?? "Paragraph";
+
+      _menu
+        .querySelectorAll<HTMLElement>("[data-block-type]")
+        .forEach((element) => {
+          element.setAttribute(
+            "aria-selected",
+            String(
+              element.getAttribute("data-block-type") ===
+                blockType
+            )
+          );
+        });
+
+      console.log(
+        "[BlockTypeSelector] sync complete",
+        {
+          finalLabel: _label.textContent,
+        }
+      );
+    }
+
+    /**
+     * Sync when editor block focus changes.
+     */
+    window.addEventListener(
+      "editor:block-focused",
+      ((event: CustomEvent) => {
+        console.log(
+          "[BlockTypeSelector] editor:block-focused",
+          {
+            detail: event.detail,
+            activeElement: document.activeElement,
+          }
+        );
+
+        syncLabel(
+          (event.detail as { blockType?: string })
+            .blockType ?? "paragraph"
+        );
+      }) as EventListener
+    );
+
+    /**
+     * Clear label when title receives focus.
+     */
+    window.addEventListener("editor:title-focused", () => {
+      console.log(
+        "[BlockTypeSelector] editor:title-focused"
+      );
+
+      _label.textContent = "—";
+    });
+
+    console.log(
+      "[BlockTypeSelector] initialised"
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log(
+      "[BlockTypeSelector] DOMContentLoaded"
+    );
+
+    initBlockTypeSelector();
+  });
+</script>

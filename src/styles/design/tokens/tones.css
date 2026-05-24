@@ -1,0 +1,104 @@
+:root {
+  --bg: var(--zinc-900);
+  --bg1: var(zinc-800);
+  --bg2: var(--zinc-700);
+  --bg3: var(--zinc-600);
+  --bg4: var(--zinc-500);
+  --bg5: var(--zinc-400);
+  --bg6: var(--zinc-300);
+  --bg7: var(--zinc-200);
+  --bg8: var(--zinc-100);
+
+  --fg: var(--zinc-100);
+  --fg1: var(--zinc-200);
+  --fg2: var(--zinc-300);
+  --fg3: var(--zinc-400);
+  --fg4: var(--zinc-500);
+  --fg5: var(--zinc-600);
+  --fg6: var(--zinc-700);
+  --fg7: var(--zinc-800);
+  --fg8: var(--zinc-900);
+
+  --purple-10: rgb(230, 210, 255);
+	--purple-9: rgb(220, 200, 255);
+	--purple-8: rgb(210, 160, 255);
+	--purple-7: rgb(205, 120, 250);
+	--purple-6: rgb(200, 80, 240);
+	--purple-5: rgb(195, 40, 235);
+	--purple-4: rgb(190, 0, 230);
+	--purple-3: rgb(180, 0, 200);
+	--purple-2: rgb(160, 0, 180);
+	--purple-1: rgb(135, 0, 148);
+	--purple: #800080;
+	--purple1: rgb(105, 0, 105);
+	--purple2: rgb(90, 0, 90);
+	--purple3: rgb(75, 0, 75);
+	--purple4: rgb(60, 0, 60);
+	--purple5: rgb(45, 0, 45);
+	--purple-dark: rgb(85, 0, 85);
+	--purple-light: rgb(204, 153, 255);
+	--yellow-5: rgb(245, 245, 220);
+	--yellow-4: rgb(255, 255, 210);
+	--yellow-3: rgb(255, 255, 190);
+	--yellow-2: rgb(255, 255, 160);
+	--yellow-1: rgb(255, 255, 130);
+	--yw: #ffff64;
+	--yellow1: rgb(255, 255, 50);
+	--yellow2: rgb(225, 225, 25);
+	--yellow3: rgb(200, 200, 0);
+	--yellow4: rgb(185, 200, 75);
+	--yellow5: rgb(178, 185, 80);
+	--yellow-dark: rgb(170, 170, 0);
+	--yellow-light: rgb(255, 255, 136);
+	--green-5: rgb(200, 255, 170);
+	--green-4: rgb(170, 255, 200);
+	--green-3: rgb(140, 255, 160);
+	--green-2: rgb(80, 255, 150);
+	--green-1: rgb(40, 210, 140);
+	--green: #00b46e;
+	--green1: rgb(0, 170, 90);
+	--green2: rgb(0, 145, 60);
+	--green3: rgb(0, 110, 40);
+	--green4: rgb(0, 75, 10);
+	--green5: rgb(0, 30, 15);
+	--green-dark: rgb(0, 170, 71);
+	--green-light: rgb(102, 255, 170);
+	--gr-5: rgb(200, 255, 250);
+	--gr-4: rgb(140, 250, 220);
+	--gr-3: rgb(90, 245, 215);
+	--gr-2: rgb(40, 235, 210);
+	--gr-1: rgb(0, 225, 200);
+	--gr: #00d2be;
+	--gr1: rgb(0, 190, 160);
+	--gr2: rgb(0, 150, 125);
+	--gr3: rgb(0, 125, 100);
+	--gr4: rgb(0, 100, 75);
+	--gr5: rgb(0, 72, 55);
+	--blue-5: rgb(160, 200, 255);
+	--blue-4: rgb(120, 180, 240);
+	--blue-3: rgb(80, 160, 220);
+	--blue-2: rgb(40, 140, 200);
+	--blue-1: rgb(0, 120, 200);
+	--blue: #007bff;
+	--blue1: rgb(0, 140, 220);
+	--blue2: rgb(0, 110, 190);
+	--blue3: rgb(0, 80, 180);
+	--blue4: rgb(0, 60, 170);
+	--blue5: rgb(0, 40, 160);
+
+  /* --- HOT FUCHSIA --- */
+  --red-5:         rgb(255, 235, 240);
+  --red-4:         rgb(255, 210, 225);
+  --red-3:         rgb(255, 175, 195);
+  --red-2:         rgb(255, 140, 160); 
+  --red-1:         rgb(255, 106, 126);
+  --red:           rgb(255, 73, 92); 
+  --red1:          rgb(220, 59, 76);
+  --red2:          rgb(185, 45, 60); 
+  --red3:          rgb(147, 33, 45);
+  --red4:          rgb(110, 22, 30); 
+  --red5:          rgb(55, 11, 15);
+
+  
+
+}

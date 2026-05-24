@@ -40,14 +40,12 @@ const documents: DocumentIndexRow[] = indexResult.data ?? [];
 const folders: Folder[] = foldersResult.data ?? [];
 
 // ── Active Document ───────────────────────────────────────────────────────────
-
-// The active document is identified by the `?doc=` query parameter.
-// If present and valid, fetch the full document for the editor.
 const docId = Astro.url.searchParams.get("doc");
 
 let activeBlocks: Block[] = [];
 let activeTitle: string = "";
 let activeDocumentId: string | null = null;
+let isPinned: boolean = false; // ← declare here with a safe default
 
 if (docId) {
   const { data: doc, error } = await getDocumentById(supabase, docId, user.id);
@@ -55,14 +53,14 @@ if (docId) {
   if (doc && !error) {
     activeDocumentId = doc.id;
     activeTitle = doc.title;
+    isPinned = doc.pinned ?? false; // ← read from the DB row, not the URL
 
-    // parseBlocks returns a discriminated union — always check ok before using.
     const parsed = parseBlocks(doc.content_blocks);
     activeBlocks = parsed.ok ? parsed.blocks : [];
   }
-  // If the doc fetch fails (wrong user, bad ID), we fall through to the
-  // empty state silently. No error page needed for a missing doc.
 }
+
+activeDocumentId = activeDocumentId ?? "";
 ---
 
 <AppLayout title="Write" description="A calm place to think. Pan around, write freely, style as you go.">
@@ -83,13 +81,15 @@ if (docId) {
       <JournalToolbar
         activeDocumentId={activeDocumentId}
         user={user}
+        isPinned={isPinned}
       />
 
       <main class="write-canvas-wrapper">
         <EditorCanvas
-          documentId={activeDocumentId}
+          documentId={activeDocumentId ?? ""}
           title={activeTitle}
           blocks={activeBlocks}
+          user={user}
         />
       </main>
     </div>

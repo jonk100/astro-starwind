@@ -1,0 +1,90 @@
+---
+
+interface Props {
+  /** The ID of the currently open document, or null if none is open. */
+  activeDocumentId: string | null;
+  user: any;
+}
+
+const { activeDocumentId, user } = Astro.props;
+---
+<!-- Centre: Save status (only shown when a doc is open) -->
+  {activeDocumentId && (
+    <div class="toolbar--center">
+      <span
+        id="save-status"
+        class="save-status"
+        aria-live="polite"
+        aria-label="Save status"
+        data-status="saved"
+      >
+        Saved
+      </span>
+    </div>
+  )}
+
+
+<style>
+/* ── Centre ── */
+  .toolbar--center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .save-status {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    transition: color 0.2s, opacity 0.2s;
+  }
+
+  .save-status[data-status="saving"] {
+    color: var(--color-accent);
+    opacity: 0.8;
+  }
+
+  .save-status[data-status="saved"] {
+    color: var(--color-text-muted);
+  }
+
+  .save-status[data-status="error"] {
+    color: var(--color-danger, #ef4444);
+  }
+
+</style>
+
+<script>
+  import { actions } from "astro:actions";
+
+  // ── Save status ────────────────────────────────────────────────────────────
+
+  /**
+   * Updates the save status indicator in the toolbar.
+   *
+   * The editor canvas dispatches a custom "editor:save-status" event
+   * with a detail of "saving", "saved", or "error". This listener
+   * reflects that state in the toolbar text and data-status attribute.
+   *
+   * @param status - The current save state.
+   * @param message - Optional override message to display.
+   */
+  function setSaveStatus(status: "saving" | "saved" | "error", message?: string) {
+    const el = document.getElementById("save-status");
+    if (!el) return;
+
+    const labels: Record<string, string> = {
+      saving: "Saving…",
+      saved: "Saved",
+      error: "Save failed",
+    };
+
+    el.setAttribute("data-status", status);
+    el.textContent = message ?? labels[status] ?? status;
+  }
+
+  window.addEventListener("editor:save-status", (e: Event) => {
+    const detail = (e as CustomEvent<{ status: "saving" | "saved" | "error" }>).detail;
+    setSaveStatus(detail.status);
+  });
+
+</script>

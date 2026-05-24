@@ -225,7 +225,7 @@ export async function updateDocumentBlocks(
     })
     .eq("id", documentId)
     .eq("user_id", userId)
-    .select("id, updated_at")
+    .select()
     .single();
 }
 

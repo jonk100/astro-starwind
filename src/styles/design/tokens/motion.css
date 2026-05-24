@@ -1,0 +1,76 @@
+
+
+:root {
+  --5xslow: 1s;
+  --4xslow: 750ms;
+  --3xslow: 500ms;
+  --2xslow: 450ms;
+  --xslow:  400ms;
+  --slow:   350ms;
+  --normal: 300ms;
+  --fast:   250ms;
+  --xfast:  200ms;
+  --2xfast: 150ms;
+  --3xfast: 100ms;
+  --4xfast:  80ms;
+  --5xfast:  60ms;
+}
+
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  18%  { transform: translateX(17px); }
+  32%  { transform: translateX(-15px); }
+  40%  { transform: translateX(12px); }
+  48%  { transform: translateX(-10px); }
+  55%  { transform: translateX(9px); }
+  62%  { transform: translateX(-8px); }
+  69%  { transform: translateX(6px); }
+  76%  { transform: translateX(-6px); }
+  82% { transform: translateX(4px); }
+  88% { transform: translateX(-4px); }
+  92% { transform: translateX(3px); }
+  95% { transform: translateX(-3px); }
+  97% { transform: translateX(2px); }
+  99% { transform: translateX(-1px); }
+  100% { transform: translateX(0px); }
+}
+
+@keyframes sm-shake {
+  0%  { transform: translateX(0); }
+  25%  { transform: translateX(10); }
+  50%  { transform: translateX(-10); }
+  65%  { transform: translateX(5); }
+  75%  { transform: translateX(-5); }
+  83%  { transform: translateX(3); }
+  90%  { transform: translateX(-2); }
+  96%  { transform: translateX(1); }
+  100%  { transform: translateX(0); }
+}
+
+
+@keyframes sm-shake {
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+}
+
+@keyframes sm-shake {
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+}
+
+@keyframes sm-shake {
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+  0%  { transform: translateX(0); }
+}

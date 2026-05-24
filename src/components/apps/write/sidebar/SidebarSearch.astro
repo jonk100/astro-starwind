@@ -1,0 +1,222 @@
+---
+/**
+ * @file src/components/apps/journal/sidebar/SidebarSearch.astro
+ * @description Full-text search input for the sidebar.
+ *
+ * While the user is typing, the normal document list is hidden and a
+ * results panel is shown inside the sidebar (not a floating overlay).
+ * The results panel is a regular in-flow element — fully opaque, no
+ * absolute positioning escape that breaks the layout.
+ */
+import './sidebar.css';
+---
+
+<div class="sidebar-search-wrapper">
+  <!-- Input -->
+  <div class="sidebar-search">
+    <svg
+      class="search-icon"
+      xmlns="http://www.w3.org/2000/svg"
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+    <input
+      id="sidebar-search-input"
+      type="search"
+      placeholder="Search documents…"
+      class="search-input"
+      aria-label="Search documents"
+      autocomplete="off"
+    />
+    <!-- Clear button — only shown while query is active -->
+    <button
+      id="sidebar-search-clear"
+      class="search-clear hidden"
+      type="button"
+      aria-label="Clear search"
+    >✕</button>
+  </div>
+</div>
+
+<script>
+  import { actions } from "astro:actions";
+
+  /**
+   * Renders search result items into the sidebar document list area.
+   * Called each time the debounced search resolves.
+   *
+   * @param results - Array of matching document rows from the server.
+   * @param container - The element that should display the results.
+   */
+  function renderSearchResults(
+    results: Array<{ id: string; title: string; preview: string | null; updated_at: string }>,
+    container: HTMLElement
+  ) {
+    if (results.length === 0) {
+      container.innerHTML = `
+        <li class="doc-empty" style="padding: 1.25rem 1rem; text-align: center;">
+          No documents found.
+        </li>`;
+      return;
+    }
+
+    container.innerHTML = results
+      .map(
+        (doc) => `
+          <li class="doc-item" data-doc-id="${doc.id}">
+            <a href="/app/write?doc=${doc.id}" class="doc-link">
+              <span class="doc-title">${doc.title || "Untitled"}</span>
+              ${doc.preview
+                ? `<span class="doc-meta">${doc.preview.slice(0, 55)}…</span>`
+                : ""}
+            </a>
+          </li>`
+      )
+      .join("");
+  }
+
+  /**
+   * Wires up the search input:
+   * - While a query is active, replaces the sidebar doc list with results.
+   * - Clearing the input (or clicking ✕) restores the original list.
+   * - A 300 ms debounce prevents excessive API calls while typing.
+   */
+  function initSearch() {
+    const input  = document.getElementById("sidebar-search-input") as HTMLInputElement | null;
+    const clear  = document.getElementById("sidebar-search-clear") as HTMLButtonElement | null;
+    const body   = document.getElementById("sidebar-document-list") as HTMLElement | null;
+    if (!input || !clear || !body) return;
+
+    // ── Build a dedicated results list that lives inside the sidebar body ──
+    const resultsList = document.createElement("ul");
+    resultsList.id        = "sidebar-search-results";
+    resultsList.className = "folder-doc-list";
+    resultsList.setAttribute("role",      "list");
+    resultsList.setAttribute("aria-live", "polite");
+    resultsList.setAttribute("aria-label","Search results");
+    // Insert it after the body (it will become visible when body is hidden)
+    body.after(resultsList);
+
+    let debounce: ReturnType<typeof setTimeout>;
+
+    /** Shows search results and hides the folder tree. */
+    function activateSearch() {
+      body.style.display = "none";
+      resultsList.style.display = "";
+      clear.classList.remove("hidden");
+    }
+
+    /** Hides search results and restores the folder tree. */
+    function deactivateSearch() {
+      body.style.display = "";
+      resultsList.style.display = "none";
+      resultsList.innerHTML = "";
+      input.value = "";
+      clear.classList.add("hidden");
+    }
+
+    // Start with results hidden
+    resultsList.style.display = "none";
+
+    input.addEventListener("input", () => {
+      clearTimeout(debounce);
+      const query = input.value.trim();
+
+      if (!query) {
+        deactivateSearch();
+        return;
+      }
+
+      activateSearch();
+
+      debounce = setTimeout(async () => {
+        const { data, error } = await actions.write.search({ query });
+        if (error) {
+          console.error("Search failed:", error.message);
+          return;
+        }
+        renderSearchResults(data ?? [], resultsList);
+      }, 300);
+    });
+
+    clear.addEventListener("click", () => {
+      deactivateSearch();
+      input.focus();
+    });
+
+    // Esc key exits search
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") deactivateSearch();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initSearch();
+  });
+</script>
+
+<style>
+  /* ── Wrapper ── */
+  .sidebar-search-wrapper {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* ── Input row ── */
+  .sidebar-search {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .search-icon {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 0.8125rem;
+    outline: none;
+    min-width: 0;
+  }
+
+  .search-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  /* ── Clear button ── */
+  .search-clear {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.1rem 0.25rem;
+    border-radius: 3px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .search-clear:hover {
+    color: var(--color-text);
+  }
+
+  .search-clear.hidden {
+    display: none;
+  }
+</style>

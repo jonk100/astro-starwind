@@ -1,0 +1,28 @@
+---
+const { activeDocumentId } = Astro.props;
+
+---
+<!-- Left: App identity -->
+  <div class="toolbar--left">
+    <span class="toolbar--app-name">Write</span>
+  </div>
+
+
+<style>
+  /* ── Left ── */
+  .toolbar--left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .toolbar--app-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+</style>

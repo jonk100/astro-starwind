@@ -126,6 +126,7 @@ export interface DocumentIndexRow {
   title: string;
   preview: string | null;
   updated_at: string;
+  pinned: boolean;
 }
 
 // ─── UI State Types ───────────────────────────────────────────────────────────= //
@@ -156,3 +157,24 @@ export interface EditorState {
 export type ParsedBlocks =
   | { ok: true; blocks: Block[] }
   | { ok: false; error: string };
+
+  // Add these to src/lib/journal/types.ts
+export type BlockTag = "p" | "h1" | "h2" | "blockquote" | "hr";
+
+export function blockTag(block: Block): BlockTag {
+  switch (block.type) {
+    case "heading":
+      return block.meta?.level === 1 ? "h1" : "h2";
+    case "quote":
+      return "blockquote";
+    case "separator":
+      return "hr";
+    default:
+      return "p";
+  }
+}
+
+export function blockClass(type: Block["type"]): string {
+  return `editor-block editor-block--${type}`;
+}
+

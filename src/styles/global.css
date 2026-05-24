@@ -6,6 +6,9 @@
 
  @import "./starwind.css";
  @import "./animation.css";
+ @import "./design/tokens/tones.css";
+ @import "./design/tokens/motion.css";
+ @import "./design/tokens/typography.css";
  
 
 :root {
@@ -37,9 +40,8 @@
 	--secondary3: var(--yellow3);
 	--secondary4: var(--yellow4);
 	--secondary5: var(--yellow5);
-
-
-	--purple-10: rgb(230, 210, 255);
+	
+--purple-10: rgb(230, 210, 255);
 	--purple-9: rgb(220, 200, 255);
 	--purple-8: rgb(210, 160, 255);
 	--purple-7: rgb(205, 120, 250);
@@ -57,7 +59,7 @@
 	--purple5: rgb(45, 0, 45);
 	--purple-dark: rgb(85, 0, 85);
 	--purple-light: rgb(204, 153, 255);
-	--yellow-5: rgb(245, 245, 220);
+--yellow-5: rgb(245, 245, 220);
 	--yellow-4: rgb(255, 255, 210);
 	--yellow-3: rgb(255, 255, 190);
 	--yellow-2: rgb(255, 255, 160);
@@ -70,7 +72,7 @@
 	--yellow5: rgb(178, 185, 80);
 	--yellow-dark: rgb(170, 170, 0);
 	--yellow-light: rgb(255, 255, 136);
-	--green-5: rgb(200, 255, 170);
+--green-5: rgb(200, 255, 170);
 	--green-4: rgb(170, 255, 200);
 	--green-3: rgb(140, 255, 160);
 	--green-2: rgb(80, 255, 150);
@@ -94,7 +96,7 @@
 	--gr3: rgb(0, 125, 100);
 	--gr4: rgb(0, 100, 75);
 	--gr5: rgb(0, 72, 55);
-	--blue-5: rgb(160, 200, 255);
+--blue-5: rgb(160, 200, 255);
 	--blue-4: rgb(120, 180, 240);
 	--blue-3: rgb(80, 160, 220);
 	--blue-2: rgb(40, 140, 200);
@@ -105,11 +107,10 @@
 	--blue3: rgb(0, 80, 180);
 	--blue4: rgb(0, 60, 170);
 	--blue5: rgb(0, 40, 160);
-	
 	--blue-dark: rgb(0, 82, 170);
 	--blue-light: rgb(162, 204, 255);
 
-	--black: 15, 18, 25;
+--black: 15, 18, 25;
 	--gray: 96, 115, 159;
 	--gray-light: 229, 233, 240;
 	--gray-dark: 34, 41, 57;
