@@ -1,67 +1,47 @@
 ---
 /**
- * @file src/components/apps/journal/toolbar/PinToggleButton.astro
- * @description Toolbar button for pinning/unpinning the current document.
+ * @file src/components/apps/write/toolbar/PinToggleButton.astro
  *
- * The initial pinned state is read from the server-rendered isPinned prop
- * so the button is always correct on first paint — even after a page navigation.
- *
- * Client-side: clicking toggles the aria-pressed attribute optimistically,
- * calls actions.write.updateDocument, then rolls back on failure.
+ * FIX f: Uses stores/pin.ts as the single source of truth for pinned state.
+ * The store is initialised from the server-rendered data-pinned attribute,
+ * so the first paint is always correct. Every subsequent toggle goes through
+ * the store — no aria-pressed drift, no rollback bugs.
  */
 import Button from '@/components/starwind/button/Button.astro';
 
 interface Props {
   activeDocumentId: string | null;
-  /** Whether the document is currently pinned. Sourced from the DB on the server. */
   isPinned: boolean;
   user: any;
 }
 
-const { activeDocumentId, isPinned = false, user } = Astro.props;
-
-/**
- * aria-pressed must be the literal string "true" or "false" — not a boolean.
- * Astro will correctly serialise `isPinned` (boolean) → "true"/"false" in the
- * attribute, but we make it explicit to be safe.
- */
-const ariaPressed = isPinned ? "true" : "false";
+const { activeDocumentId, isPinned = false } = Astro.props;
 ---
 
-<Button
+<button
   id="toolbar--pin-button"
-  class={`toolbar--button${isPinned ? " is-pinned" : ""}`}
+  class="toolbar--button"
   type="button"
   aria-label={isPinned ? "Unpin document" : "Pin document"}
-  aria-pressed={ariaPressed}
+  aria-pressed={isPinned ? "true" : "false"}
   data-document-id={activeDocumentId}
+  data-pinned={isPinned ? "true" : "false"}
   title={isPinned ? "Unpin document" : "Pin document"}
 >
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <line x1="12" y1="17" x2="12" y2="22" />
     <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
   </svg>
-</Button>
+</button>
 
 <style>
-  /* ── Base button ── */
   .toolbar--button {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 32px;
     height: 32px;
+    padding: 0;
     border: none;
     border-radius: 6px;
     background: transparent;
@@ -75,91 +55,59 @@ const ariaPressed = isPinned ? "true" : "false";
     color: var(--color-text);
   }
 
-  /* ── Pinned state — applied both via server-rendered class and aria-pressed ── */
-  .toolbar--button[aria-pressed="true"],
-  .toolbar--button.is-pinned {
+  .toolbar--button[aria-pressed="true"] {
     color: var(--color-accent);
     transform: rotate(20deg) translateY(2px);
   }
 
-  .toolbar--button:hover[aria-pressed="true"],
-  .toolbar--button:hover.is-pinned {
+  .toolbar--button[aria-pressed="true"]:hover {
     background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+
+  .toolbar--button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>
 
 <script>
-  import { actions } from "astro:actions";
+  import { initPinStore, togglePin, pinStore } from "@/stores/journal/pin";
 
   /**
-   * Initialises the pin toggle button.
-   *
-   * On click:
-   * 1. Read the current pinned state from aria-pressed.
-   * 2. Optimistically flip the attribute and aria-label.
-   * 3. Call the server action.
-   * 4. Roll back on failure.
-   * 5. Broadcast "journal:doc-pinned" for the sidebar to react.
+   * Syncs all UI attributes with store state.
    */
-  function initPinButton() {
+  function applyState(btn: HTMLButtonElement, pinned: boolean): void {
+    btn.setAttribute("aria-pressed", pinned ? "true" : "false");
+    btn.dataset.pinned = pinned ? "true" : "false";
+    btn.setAttribute("aria-label", pinned ? "Unpin document" : "Pin document");
+    btn.setAttribute("title", pinned ? "Unpin document" : "Pin document");
+  }
+
+  function initPinButton(): void {
     const btn = document.getElementById("toolbar--pin-button") as HTMLButtonElement | null;
     if (!btn) return;
 
-    const documentId = btn.getAttribute("data-document-id");
+    const documentId = btn.dataset.documentId;
     if (!documentId) return;
 
-    btn.addEventListener("click", async () => {
-      const currentlyPinned = btn.getAttribute("aria-pressed") === "true";
-      const newPinned        = !currentlyPinned;
+    const initialPinned = btn.dataset.pinned === "true";
 
-      // ── Optimistic UI ──────────────────────────────────────────────────────
-      applyPinnedState(btn, newPinned);
+    initPinStore(documentId, initialPinned);
 
-      window.dispatchEvent(
-        new CustomEvent("journal:doc-pinned", {
-          detail: { documentId, pinned: newPinned },
-        })
-      );
+    const unsubscribe = pinStore.subscribe((store) => {
+      const state = store[documentId];
+      if (!state) return;
 
-      // ── Server update ──────────────────────────────────────────────────────
-      const { error } = await actions.write.updateDocument({
-        id:     documentId,
-        pinned: newPinned,
-      });
-
-      if (error) {
-        // Roll back on failure
-        applyPinnedState(btn, currentlyPinned);
-        window.dispatchEvent(
-          new CustomEvent("journal:doc-pinned", {
-            detail: { documentId, pinned: currentlyPinned },
-          })
-        );
-        console.error("Failed to pin document:", error.message);
-      }
+      applyState(btn, state.pinned);
+      btn.disabled = state.requesting;
     });
+
+    btn.addEventListener("click", async () => {
+      await togglePin(documentId);
+    });
+
+    window.addEventListener("beforeunload", unsubscribe);
   }
 
-  /**
-   * Updates the button's aria-pressed, aria-label, and CSS class to reflect
-   * the given pinned state.
-   *
-   * @param btn    - The pin button element.
-   * @param pinned - The desired pinned state.
-   */
-  function applyPinnedState(btn: HTMLButtonElement, pinned: boolean) {
-    btn.setAttribute("aria-pressed", String(pinned));
-    btn.setAttribute("aria-label",   pinned ? "Unpin document" : "Pin document");
-    btn.setAttribute("title",        pinned ? "Unpin document" : "Pin document");
-
-    if (pinned) {
-      btn.classList.add("is-pinned");
-    } else {
-      btn.classList.remove("is-pinned");
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    initPinButton();
-  });
+  document.addEventListener("DOMContentLoaded", initPinButton);
 </script>

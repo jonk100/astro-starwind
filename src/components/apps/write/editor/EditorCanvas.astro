@@ -1,23 +1,11 @@
 ---
 /**
- * @file src/components/apps/journal/editor/EditorCanvas.astro
- * @description The writing canvas for the Write app.
- *
- * Renders the document title and block list server-side for fast initial paint,
- * then hands off to editorCanvas.ts for all client-side interactivity:
- * contenteditable block editing, keyboard navigation, block transforms,
- * and debounced autosave via actions.journal.saveBlocks.
- *
- * When no document is open (documentId is null), an empty state is shown
- * prompting the user to create or select a document.
- *
- * Block rendering is intentionally simple — each block is a single
- * contenteditable element. No nested trees, no shadow DOM, no framework.
+ * src/components/apps/write/editor/EditorCanvas.astro
  */
-
-import type { Block } from "@/lib/journal/types";
+import type { Block } from '@/lib/journal/types';
 import { blockTag, blockClass } from "@/lib/journal/types";
-import './editorCanvas.css';
+import "./editorCanvas.css";
+import EmptyCanvas from './editorParts/EmptyCanvas.astro';
 
 interface Props {
   documentId: string | null;
@@ -33,65 +21,42 @@ const { documentId, title, blocks } = Astro.props;
   class="editor-canvas"
   id="editor-canvas"
   data-document-id={documentId}
-  data-user-id={Astro.props.user?.id}
 >
-  { !documentId ? (
-    // Empty state: no document selected
-    <div class="canvas-empty">
-      <p class="canvas-empty-heading">Nothing open.</p>
-      <p class="canvas-empty-body">
-        Select a document from the sidebar or create a new one to start writing.
-      </p>
-    </div>
+  {!documentId ? (
+    <EmptyCanvas />
   ) : (
-    // Document editor
     <div class="editor-inner" id="editor-inner">
-      {/* Title */}
       <div
         id="editor-title"
         class="editor-title"
         contenteditable="true"
         role="textbox"
         aria-label="Document title"
-        aria-multiline="false"
         spellcheck="true"
         data-placeholder="Untitled"
-        data-document-id={documentId}
       >
         {title}
       </div>
 
-      {/* Block list */}
-      <div
-        id="editor-blocks"
-        class="editor-block-list"
-        aria-label="Document content"
-      >
+      <div id="editor-blocks" class="editor-block-list">
         {blocks.length === 0 ? (
-          // First block: empty paragraph for new documents
           <div
             class="editor-block editor-block--paragraph"
             contenteditable="true"
-            role="textbox"
-            aria-multiline="true"
-            spellcheck="true"
             data-block-id=""
             data-block-type="paragraph"
             data-placeholder="Start writing…"
-          ></div>
+          />
         ) : (
-          // Fixed: Removed the extra wrapping curly braces around blocks.map
           blocks.map((block) => {
             const Tag = blockTag(block);
             const isSeparator = block.type === "separator";
-            
             return (
               <Tag
                 class={blockClass(block.type)}
-                contenteditable={!isSeparator ? "true" : undefined}
+                contenteditable={!isSeparator}
                 role={!isSeparator ? "textbox" : undefined}
-                aria-multiline={!isSeparator ? "true" : undefined}
-                spellcheck={!isSeparator ? "true" : undefined}
+                spellcheck={!isSeparator}
                 data-block-id={block.id}
                 data-block-type={block.type}
                 data-placeholder={block.type === "paragraph" ? "Start writing…" : undefined}
@@ -106,20 +71,31 @@ const { documentId, title, blocks } = Astro.props;
   )}
 </div>
 
-
-
 <script>
-  import { initEditor } from "./editorCanvas";
+  import { initEditor } from "./editorCanvas/editorCanvas";
+  import { setActiveDocument } from "@/stores/editor";
 
-  // Runs cleanly on the client DOM
   document.addEventListener("DOMContentLoaded", () => {
-    const canvas = document.getElementById("editor-canvas");
+    const canvas = document.getElementById("editor-canvas") as HTMLElement | null;
     if (!canvas) return;
 
-    const documentId = canvas.getAttribute("data-document-id");
-    if (!documentId) return; 
+    const documentId = canvas.dataset.documentId;
+    if (!documentId) return;
 
-    // Initialize the engine cleanly
+    // Sync server-rendered data into NanoStores
+    const titleEl = document.getElementById("editor-title") as HTMLElement;
+    const initialTitle = titleEl?.textContent?.trim() || "Untitled";
+
+    const initialBlocks = Array.from(
+      document.querySelectorAll<HTMLElement>(".editor-block")
+    ).map((el) => ({
+      id: el.dataset.blockId || `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      type: (el.dataset.blockType as any) || "paragraph",
+      content: el.textContent || "",
+    }));
+
+    setActiveDocument(documentId, initialTitle, initialBlocks);
+
     initEditor(documentId);
   });
 </script>

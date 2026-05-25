@@ -55,10 +55,19 @@ export type TagUpdate = TablesUpdate<"tags">;
 export type BlockType =
   | "paragraph"
   | "heading"
+  | "heading-1"
+  | "heading-2"
+  | "heading-3"
+  | "heading-4"
+  | "heading-5"
   | "quote"
   | "separator"
   | "checklist"
   | "callout"
+  | "callout-info"
+  | "callout-warning"
+  | "callout-success"
+  | "callout-danger"
   | "code"
   | "prompt";
 

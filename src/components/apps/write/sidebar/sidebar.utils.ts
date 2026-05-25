@@ -3,19 +3,35 @@
 // |________________________________________________________|
 import type { DocumentIndexRow } from "@/lib/journal/types";
 
-//! - the function takes 'documents' as an argument
-export function sortDocumentsForSidebar(documents: DocumentIndexRow[]) {
-
-  //! 1. Define comparison, get the date and pinned state
-  function compareDocuments(a: DocumentIndexRow, b: DocumentIndexRow) {
-    if (a.pinned === b.pinned) {
-      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-    }
-    return a.pinned ? -1 : 1;
+const compareDocuments = (a: DocumentIndexRow, b: DocumentIndexRow) => {
+  if (a.pinned === b.pinned) {
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
   }
+  return a.pinned ? -1 : 1;
+};
 
-  //! 2. Do the sorting and return the result
-  return [...documents].sort(compareDocuments);
+export function sortDocumentsForSidebar(documents: DocumentIndexRow[]) {
+  // 1. Store the sorted result in a variable
+  const sortedDocuments = [...documents].sort(compareDocuments);
+
+  // 2. Log the entire sorted array (the data output)
+  // console.log("Full Sorted Data:", sortedDocuments);
+
+  // 3. Log just the pinned status (mapping it to an array of booleans)
+  console.log("Pinned Statuses:", sortedDocuments[0].pinned);
+
+  // Optional: Log it as a table so it's easier to read in the console!
+  // Assuming your DocumentIndexRow has an 'id' or 'title' property
+  console.table(
+    sortedDocuments.map(doc => ({
+      // title: doc.title, // Uncomment if you have a title property
+      updated_at: doc.updated_at,
+      pinned: doc.pinned
+    }))
+  );
+
+  // 4. Return the sorted array
+  return sortedDocuments;
 }
 
 //! Pass the sortedArguments to this function
@@ -60,3 +76,4 @@ export function formatUpdatedAt(iso: string): string {
   if (isYesterday) return "Yesterday";
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
+

@@ -1,0 +1,1314 @@
+--- File: JournalToolbar.astro ---
+---
+/**
+ * @file src/components/apps/journal/toolbar/JournalToolbar.astro
+ * @description Minimal top toolbar for the Write app.
+ *
+ * Displays contextual actions for the currently open document:
+ * - Document title (read-only display — editing happens in the canvas)
+ * - Save status indicator (Saved / Saving… / Unsaved changes)
+ * - Pin toggle
+ * - Delete document
+ *
+ * When no document is open, only the app title is shown.
+ *
+ * This component is intentionally thin. Heavy document actions (block
+ * transforms, slash commands) belong in the editor canvas, not here.
+ */
+import ToolbarLeft from "./ToolbarLeft.astro";
+import ToolbarMiddle from "./ToolbarMiddle.astro";
+import ToolbarRight from "./ToolbarRight.astro";
+import BlockToolbar from "./blocks/BlockToolbar.astro";
+
+interface Props {
+  /** The ID of the currently open document, or null if none is open. */
+  activeDocumentId: string | null;
+  /** The authenticated user object from Astro.locals. */
+  user: any;
+  isPinned: boolean;
+}
+
+const { activeDocumentId, user, isPinned } = Astro.props;
+---
+
+<header class="toolbar" role="banner">
+  <ToolbarLeft activeDocumentId={activeDocumentId} />
+  <ToolbarMiddle activeDocumentId={activeDocumentId} user={user} />
+  <BlockToolbar activeDocumentId={activeDocumentId} />
+  <ToolbarRight activeDocumentId={activeDocumentId} user={user} isPinned={isPinned} />
+</header>
+
+<style>
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    padding: 0 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    flex-shrink: 0;
+    gap: 1rem;
+  }
+</style>
+
+
+
+
+--- File: ToolbarLeft.astro ---
+---
+const { activeDocumentId } = Astro.props;
+
+---
+<!-- Left: App identity -->
+  <div class="toolbar--left">
+    <span class="toolbar--app-name">Write</span>
+  </div>
+
+
+<style>
+  /* ── Left ── */
+  .toolbar--left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .toolbar--app-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+</style>
+
+--- File: ToolbarMiddle.astro ---
+---
+
+interface Props {
+  /** The ID of the currently open document, or null if none is open. */
+  activeDocumentId: string | null;
+  user: any;
+}
+
+const { activeDocumentId, user } = Astro.props;
+---
+<!-- Centre: Save status (only shown when a doc is open) -->
+  {activeDocumentId && (
+    <div class="toolbar--center">
+      <span
+        id="save-status"
+        class="save-status"
+        aria-live="polite"
+        aria-label="Save status"
+        data-status="saved"
+      >
+        Saved
+      </span>
+    </div>
+  )}
+
+
+<style>
+/* ── Centre ── */
+  .toolbar--center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .save-status {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    transition: color 0.2s, opacity 0.2s;
+  }
+
+  .save-status[data-status="saving"] {
+    color: var(--color-accent);
+    opacity: 0.8;
+  }
+
+  .save-status[data-status="saved"] {
+    color: var(--color-text-muted);
+  }
+
+  .save-status[data-status="error"] {
+    color: var(--color-danger, #ef4444);
+  }
+
+</style>
+
+<script>
+  import { actions } from "astro:actions";
+
+  // ── Save status ────────────────────────────────────────────────────────────
+
+  /**
+   * Updates the save status indicator in the toolbar.
+   *
+   * The editor canvas dispatches a custom "editor:save-status" event
+   * with a detail of "saving", "saved", or "error". This listener
+   * reflects that state in the toolbar text and data-status attribute.
+   *
+   * @param status - The current save state.
+   * @param message - Optional override message to display.
+   */
+  function setSaveStatus(status: "saving" | "saved" | "error", message?: string) {
+    const el = document.getElementById("save-status");
+    if (!el) return;
+
+    const labels: Record<string, string> = {
+      saving: "Saving…",
+      saved: "Saved",
+      error: "Save failed",
+    };
+
+    el.setAttribute("data-status", status);
+    el.textContent = message ?? labels[status] ?? status;
+  }
+
+  window.addEventListener("editor:save-status", (e: Event) => {
+    const detail = (e as CustomEvent<{ status: "saving" | "saved" | "error" }>).detail;
+    setSaveStatus(detail.status);
+  });
+
+</script>
+
+--- File: NoteDeleteButton.astro ---
+---
+import Button from '@/components/starwind/button/Button.astro';
+
+interface Props {
+  /** The ID of the currently open document, or null if none is open. */
+  activeDocumentId: string | null;
+  user: any;
+}
+
+const { activeDocumentId, user } = Astro.props;
+---
+
+<!-- Delete document -->
+<Button
+  id="toolbar--delete-button"
+  class="toolbar--button toolbar--button--danger"
+  type="button"
+  aria-label="Delete document"
+  data-document-id={activeDocumentId}
+  title="Delete document"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6M14 11v6" />
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+  </svg>
+</Button>
+
+<style>
+  .toolbar--button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  .toolbar--button:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .toolbar--button[aria-pressed="true"] {
+    color: var(--color-accent);
+  }
+
+  .toolbar--button--danger:hover {
+    background-color: color-mix(in srgb, var(--color-danger, #ef4444) 10%, transparent);
+    color: var(--color-danger, #ef4444);
+  }
+</style>
+
+<script>
+  import { actions } from "astro:actions";
+  // ── Delete document ────────────────────────────────────────────────────────
+
+  /**
+   * Handles the delete button click.
+   * Shows a native confirm dialog before calling the delete action.
+   * On success, navigates back to the write app root (no open document).
+   */
+  function initDeleteButton() {
+    const btn = document.getElementById("toolbar--delete-button") as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const documentId = btn.getAttribute("data-document-id");
+    if (!documentId) return;
+
+    btn.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        "Delete this document? This cannot be undone."
+      );
+      if (!confirmed) return;
+
+      btn.setAttribute("disabled", "true");
+
+      const { error } = await actions.write.deleteDocument({ id: documentId });
+
+      if (error) {
+        btn.removeAttribute("disabled");
+        console.error("Failed to delete document:", error.message);
+        return;
+      }
+
+      // Navigate back to the write root with no document selected
+      window.location.href = "/app/write";
+    });
+  }
+
+    document.addEventListener("DOMContentLoaded", () => {
+    initDeleteButton();
+  });
+</script>
+
+--- File: ToolbarRight.astro ---
+---
+/**
+ * @file src/components/apps/write/toolbar/ToolbarRight.astro
+ * @description Right section of the journal toolbar.
+ *
+ * Contains, left-to-right:
+ *   1. BlockToolbar  — icon buttons for common block types + More dropdown
+ *   2. PinToggleButton
+ *   3. NoteDeleteButton
+ */
+import NoteDeleteButton from './NoteDeleteButton.astro';
+import PinToggleButton from './PinToggleButton.astro';
+import BlockToolbar from './BlockToolbar.astro';
+
+interface Props {
+  activeDocumentId: string | null;
+  user: any;
+  isPinned: boolean;
+}
+
+const { activeDocumentId, user, isPinned } = Astro.props;
+---
+
+{activeDocumentId && (
+  <div class="toolbar--right">
+    {/* <BlockToolbar activeDocumentId={activeDocumentId} /> */}
+    <div class="toolbar--divider" aria-hidden="true"></div>
+    <PinToggleButton activeDocumentId={activeDocumentId} user={user} isPinned={isPinned} />
+    <NoteDeleteButton activeDocumentId={activeDocumentId} user={user} />
+  </div>
+)}
+
+<style>
+  .toolbar--right {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+  }
+
+  .toolbar--divider {
+    width: 1px;
+    height: 18px;
+    background-color: var(--color-border);
+    margin: 0 0.25rem;
+  }
+</style>
+
+
+--- File: PinToggleButton.astro ---
+---
+/**
+ * @file src/components/apps/write/toolbar/PinToggleButton.astro
+ *
+ * FIX f: Uses stores/pin.ts as the single source of truth for pinned state.
+ * The store is initialised from the server-rendered data-pinned attribute,
+ * so the first paint is always correct. Every subsequent toggle goes through
+ * the store — no aria-pressed drift, no rollback bugs.
+ */
+import Button from '@/components/starwind/button/Button.astro';
+
+interface Props {
+  activeDocumentId: string | null;
+  isPinned: boolean;
+  user: any;
+}
+
+const { activeDocumentId, isPinned = false } = Astro.props;
+---
+
+<button
+  id="toolbar--pin-button"
+  class="toolbar--button"
+  type="button"
+  aria-label={isPinned ? "Unpin document" : "Pin document"}
+  aria-pressed={isPinned ? "true" : "false"}
+  data-document-id={activeDocumentId}
+  data-pinned={isPinned ? "true" : "false"}
+  title={isPinned ? "Unpin document" : "Pin document"}
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <line x1="12" y1="17" x2="12" y2="22" />
+    <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+  </svg>
+</button>
+
+<style>
+  .toolbar--button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, transform 0.2s ease;
+  }
+
+  .toolbar--button:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .toolbar--button[aria-pressed="true"] {
+    color: var(--color-accent);
+    transform: rotate(20deg) translateY(2px);
+  }
+
+  .toolbar--button[aria-pressed="true"]:hover {
+    background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+
+  .toolbar--button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  import { initPinStore, togglePin, pinStore } from "@/stores/journal/pin";
+
+  /**
+   * Syncs all UI attributes with store state.
+   */
+  function applyState(btn: HTMLButtonElement, pinned: boolean): void {
+    btn.setAttribute("aria-pressed", pinned ? "true" : "false");
+    btn.dataset.pinned = pinned ? "true" : "false";
+    btn.setAttribute("aria-label", pinned ? "Unpin document" : "Pin document");
+    btn.setAttribute("title", pinned ? "Unpin document" : "Pin document");
+  }
+
+  function initPinButton(): void {
+    const btn = document.getElementById("toolbar--pin-button") as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const documentId = btn.dataset.documentId;
+    if (!documentId) return;
+
+    const initialPinned = btn.dataset.pinned === "true";
+
+    initPinStore(documentId, initialPinned);
+
+    const unsubscribe = pinStore.subscribe((store) => {
+      const state = store[documentId];
+      if (!state) return;
+
+      applyState(btn, state.pinned);
+      btn.disabled = state.requesting;
+    });
+
+    btn.addEventListener("click", async () => {
+      await togglePin(documentId);
+    });
+
+    window.addEventListener("beforeunload", unsubscribe);
+  }
+
+  document.addEventListener("DOMContentLoaded", initPinButton);
+</script>
+
+--- File: blocks/BlockToolbar.astro ---
+---
+/**
+ * @file src/components/apps/write/toolbar/BlockToolbar.astro
+ *
+ * Features:
+ * - Primary buttons: shown directly in toolbar, one-click to apply.
+ * - Secondary ("More") dropdown: less-used types.
+ * - Ctrl+N shortcuts: hold Ctrl to see number overlays, press to apply.
+ * - Right-click a primary button to demote it to secondary.
+ * - "Pin" button in dropdown to promote to primary.
+ * - Preferences saved to localStorage.
+ */
+
+interface Props {
+  activeDocumentId: string | null;
+}
+
+const { activeDocumentId } = Astro.props;
+
+/**
+ * Blocks shown as direct icon buttons in the toolbar.
+ * Keep this to 5–6 max so the toolbar doesn't overflow on small screens.
+ */
+const ALL_BLOCKS = [
+  { type: "paragraph",  icon: "P",    label: "Paragraph", title: "Paragraph",          defaultPrimary: true  },
+  { type: "heading",    icon: "H1",   label: "H1",        title: "Heading 1",          defaultPrimary: true  },
+  { type: "heading-2",  icon: "H2",   label: "H2",        title: "Heading 2",          defaultPrimary: true  },
+  { type: "heading-3",  icon: "H3",   label: "H3",        title: "Heading 3",          defaultPrimary: true  },
+  { type: "quote",      icon: "SS",   label: "Quote",     title: "Quote",              defaultPrimary: true  },
+  { type: "checklist",  icon: "CL",   label: "Check",     title: "Checklist item",     defaultPrimary: true  },
+  { type: "heading-4",  icon: "H4",   label: "H4",        title: "Heading 4",          defaultPrimary: false },
+  { type: "heading-5",  icon: "H5",   label: "H5",        title: "Heading 5",          defaultPrimary: false },
+  { type: "code",       icon: "{}",   label: "Code",      title: "Code block",         defaultPrimary: false },
+  { type: "callout",    icon: "!!",   label: "Callout",   title: "Callout (Ctrl+</>)", defaultPrimary: false },
+  { type: "separator",  icon: "--",   label: "Divider",   title: "Horizontal rule",    defaultPrimary: false },
+  { type: "prompt",     icon: "**",   label: "Prompt",    title: "Writing prompt",     defaultPrimary: false },
+];
+
+---
+
+{activeDocumentId && (
+  <div class="block-toolbar" id="block-toolbar" role="toolbar" aria-label="Block type">
+    <div class="bt-primary" id="bt-primary"></div>
+    <div class="bt-divider" aria-hidden="true"></div>
+    <div class="bt-more-wrapper" id="bt-more-wrapper">
+      <button class="bt-btn bt-more-trigger" id="bt-more-trigger" type="button"
+        aria-haspopup="listbox" aria-expanded="false" title="More block types">
+        <span class="bt-icon" aria-hidden="true">...</span>
+      </button>
+      <ul class="bt-dropdown" id="bt-dropdown" role="listbox" hidden></ul>
+    </div>
+  </div>
+)}
+ 
+<script id="bt-block-defs" type="application/json" set:html={JSON.stringify(ALL_BLOCKS)}></script>
+ 
+
+
+<style>
+  .block-toolbar { display: flex; align-items: center; gap: 0.125rem; }
+  .bt-primary    { display: flex; align-items: center; gap: 0.125rem; }
+ 
+  .bt-btn {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    min-width: 28px; height: 28px; padding: 0 0.3rem;
+    border: none; border-radius: 5px; background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.7rem; font-weight: 700;
+    font-family: var(--font-mono, monospace);
+    cursor: pointer;
+    transition: background-color 0.1s, color 0.1s;
+    white-space: nowrap; user-select: none;
+  }
+  .bt-btn:hover { background-color: var(--color-surface-hover); color: var(--color-text); }
+  .bt-btn[aria-pressed="true"] {
+    background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    color: var(--color-accent);
+  }
+  .bt-icon { display: block; line-height: 1; }
+ 
+  /* Ctrl+N number badge */
+  .bt-shortcut-badge {
+    position: absolute; top: 1px; right: 1px;
+    font-size: 0.45rem; font-weight: 700; line-height: 1;
+    color: var(--color-accent);
+    opacity: 0; transition: opacity 0.1s; pointer-events: none;
+  }
+  .block-toolbar.ctrl-mode .bt-shortcut-badge { opacity: 1; }
+ 
+  .bt-divider { width: 1px; height: 16px; background-color: var(--color-border); margin: 0 0.25rem; flex-shrink: 0; }
+  .bt-more-wrapper { position: relative; }
+ 
+  .bt-dropdown {
+    position: absolute; top: calc(100% + 6px); right: 0; z-index: 200;
+    list-style: none; margin: 0; padding: 0.25rem;
+    background-color: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 210px;
+  }
+  .bt-dropdown[hidden] { display: none; }
+ 
+  .bt-dropdown-option {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.35rem 0.6rem; border-radius: 5px;
+    cursor: pointer; font-size: 0.8125rem; color: var(--color-text);
+    transition: background-color 0.1s;
+  }
+  .bt-dropdown-option:hover { background-color: var(--color-surface-hover); }
+  .bt-dropdown-option[aria-selected="true"] { color: var(--color-accent); font-weight: 600; }
+ 
+  .bt-dropdown-icon {
+    width: 2rem; text-align: center;
+    font-size: 0.7rem; font-family: var(--font-mono, monospace); font-weight: 700;
+    color: var(--color-text-muted); flex-shrink: 0;
+  }
+  .bt-dropdown-title { color: var(--color-text); font-size: 0.8125rem; flex: 1; }
+ 
+  .bt-pin-btn {
+    margin-left: auto; padding: 0.1rem 0.35rem;
+    border: 1px solid var(--color-border); border-radius: 4px;
+    background: transparent; color: var(--color-text-muted);
+    font-size: 0.65rem; cursor: pointer; white-space: nowrap;
+    transition: color 0.1s, border-color 0.1s;
+  }
+  .bt-pin-btn:hover { color: var(--color-accent); border-color: var(--color-accent); }
+  .bt-demote-hint {
+    font-size: 0.6rem; color: var(--color-text-muted);
+    margin-top: 0.5rem; padding: 0.25rem 0.6rem;
+    border-top: 1px solid var(--color-border);
+    display: block; text-align: center;
+  }
+</style>
+
+<script>
+  const STORAGE_KEY = "write:toolbar-primary";
+ 
+  interface BlockDef {
+    type: string; icon: string; label: string; title: string; defaultPrimary: boolean;
+  }
+ 
+  function loadDefs(): BlockDef[] {
+    const el = document.getElementById("bt-block-defs");
+    try { return JSON.parse(el?.textContent ?? "[]") as BlockDef[]; } catch { return []; }
+  }
+ 
+  function loadPrimaryTypes(defs: BlockDef[]): string[] {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved) as string[];
+    } catch { /* ignore */ }
+    return defs.filter((d) => d.defaultPrimary).map((d) => d.type);
+  }
+ 
+  function savePrimaryTypes(types: string[]): void {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(types));
+  }
+ 
+  function initBlockToolbar(): void {
+    const toolbar  = document.getElementById("block-toolbar");
+    const primary  = document.getElementById("bt-primary");
+    const moreBtnEl = document.getElementById("bt-more-trigger") as HTMLButtonElement | null;
+    const dropdownEl = document.getElementById("bt-dropdown")    as HTMLUListElement  | null;
+    const wrapper  = document.getElementById("bt-more-wrapper");
+ 
+    if (!toolbar || !primary || !moreBtnEl || !dropdownEl || !wrapper) return;
+ 
+    // Re-type as non-null for use inside closures
+    const moreBtn:  HTMLButtonElement = moreBtnEl;
+    const dropdown: HTMLUListElement  = dropdownEl;
+ 
+    const defs = loadDefs();
+    let primaryTypes = loadPrimaryTypes(defs);
+    let lastActiveType: string | null = null;
+ 
+    function dispatchBlockType(blockType: string): void {
+      window.dispatchEvent(new CustomEvent("editor:set-block-type", { detail: { blockType } }));
+    }
+ 
+    function syncActiveType(activeType: string | null): void {
+      lastActiveType = activeType;
+      primary!.querySelectorAll<HTMLButtonElement>("[data-block-type]").forEach((btn) => {
+        btn.setAttribute("aria-pressed", String(btn.dataset.blockType === activeType));
+      });
+      dropdown.querySelectorAll<HTMLElement>("[data-block-type]").forEach((opt) => {
+        opt.setAttribute("aria-selected", String(opt.dataset.blockType === activeType));
+      });
+    }
+ 
+    function renderPrimary(): void {
+      primary!.innerHTML = "";
+      primaryTypes.forEach((type, idx) => {
+        const def = defs.find((d) => d.type === type);
+        if (!def) return;
+ 
+        const btn = document.createElement("button");
+        btn.className           = "bt-btn";
+        btn.type                = "button";
+        btn.dataset.blockType   = type;
+        btn.setAttribute("aria-label",   def.title);
+        btn.setAttribute("aria-pressed", "false");
+        btn.title               = `${def.title}${idx < 9 ? ` (Ctrl+${idx + 1})` : ""}`;
+ 
+        const icon = document.createElement("span");
+        icon.className   = "bt-icon";
+        icon.textContent = def.icon;
+        btn.appendChild(icon);
+ 
+        if (idx < 9) {
+          const badge = document.createElement("span");
+          badge.className   = "bt-shortcut-badge";
+          badge.textContent = String(idx + 1);
+          btn.appendChild(badge);
+        }
+ 
+        btn.addEventListener("mousedown", (e) => e.preventDefault());
+        btn.addEventListener("click", () => dispatchBlockType(type));
+ 
+        // Right-click to demote
+        btn.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          primaryTypes = primaryTypes.filter((t) => t !== type);
+          savePrimaryTypes(primaryTypes);
+          renderPrimary();
+          renderDropdown();
+        });
+ 
+        primary!.appendChild(btn);
+      });
+ 
+      // Hint shown at the bottom of primary area
+      const hint = document.createElement("span");
+      hint.className   = "bt-demote-hint";
+      hint.style.display = "none"; // revealed inside dropdown instead
+      syncActiveType(lastActiveType);
+    }
+ 
+    function renderDropdown(): void {
+      dropdown.innerHTML = "";
+      const secondaryDefs = defs.filter((d) => !primaryTypes.includes(d.type));
+ 
+      if (secondaryDefs.length === 0) {
+        const li = document.createElement("li");
+        li.style.padding = "0.5rem 0.6rem";
+        li.style.fontSize = "0.75rem";
+        li.style.color = "var(--color-text-muted)";
+        li.textContent = "All blocks are in the toolbar";
+        dropdown.appendChild(li);
+      } else {
+        secondaryDefs.forEach((def) => {
+          const li = document.createElement("li");
+          li.className         = "bt-dropdown-option";
+          li.dataset.blockType = def.type;
+          li.setAttribute("role",          "option");
+          li.setAttribute("aria-selected", "false");
+ 
+          const iconEl = document.createElement("span");
+          iconEl.className   = "bt-dropdown-icon";
+          iconEl.textContent = def.icon;
+ 
+          const titleEl = document.createElement("span");
+          titleEl.className   = "bt-dropdown-title";
+          titleEl.textContent = def.title;
+ 
+          const pinBtn = document.createElement("button");
+          pinBtn.className   = "bt-pin-btn";
+          pinBtn.type        = "button";
+          pinBtn.textContent = "Pin";
+          pinBtn.title       = "Add to toolbar";
+          pinBtn.addEventListener("mousedown", (e) => e.preventDefault());
+          pinBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            primaryTypes = primaryTypes.length < 9
+              ? [...primaryTypes, def.type]
+              : [...primaryTypes.slice(1), def.type];
+            savePrimaryTypes(primaryTypes);
+            renderPrimary();
+            renderDropdown();
+            dropdown.hidden = true;
+            moreBtn.setAttribute("aria-expanded", "false");
+          });
+ 
+          li.appendChild(iconEl);
+          li.appendChild(titleEl);
+          li.appendChild(pinBtn);
+          dropdown.appendChild(li);
+        });
+      }
+ 
+      // Footer hint
+      const hint = document.createElement("li");
+      hint.style.cssText = "padding: 0.4rem 0.6rem; font-size: 0.65rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border); margin-top: 0.25rem; list-style: none;";
+      hint.textContent = "Right-click toolbar buttons to move here";
+      dropdown.appendChild(hint);
+    }
+ 
+    // ── Dropdown open/close ────────────────────────────────────────────────
+ 
+    moreBtn.addEventListener("mousedown", (e) => e.preventDefault());
+    moreBtn.addEventListener("click", () => {
+      const isOpen = !dropdown.hidden;
+      dropdown.hidden = isOpen;
+      moreBtn.setAttribute("aria-expanded", String(!isOpen));
+    });
+ 
+    dropdown.addEventListener("mousedown", (e) => e.preventDefault());
+    dropdown.addEventListener("click", (e) => {
+      const option = (e.target as HTMLElement).closest<HTMLElement>("[data-block-type]");
+      if (!option || (e.target as HTMLElement).classList.contains("bt-pin-btn")) return;
+      const blockType = option.dataset.blockType;
+      if (blockType) dispatchBlockType(blockType);
+      dropdown.hidden = true;
+      moreBtn.setAttribute("aria-expanded", "false");
+    });
+ 
+    document.addEventListener("click", (e) => {
+      if (!wrapper.contains(e.target as Node)) {
+        dropdown.hidden = true;
+        moreBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+ 
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        dropdown.hidden = true;
+        moreBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+ 
+    // ── Ctrl+N shortcuts ───────────────────────────────────────────────────
+ 
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        toolbar.classList.add("ctrl-mode");
+        const num = parseInt(e.key, 10);
+        if (!isNaN(num) && num >= 1 && num <= primaryTypes.length) {
+          e.preventDefault();
+          dispatchBlockType(primaryTypes[num - 1]);
+        }
+      }
+    });
+ 
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Control" || e.key === "Meta") {
+        toolbar.classList.remove("ctrl-mode");
+      }
+    });
+ 
+    // ── Focus sync ─────────────────────────────────────────────────────────
+ 
+    window.addEventListener("editor:block-focused", ((e: CustomEvent) => {
+      syncActiveType((e.detail as { blockType?: string }).blockType ?? null);
+    }) as EventListener);
+ 
+    window.addEventListener("editor:title-focused", () => syncActiveType(null));
+ 
+    // ── Initial render ─────────────────────────────────────────────────────
+    renderPrimary();
+    renderDropdown();
+  }
+ 
+  document.addEventListener("DOMContentLoaded", () => {
+    initBlockToolbar();
+  });
+</script>
+
+
+--- File: blocks/BlockTypeSelector.astro ---
+---
+/**
+ * @file src/components/apps/journal/toolbar/BlockTypeSelector.astro
+ * @description Toolbar dropdown for transforming the currently-focused block
+ * into a different block type.
+ */
+
+interface Props {
+  activeDocumentId: string | null;
+}
+
+const { activeDocumentId } = Astro.props;
+
+/**
+ * Available block types.
+ */
+const BLOCK_TYPES = [
+  { value: "paragraph", label: "Paragraph", icon: "P" },
+  { value: "heading", label: "Heading", icon: "H" },
+  { value: "quote", label: "Quote", icon: "Q" },
+  { value: "checklist", label: "Checklist", icon: "[x]" },
+  { value: "code", label: "Code", icon: "</>" },
+  { value: "callout", label: "Callout", icon: "!" },
+  { value: "separator", label: "Divider", icon: "---" },
+  { value: "prompt", label: "Prompt", icon: "**" },
+  { value: "callout-info", label: "Info", icon: "!!" },
+  { value: "callout-warning", label: "Warning", icon: "!!" },
+  { value: "callout-success", label: "Success", icon: "!!" },
+  { value: "callout-danger", label: "Danger", icon: "!!" },
+  { value: "heading-1", label: "H1", icon: "H1" },
+  { value: "heading-2", label: "H2", icon: "H2" },
+  { value: "heading-3", label: "H3", icon: "H3" },
+  { value: "heading-4", label: "H4", icon: "H4" },
+  { value: "heading-5", label: "H5", icon: "H5" },
+];
+---
+
+{activeDocumentId && (
+  <div class="block-type-selector" id="block-type-selector">
+    <button
+      id="block-type-trigger"
+      class="block-type-trigger"
+      type="button"
+      aria-haspopup="listbox"
+      aria-expanded="false"
+      aria-label="Change block type"
+      title="Change block type"
+    >
+      <span id="block-type-label" class="block-type-label">
+        Paragraph
+      </span>
+
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="10"
+        height="10"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+
+    <ul
+      id="block-type-menu"
+      class="block-type-menu"
+      role="listbox"
+      aria-label="Block type options"
+      hidden
+    >
+      {BLOCK_TYPES.map((blockType) => (
+        <li
+          class="block-type-option"
+          role="option"
+          aria-selected="false"
+          data-block-type={blockType.value}
+          tabindex="-1"
+        >
+          <span class="block-type-option-icon" aria-hidden="true">
+            {blockType.icon}
+          </span>
+
+          <span class="block-type-option-label">
+            {blockType.label}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
+<style>
+  .block-type-selector {
+    position: relative;
+  }
+
+  .block-type-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    height: 28px;
+    padding: 0.25rem 0.5rem;
+
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+
+    background: transparent;
+
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+  }
+
+  .block-type-trigger:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+
+  .block-type-label {
+    min-width: 5ch;
+    text-align: left;
+  }
+
+  .block-type-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 200;
+
+    min-width: 145px;
+    margin: 0;
+    padding: 0.25rem;
+
+    list-style: none;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    background-color: var(--color-surface);
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .block-type-menu[hidden] {
+    display: none;
+  }
+
+  .block-type-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    padding: 0.35rem 0.6rem;
+
+    border-radius: 5px;
+
+    color: var(--color-text);
+    font-size: 0.8125rem;
+
+    cursor: pointer;
+
+    transition: background-color 0.1s;
+  }
+
+  .block-type-option:hover,
+  .block-type-option:focus {
+    background-color: var(--color-surface-hover);
+    outline: none;
+  }
+
+  .block-type-option[aria-selected="true"] {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .block-type-option-icon {
+    width: 2rem;
+
+    flex-shrink: 0;
+
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-family: var(--font-mono, monospace);
+    text-align: center;
+  }
+</style>
+
+<script>
+  /**
+   * Initialises the block type selector.
+   */
+  function initBlockTypeSelector(): void {
+    const selector = document.getElementById("block-type-selector");
+
+    const trigger =
+      document.getElementById(
+        "block-type-trigger"
+      ) as HTMLButtonElement | null;
+
+    const menu =
+      document.getElementById(
+        "block-type-menu"
+      ) as HTMLUListElement | null;
+
+    const label =
+      document.getElementById(
+        "block-type-label"
+      ) as HTMLElement | null;
+
+    if (!selector || !trigger || !menu || !label) {
+      console.warn("[BlockTypeSelector] Missing required DOM nodes.");
+
+      return;
+    }
+
+    const _selector = selector;
+    const _trigger = trigger;
+    const _menu = menu;
+    const _label = label;
+
+    /**
+     * Human-readable labels keyed by block type.
+     */
+    const LABELS: Record<string, string> = {
+      paragraph: "Paragraph",
+      heading: "Heading",
+      quote: "Quote",
+      checklist: "Checklist",
+      code: "Code",
+      callout: "Callout",
+      separator: "Divider",
+    };
+
+    /**
+     * Prevent stale sync events briefly after selection.
+     */
+    let suppressSyncUntil = 0;
+
+    /**
+     * Opens the dropdown.
+     */
+    function openMenu(): void {
+      console.log("[BlockTypeSelector] openMenu");
+
+      _menu.hidden = false;
+
+      _trigger.setAttribute("aria-expanded", "true");
+    }
+
+    /**
+     * Closes the dropdown.
+     */
+    function closeMenu(): void {
+      console.log("[BlockTypeSelector] closeMenu");
+
+      _menu.hidden = true;
+
+      _trigger.setAttribute("aria-expanded", "false");
+    }
+
+    /**
+     * Toggle menu visibility.
+     */
+    _trigger.addEventListener("click", () => {
+      console.log(
+        "[BlockTypeSelector] trigger click",
+        {
+          menuHidden: _menu.hidden,
+        }
+      );
+
+      _menu.hidden ? openMenu() : closeMenu();
+    });
+
+    /**
+     * Close menu when clicking outside.
+     */
+    document.addEventListener("click", (event: MouseEvent) => {
+      if (!_selector.contains(event.target as Node)) {
+        console.log(
+          "[BlockTypeSelector] outside click"
+        );
+
+        closeMenu();
+      }
+    });
+
+    /**
+     * Close on Escape.
+     */
+    document.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        console.log(
+          "[BlockTypeSelector] escape pressed"
+        );
+
+        closeMenu();
+      }
+    });
+
+    /**
+     * Prevent dropdown options from stealing editor focus.
+     */
+    _menu.addEventListener("mousedown", (event: MouseEvent) => {
+      console.log(
+        "[BlockTypeSelector] prevent menu focus steal",
+        {
+          activeElement: document.activeElement,
+        }
+      );
+
+      event.preventDefault();
+    });
+
+    /**
+     * Handle block type selection.
+     */
+    _menu.addEventListener("click", (event: MouseEvent) => {
+      const option = (
+        event.target as HTMLElement
+      ).closest<HTMLElement>("[data-block-type]");
+
+      console.log(
+        "[BlockTypeSelector] menu click",
+        {
+          target: event.target,
+          option,
+          activeElement: document.activeElement,
+        }
+      );
+
+      if (!option) {
+        console.warn(
+          "[BlockTypeSelector] no option found"
+        );
+
+        return;
+      }
+
+      const blockType = option.getAttribute("data-block-type");
+
+      if (!blockType) {
+        console.warn(
+          "[BlockTypeSelector] missing data-block-type"
+        );
+
+        return;
+      }
+
+      console.log(
+        "[BlockTypeSelector] selected block type",
+        {
+          blockType,
+          previousLabel: _label.textContent,
+          activeElement: document.activeElement,
+        }
+      );
+
+      suppressSyncUntil = Date.now() + 100;
+
+      console.log(
+        "[BlockTypeSelector] suppress sync until",
+        suppressSyncUntil
+      );
+
+      _label.textContent = LABELS[blockType] ?? blockType;
+
+      _menu
+        .querySelectorAll<HTMLElement>("[aria-selected]")
+        .forEach((element) => {
+          element.setAttribute("aria-selected", "false");
+        });
+
+      option.setAttribute("aria-selected", "true");
+
+      console.log(
+        "[BlockTypeSelector] dispatch editor:set-block-type",
+        {
+          blockType,
+        }
+      );
+
+      window.dispatchEvent(
+        new CustomEvent("editor:set-block-type", {
+          detail: { blockType },
+        })
+      );
+
+      console.log(
+        "[BlockTypeSelector] after dispatch",
+        {
+          activeElement: document.activeElement,
+        }
+      );
+
+      closeMenu();
+    });
+
+    /**
+     * Sync toolbar label with active editor block.
+     */
+    function syncLabel(blockType: string): void {
+      console.log(
+        "[BlockTypeSelector] syncLabel",
+        {
+          blockType,
+          suppressSyncUntil,
+          now: Date.now(),
+          activeElement: document.activeElement,
+        }
+      );
+
+      if (Date.now() < suppressSyncUntil) {
+        console.warn(
+          "[BlockTypeSelector] sync suppressed"
+        );
+
+        return;
+      }
+
+      _label.textContent = LABELS[blockType] ?? "Paragraph";
+
+      _menu
+        .querySelectorAll<HTMLElement>("[data-block-type]")
+        .forEach((element) => {
+          element.setAttribute(
+            "aria-selected",
+            String(
+              element.getAttribute("data-block-type") ===
+                blockType
+            )
+          );
+        });
+
+      console.log(
+        "[BlockTypeSelector] sync complete",
+        {
+          finalLabel: _label.textContent,
+        }
+      );
+    }
+
+    /**
+     * Sync when editor block focus changes.
+     */
+    window.addEventListener(
+      "editor:block-focused",
+      ((event: CustomEvent) => {
+        console.log(
+          "[BlockTypeSelector] editor:block-focused",
+          {
+            detail: event.detail,
+            activeElement: document.activeElement,
+          }
+        );
+
+        syncLabel(
+          (event.detail as { blockType?: string })
+            .blockType ?? "paragraph"
+        );
+      }) as EventListener
+    );
+
+    /**
+     * Clear label when title receives focus.
+     */
+    window.addEventListener("editor:title-focused", () => {
+      console.log(
+        "[BlockTypeSelector] editor:title-focused"
+      );
+
+      _label.textContent = "—";
+    });
+
+    console.log(
+      "[BlockTypeSelector] initialised"
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log(
+      "[BlockTypeSelector] DOMContentLoaded"
+    );
+
+    initBlockTypeSelector();
+  });
+</script>
+

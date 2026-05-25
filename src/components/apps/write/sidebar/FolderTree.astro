@@ -1,21 +1,8 @@
 ---
-/**
- * @file src/components/apps/journal/sidebar/FolderTree.astro
- * @description Sidebar folder tree with document list.
- *
- * Each document item has a small "move to folder" context button that
- * reveals a dropdown of available folders. Selecting one calls
- * actions.write.moveDocument and reloads so the tree re-renders.
- *
- * Folder collapse/expand is driven by aria-expanded + display toggling.
- */
-
 import type { DocumentIndexRow, Folder } from "@/lib/journal/types";
-import {
-  sortDocumentsForSidebar,
-  groupDocumentsByFolder,
-  formatUpdatedAt,
-} from "./sidebar.utils";
+import { sortDocumentsForSidebar, groupDocumentsByFolder, formatUpdatedAt } from "./sidebar.utils";
+import DocumentItem from "./FolderTree/DocumentItem.astro"; // Assuming you extracted this too!
+import FolderPicker from "./FolderTree/FolderPicker.astro"; // Assuming you extracted this too!
 import "./sidebar.css";
 
 interface Props {
@@ -27,13 +14,8 @@ interface Props {
 
 const { documents, folders, activeDocumentId } = Astro.props;
 
-const sortedDocuments          = sortDocumentsForSidebar(documents);
+const sortedDocuments = sortDocumentsForSidebar(documents);
 const { byFolder, unfiledDocs } = groupDocumentsByFolder(sortedDocuments);
-
-/**
- * Serialises the folder list to a JSON string embedded in a data attribute
- * so the client-side move-picker can read all options without an extra fetch.
- */
 const foldersJson = JSON.stringify(
   folders.map((f) => ({ id: f.id, name: f.name, icon: f.icon ?? "📁" }))
 );
@@ -44,8 +26,7 @@ const foldersJson = JSON.stringify(
   id="sidebar-document-list"
   data-folders={foldersJson}
 >
-
-  <!-- Folders with their documents -->
+ 
   {folders.map((folder) => {
     const folderDocs = byFolder.get(folder.id) ?? [];
     return (
@@ -53,8 +34,9 @@ const foldersJson = JSON.stringify(
         <button
           class="folder-toggle"
           type="button"
-          aria-expanded="true"
+          aria-expanded="false"
           aria-controls={`folder-docs-${folder.id}`}
+          data-folder-id={folder.id}
           data-folder-toggle
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-chevron" aria-hidden="true">
@@ -65,38 +47,24 @@ const foldersJson = JSON.stringify(
           <span class="folder-count">{folderDocs.length}</span>
         </button>
 
+
+        {/* <!-- Default hidden; script reveals based on saved state --> */}
         <ul
           id={`folder-docs-${folder.id}`}
           class="folder-doc-list"
           role="list"
+          style="display: none"
         >
           {folderDocs.length === 0 ? (
             <li class="doc-empty">No documents</li>
           ) : (
             folderDocs.map((doc) => (
-              <li class="doc-item" data-doc-id={doc.id} data-folder-id={folder.id}>
-                <a
-                  href={`/app/write?doc=${doc.id}`}
-                  class={`doc-link ${doc.id === activeDocumentId ? "is-active" : ""}`}
-                  aria-current={doc.id === activeDocumentId ? "page" : undefined}
-                >
-                  <span class="doc-title">{doc.title || "Untitled"}</span>
-                  <span class="doc-meta">{formatUpdatedAt(doc.updated_at)}</span>
-                </a>
-                <!-- Move-to-folder trigger -->
-                <button
-                  class="doc-move-btn"
-                  type="button"
-                  aria-label="Move to folder"
-                  title="Move to folder"
-                  data-doc-id={doc.id}
-                  data-move-trigger
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                  </svg>
-                </button>
-              </li>
+
+              <DocumentItem 
+                doc={doc} 
+                folderId={folder.id} 
+                activeDocumentId={activeDocumentId} 
+              />
             ))
           )}
         </ul>
@@ -104,44 +72,40 @@ const foldersJson = JSON.stringify(
     );
   })}
 
-  <!-- Unfiled documents -->
   {unfiledDocs.length > 0 && (
-    <section class="sidebar-folder">
-      <div class="folder-toggle folder-toggle--static">
+    <section class="sidebar-folder" data-folder-id="__unfiled__">
+      <button
+        class="folder-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="folder-docs-unfiled"
+        data-folder-id="__unfiled__"
+        data-folder-toggle
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-chevron" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
         <span class="folder-name">All Documents</span>
         <span class="folder-count">{unfiledDocs.length}</span>
-      </div>
-      <ul class="folder-doc-list" role="list">
+      </button>
+      <ul
+        id="folder-docs-unfiled"
+        class="folder-doc-list"
+        role="list"
+        style="display: none"
+      >
         {unfiledDocs.map((doc) => (
-          <li class="doc-item" data-doc-id={doc.id} data-folder-id="">
-            <a
-              href={`/app/write?doc=${doc.id}`}
-              class={`doc-link ${doc.id === activeDocumentId ? "is-active" : ""}`}
-              aria-current={doc.id === activeDocumentId ? "page" : undefined}
-            >
-              <span class="doc-title">{doc.title || "Untitled"}</span>
-              <span class="doc-meta">{formatUpdatedAt(doc.updated_at)}</span>
-            </a>
-            <!-- Move-to-folder trigger -->
-            <button
-              class="doc-move-btn"
-              type="button"
-              aria-label="Move to folder"
-              title="Move to folder"
-              data-doc-id={doc.id}
-              data-move-trigger
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-              </svg>
-            </button>
-          </li>
+
+          <DocumentItem 
+            doc={doc} 
+            folderId={null}
+            activeDocumentId={activeDocumentId} 
+          />
         ))}
       </ul>
     </section>
   )}
 
-  <!-- Empty state -->
   {documents.length === 0 && (
     <div class="sidebar-empty">
       <p>No documents yet.</p>
@@ -149,15 +113,13 @@ const foldersJson = JSON.stringify(
     </div>
   )}
 
-  <!-- Shared folder picker popup (one instance, repositioned on each open) -->
-  <div id="folder-picker" class="folder-picker" hidden aria-label="Choose a folder">
-    <ul id="folder-picker-list" class="folder-picker-list" role="listbox"></ul>
-  </div>
+  <FolderPicker />
 
+  
 </div>
 
 <style>
-  /* ── Move button — hidden until row is hovered ── */
+  /* ── Move button ── */
   .doc-move-btn {
     position: absolute;
     right: 0.375rem;
@@ -166,8 +128,8 @@ const foldersJson = JSON.stringify(
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: 4px;
     background: transparent;
@@ -175,275 +137,26 @@ const foldersJson = JSON.stringify(
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.15s, background-color 0.15s;
-    flex-shrink: 0;
   }
 
-  .doc-item:hover .doc-move-btn {
-    opacity: 1;
-  }
 
-  .doc-move-btn:hover {
-    background-color: var(--color-surface-hover);
-    color: var(--color-text);
-  }
+  .doc-item:hover .doc-move-btn { opacity: 1; }
+  .doc-move-btn:hover { background-color: var(--color-surface-hover); color: var(--color-text); }
 
-  /* ── Folder picker popup ── */
-  .folder-picker {
-    position: fixed;
-    z-index: 300;
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-    padding: 0.25rem;
-    min-width: 160px;
-  }
 
-  .folder-picker[hidden] {
-    display: none;
-  }
+  
 
-  .folder-picker-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .folder-picker-option {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.6rem;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.8125rem;
-    color: var(--color-text);
-    transition: background-color 0.1s;
-  }
-
-  .folder-picker-option:hover {
-    background-color: var(--color-surface-hover);
-  }
-
-  .folder-picker-option.is-current {
-    color: var(--color-accent);
-    font-weight: 600;
-  }
-
-  .folder-picker-option--remove {
-    color: var(--color-text-muted);
-    border-top: 1px solid var(--color-border);
-    margin-top: 0.25rem;
-    padding-top: 0.5rem;
-  }
+  /* Chevron animation driven by aria-expanded */
+  .folder-toggle[aria-expanded="false"] .folder-chevron { transform: rotate(-90deg); }
+  .folder-chevron { transition: transform 0.15s ease; }
 </style>
 
 <script>
-  import { actions } from "astro:actions";
-
-  // ── Folder toggle ──────────────────────────────────────────────────────────
-
-  /**
-   * Wires up each folder header button to toggle the visibility of its
-   * document list and update aria-expanded accordingly.
-   */
-  function initFolderToggles(): void {
-    document.querySelectorAll<HTMLButtonElement>("[data-folder-toggle]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const expanded = btn.getAttribute("aria-expanded") === "true";
-        const targetId = btn.getAttribute("aria-controls");
-        const target   = targetId ? document.getElementById(targetId) : null;
-        btn.setAttribute("aria-expanded", String(!expanded));
-        if (target) target.style.display = expanded ? "none" : "";
-      });
-    });
-  }
-
-  // ── Move-to-folder picker ──────────────────────────────────────────────────
-
-  /**
-   * A shared folder-picker popup rendered once and repositioned on each open.
-   *
-   * Flow:
-   * 1. User hovers a doc-item — the move button appears.
-   * 2. User clicks the move button — the picker opens near the button,
-   *    populated with all available folders plus a "Remove from folder" option.
-   * 3. User picks a folder — moveDocument action is called, page reloads.
-   */
-  function initMovePicker(): void {
-    const body        = document.getElementById("sidebar-document-list");
-    const picker      = document.getElementById("folder-picker")      as HTMLElement | null;
-    const pickerList  = document.getElementById("folder-picker-list") as HTMLUListElement | null;
-
-    if (!body || !picker || !pickerList) return;
-
-    // Parse folder data embedded by the server
-    interface FolderMeta { id: string; name: string; icon: string; }
-    let folders: FolderMeta[] = [];
-    try {
-      folders = JSON.parse(body.dataset.folders ?? "[]") as FolderMeta[];
-    } catch {
-      folders = [];
-    }
-
-    /** Currently active doc-id being moved — used when an option is clicked. */
-    let activeDocId: string | null = null;
-
-    /** Closes the picker and clears state. */
-    function closePicker(): void {
-      picker!.hidden = true;
-      activeDocId   = null;
-    }
-
-    /**
-     * Opens the picker near the clicked move button and populates it with
-     * the available folders for the given document.
-     *
-     * @param triggerBtn   - The move button that was clicked.
-     * @param documentId   - The document to move.
-     * @param currentFolder - The folder the document currently belongs to, or "".
-     */
-    function openPicker(
-      triggerBtn: HTMLElement,
-      documentId: string,
-      currentFolder: string
-    ): void {
-      activeDocId = documentId;
-
-      // Build option list
-      pickerList!.innerHTML = "";
-
-      folders.forEach((f) => {
-        const li = document.createElement("li");
-        li.className  = `folder-picker-option${f.id === currentFolder ? " is-current" : ""}`;
-        li.dataset.folderId = f.id;
-        li.setAttribute("role", "option");
-        li.setAttribute("aria-selected", String(f.id === currentFolder));
-        li.innerHTML = `<span>${f.icon}</span><span>${f.name}</span>`;
-        pickerList!.appendChild(li);
-      });
-
-      // "Remove from folder" option — only useful when doc is in a folder
-      if (currentFolder) {
-        const li = document.createElement("li");
-        li.className = "folder-picker-option folder-picker-option--remove";
-        li.dataset.folderId = "__none__";
-        li.setAttribute("role", "option");
-        li.innerHTML = `<span>Remove from folder</span>`;
-        pickerList!.appendChild(li);
-      }
-
-      // Position near the trigger button
-      const rect = triggerBtn.getBoundingClientRect();
-      picker!.style.top  = `${rect.bottom + 4}px`;
-      picker!.style.left = `${rect.left}px`;
-      picker!.hidden     = false;
-    }
-
-    // Open on move-button click
-    body.addEventListener("click", (e: MouseEvent) => {
-      const trigger = (e.target as HTMLElement).closest<HTMLElement>("[data-move-trigger]");
-      if (!trigger) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      const docItem      = trigger.closest<HTMLElement>("[data-doc-id]");
-      const documentId   = trigger.getAttribute("data-doc-id") ?? docItem?.dataset.docId ?? "";
-      const currentFolder = docItem?.dataset.folderId ?? "";
-
-      if (!documentId) return;
-
-      // Toggle: if already open for this doc, close it
-      if (!picker.hidden && activeDocId === documentId) {
-        closePicker();
-        return;
-      }
-
-      openPicker(trigger, documentId, currentFolder);
-    });
-
-    // Select a folder
-    pickerList.addEventListener("click", async (e: MouseEvent) => {
-      const option = (e.target as HTMLElement).closest<HTMLElement>("[data-folder-id]");
-      if (!option || !activeDocId) return;
-
-      const folderId = option.dataset.folderId ?? "";
-      const docId    = activeDocId;
-
-      closePicker();
-
-      const { error } = await actions.write.moveDocument({
-        document_id: docId,
-        folder_id:   folderId === "__none__" ? null : folderId,
-      });
-
-      if (error) {
-        console.error("Failed to move document:", error.message);
-        return;
-      }
-
-      // Reload to show updated tree
-      window.location.reload();
-    });
-
-    // Close when clicking anywhere else
-    document.addEventListener("click", (e: MouseEvent) => {
-      if (!picker.hidden && !picker.contains(e.target as Node)) {
-        closePicker();
-      }
-    });
-
-    // Close on Escape
-    document.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key === "Escape") closePicker();
-    });
-  }
-
-  // ── Real-time sidebar updates ──────────────────────────────────────────────
-
-  /**
-   * Listens for events broadcast by the editor and sidebar components to
-   * keep the sidebar in sync without a full page reload.
-   */
-  function initRealtimeUpdates(): void {
-    // Sync title text as the user types
-    window.addEventListener("journal:title-updated", ((e: CustomEvent) => {
-      const { documentId, title } = e.detail as { documentId: string; title: string };
-      document.querySelectorAll<HTMLElement>(`[data-doc-id="${documentId}"] .doc-title`).forEach((el) => {
-        el.textContent = title;
-      });
-    }) as EventListener);
-
-    // Sync "Today" meta label after autosave
-    window.addEventListener("journal:doc-updated", ((e: CustomEvent) => {
-      const { documentId } = e.detail as { documentId: string };
-      document.querySelectorAll<HTMLElement>(`[data-doc-id="${documentId}"] .doc-meta`).forEach((el) => {
-        el.textContent = "Today";
-      });
-    }) as EventListener);
-
-    // Move pinned documents to top of their list
-    window.addEventListener("journal:doc-pinned", ((e: CustomEvent) => {
-      const { documentId, pinned } = e.detail as { documentId: string; pinned: boolean };
-      const items = document.querySelectorAll<HTMLElement>(`[data-doc-id="${documentId}"]`);
-      items.forEach((item) => {
-        const list = item.parentElement;
-        if (!list) return;
-        if (pinned) {
-          item.classList.add("is-pinned");
-          list.prepend(item);
-        } else {
-          item.classList.remove("is-pinned");
-        }
-      });
-    }) as EventListener);
-  }
+  import { initFolderToggles, initRealtimeUpdates } from "./FolderTree/sidebar.client";
 
   // ── Init ───────────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
     initFolderToggles();
-    initMovePicker();
     initRealtimeUpdates();
   });
 </script>

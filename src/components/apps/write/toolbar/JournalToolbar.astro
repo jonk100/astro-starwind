@@ -17,6 +17,7 @@
 import ToolbarLeft from "./ToolbarLeft.astro";
 import ToolbarMiddle from "./ToolbarMiddle.astro";
 import ToolbarRight from "./ToolbarRight.astro";
+import BlockToolbar from "./blocks/BlockToolbar.astro";
 
 interface Props {
   /** The ID of the currently open document, or null if none is open. */
@@ -32,6 +33,7 @@ const { activeDocumentId, user, isPinned } = Astro.props;
 <header class="toolbar" role="banner">
   <ToolbarLeft activeDocumentId={activeDocumentId} />
   <ToolbarMiddle activeDocumentId={activeDocumentId} user={user} />
+  <BlockToolbar activeDocumentId={activeDocumentId} />
   <ToolbarRight activeDocumentId={activeDocumentId} user={user} isPinned={isPinned} />
 </header>
 

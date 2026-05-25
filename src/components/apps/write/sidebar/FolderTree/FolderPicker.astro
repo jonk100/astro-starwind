@@ -1,0 +1,372 @@
+---
+// This is a self-contained client widget, no server props needed!
+---
+
+<div id="folder-picker" class="folder-picker bg-zinc-200" hidden aria-label="Choose a folder">
+  <ul id="folder-picker-list" class="folder-picker-list" role="listbox"></ul>
+</div>
+
+<dialog id="new-folder-modal" class="folder-modal">
+  <form id="new-folder-form" class="folder-modal-form">
+    <h3 class="folder-modal-title">Create New Folder</h3>
+    <p class="folder-modal-desc">Enter a name for your new folder to move this document into.</p>
+    
+    <input 
+      type="text" 
+      id="new-folder-name" 
+      class="folder-modal-input" 
+      placeholder="Folder name" 
+      autocomplete="off"
+      required 
+    />
+    
+    <div class="folder-modal-actions">
+      <button type="button" id="cancel-new-folder" class="btn-cancel">Cancel</button>
+      <button type="submit" id="submit-new-folder" class="btn-submit">Create & Move</button>
+    </div>
+  </form>
+</dialog>
+
+<style>
+  /* --- Picker Styles --- */
+  .folder-picker {
+    position: fixed;
+    z-index: 300;
+    border-radius: var(--space-2);
+    color: var(--text);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    min-width: 160px;
+    padding: var(--space-2);
+    text-align: center;
+    padding-top: var(--space-2);
+  }
+
+  .folder-picker[hidden] { 
+    display: none; 
+  }
+  
+  .folder-picker-list { 
+    list-style: none; 
+    margin: 0; 
+    padding: 0; 
+  }
+
+  :global(.folder-picker-option) {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: var(--fsxs);
+    transition: background-color 0.1s;
+    margin: 0;
+    padding: var(--space-2);
+    border: 1px solid transparent;
+    transition: all var(--slow) ease-in-out;
+    gap: var(--space-2);
+  }
+
+  :global(.folder-picker-option:hover) { 
+    border: 1px solid var(--accent);
+  }
+  
+  :global(.folder-picker-option.is-current) { 
+    color: var(--color-accent); 
+    font-weight: 600; 
+  }
+
+  :global(.folder-picker-option--remove) {
+    border-top: 1px dotted rgba(0, 0, 0, 0.5);
+    margin: 0;
+    padding: var(--space-2);
+    border-radius: 0;
+  }
+
+  :global(.folder-picker-option--create) {
+    font-weight: 500;
+    margin: 0;
+    padding: var(--space-2);
+    border-top: 1px dotted var(--accent-light);
+  }
+
+  /* --- Modal Styles --- */
+  .folder-modal {
+    border: none;
+    border-radius: 8px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 400px;
+    background: var(--bg, #ffffff);
+    color: var(--text, #111111);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .folder-modal::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+  }
+
+  .folder-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .folder-modal-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .folder-modal-desc {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted, #666);
+  }
+
+  .folder-modal-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border, #ccc);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .folder-modal-input:focus {
+    border-color: var(--accent, #2563eb);
+  }
+
+  .folder-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .folder-modal-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    font-weight: 500;
+  }
+
+  .btn-cancel {
+    background: transparent;
+    color: var(--text-muted, #666);
+  }
+
+  .btn-cancel:hover {
+    background: var(--bg-hover, #f3f4f6);
+  }
+
+  .btn-submit {
+    background: var(--accent, #2563eb);
+    color: white;
+  }
+
+  .btn-submit:hover {
+    opacity: 0.9;
+  }
+</style>
+
+<script>
+  import { actions } from "astro:actions";
+
+  function initMovePicker(): void {
+    const body       = document.getElementById("sidebar-document-list");
+    const picker     = document.getElementById("folder-picker");
+    const pickerList = document.getElementById("folder-picker-list") as HTMLUListElement | null;
+    
+    // Modal Elements
+    const modal      = document.getElementById("new-folder-modal") as HTMLDialogElement | null;
+    const modalForm  = document.getElementById("new-folder-form") as HTMLFormElement | null;
+    const modalInput = document.getElementById("new-folder-name") as HTMLInputElement | null;
+    const cancelBtn  = document.getElementById("cancel-new-folder");
+    const submitBtn  = document.getElementById("submit-new-folder") as HTMLButtonElement | null;
+
+    if (!body || !picker || !pickerList || !modal || !modalForm || !modalInput) return;
+
+    interface FolderMeta { id: string; name: string; icon: string; }
+    let folders: FolderMeta[] = [];
+    try { 
+      folders = JSON.parse(body.dataset.folders ?? "[]") as FolderMeta[]; 
+    } catch { 
+      folders = []; 
+    }
+
+    let activeDocId: string | null = null;
+    let pendingDocIdForCreate: string | null = null; // Stores ID when modal is open
+
+    function closePicker(): void { 
+      picker!.hidden = true; 
+      activeDocId = null; 
+    }
+
+    function openPicker(trigger: HTMLElement, documentId: string, currentFolder: string): void {
+      activeDocId = documentId;
+      pickerList!.innerHTML = "";
+
+      const header = document.createElement("li");
+      header.className = "folder-picker-header";
+      header.setAttribute("aria-hidden", "true");
+      header.textContent = "Move to Folder:";
+      pickerList!.appendChild(header);
+
+      folders.forEach((f) => {
+        const li = document.createElement("li");
+        li.className = `folder-picker-option${f.id === currentFolder ? " is-current" : ""}`;
+        li.dataset.folderId = f.id;
+        li.setAttribute("role", "option");
+        li.innerHTML = `<span>${f.icon}</span><span>${f.name}</span>`;
+        pickerList!.appendChild(li);
+      });
+
+      if (currentFolder && currentFolder !== "" && currentFolder !== "__unfiled__") {
+        const li = document.createElement("li");
+        li.className = "folder-picker-option folder-picker-option--remove";
+        li.dataset.folderId = "__none__";
+        li.setAttribute("role", "option");
+        li.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; flex-shrink: 0;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Remove from folder</span>
+        `;
+        pickerList!.appendChild(li);
+      }
+
+      const createLi = document.createElement("li");
+      createLi.className = "folder-picker-option folder-picker-option--create";
+      createLi.dataset.folderId = "__create_new__"; 
+      createLi.setAttribute("role", "option");
+      createLi.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; flex-shrink: 0;">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>New folder...</span>
+      `;
+      pickerList!.appendChild(createLi);
+
+      const rect = trigger.getBoundingClientRect();
+      picker!.style.top = `${rect.bottom + 4}px`;
+      picker!.style.left = `${rect.left}px`;
+      picker!.hidden = false;
+    }
+
+    body.addEventListener("click", (e: MouseEvent) => {
+      const trigger = (e.target as HTMLElement).closest<HTMLElement>("[data-move-trigger]");
+      if (!trigger) return;
+      e.preventDefault(); 
+      e.stopPropagation();
+
+      const docItem = trigger.closest<HTMLElement>("[data-doc-id]");
+      const documentId = trigger.getAttribute("data-doc-id") ?? docItem?.dataset.docId ?? "";
+      const currentFolder = trigger.getAttribute("data-folder-id") ?? docItem?.getAttribute("data-folder-id") ?? "";
+      
+      if (!documentId) return;
+
+      if (!picker.hidden && activeDocId === documentId) { 
+        closePicker(); 
+        return; 
+      }
+      
+      openPicker(trigger, documentId, currentFolder);
+    });
+
+    pickerList.addEventListener("click", async (e: MouseEvent) => {
+      const option = (e.target as HTMLElement).closest<HTMLElement>("[data-folder-id]");
+      if (!option || !activeDocId) return;
+      
+      const folderId = option.dataset.folderId ?? "";
+      const docId = activeDocId;
+
+      // --- New Folder Flow ---
+      if (folderId === "__create_new__") {
+        pendingDocIdForCreate = docId; // Save the document ID
+        closePicker();
+        
+        // Open the shiny new modal instead of prompt
+        modalInput!.value = "";
+        modal!.showModal(); 
+        return;
+      }
+
+      // --- Standard Move Flow ---
+      closePicker();
+      const { error } = await actions.write.moveDocument({
+        document_id: docId,
+        folder_id: folderId === "__none__" ? null : folderId,
+      });
+      
+      if (error) { 
+        console.error("Failed to move document:", error.message); 
+        return; 
+      }
+      window.location.reload();
+    });
+
+    // --- Modal Event Listeners ---
+    cancelBtn?.addEventListener("click", () => {
+      modal!.close();
+      pendingDocIdForCreate = null;
+    });
+
+    modalForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!pendingDocIdForCreate) return;
+
+      const folderName = modalInput!.value.trim();
+      if (!folderName) return;
+
+      // Lock button to prevent double-clicks
+      if (submitBtn) submitBtn.disabled = true;
+
+      // 1. Create the folder
+      const { data: newFolder, error: createError } = await actions.write.createFolder({
+        name: folderName,
+        icon: "📁"
+      });
+
+      if (createError) {
+        console.error("Failed to create folder:", createError.message);
+        alert(`Could not create folder: ${createError.message}`);
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      // 2. Move the document into it
+      if (newFolder && newFolder.id) {
+        const { error: moveError } = await actions.write.moveDocument({
+          document_id: pendingDocIdForCreate,
+          folder_id: newFolder.id,
+        });
+
+        if (moveError) console.error("Failed to move document to new folder:", moveError.message);
+      }
+
+      // 3. Reload to show updates
+      window.location.reload();
+    });
+
+    // Dismissal listeners for picker
+    document.addEventListener("click", (e: MouseEvent) => {
+      if (!picker.hidden && !picker.contains(e.target as Node)) closePicker();
+    });
+    
+    // Global ESC handler (closes picker or modal cleanly)
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (!picker.hidden) closePicker();
+        // <dialog> natively closes on Escape, but we can clean up our tracking variable
+        if (modal?.open) pendingDocIdForCreate = null;
+      }
+    });
+  }
+  
+  document.addEventListener("DOMContentLoaded", initMovePicker);
+</script>

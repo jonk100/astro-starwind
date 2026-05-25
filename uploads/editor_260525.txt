@@ -1,0 +1,1302 @@
+--- File: EditorCanvas.astro ---
+---
+/**
+ * src/components/apps/write/editor/EditorCanvas.astro
+ */
+import type { Block } from '@/lib/journal/types';
+import { blockTag, blockClass } from "@/lib/journal/types";
+import "./editorCanvas.css";
+import EmptyCanvas from './editorParts/EmptyCanvas.astro';
+
+interface Props {
+  documentId: string | null;
+  title: string;
+  blocks: Block[];
+  user: any;
+}
+
+const { documentId, title, blocks } = Astro.props;
+---
+
+<div
+  class="editor-canvas"
+  id="editor-canvas"
+  data-document-id={documentId}
+>
+  {!documentId ? (
+    <EmptyCanvas />
+  ) : (
+    <div class="editor-inner" id="editor-inner">
+      <div
+        id="editor-title"
+        class="editor-title"
+        contenteditable="true"
+        role="textbox"
+        aria-label="Document title"
+        spellcheck="true"
+        data-placeholder="Untitled"
+      >
+        {title}
+      </div>
+
+      <div id="editor-blocks" class="editor-block-list">
+        {blocks.length === 0 ? (
+          <div
+            class="editor-block editor-block--paragraph"
+            contenteditable="true"
+            data-block-id=""
+            data-block-type="paragraph"
+            data-placeholder="Start writing…"
+          />
+        ) : (
+          blocks.map((block) => {
+            const Tag = blockTag(block);
+            const isSeparator = block.type === "separator";
+            return (
+              <Tag
+                class={blockClass(block.type)}
+                contenteditable={!isSeparator}
+                role={!isSeparator ? "textbox" : undefined}
+                spellcheck={!isSeparator}
+                data-block-id={block.id}
+                data-block-type={block.type}
+                data-placeholder={block.type === "paragraph" ? "Start writing…" : undefined}
+              >
+                {!isSeparator && block.content}
+              </Tag>
+            );
+          })
+        )}
+      </div>
+    </div>
+  )}
+</div>
+
+<script>
+  import { initEditor } from "./editorCanvas/editorCanvas";
+  import { setActiveDocument } from "@/stores/editor";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById("editor-canvas") as HTMLElement | null;
+    if (!canvas) return;
+
+    const documentId = canvas.dataset.documentId;
+    if (!documentId) return;
+
+    // Sync server-rendered data into NanoStores
+    const titleEl = document.getElementById("editor-title") as HTMLElement;
+    const initialTitle = titleEl?.textContent?.trim() || "Untitled";
+
+    const initialBlocks = Array.from(
+      document.querySelectorAll<HTMLElement>(".editor-block")
+    ).map((el) => ({
+      id: el.dataset.blockId || `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      type: (el.dataset.blockType as any) || "paragraph",
+      content: el.textContent || "",
+    }));
+
+    setActiveDocument(documentId, initialTitle, initialBlocks);
+
+    initEditor(documentId);
+  });
+</script>
+
+--- File: utils.ts ---
+import { actions } from "astro:actions";
+
+// ─── Constants & Configuration ──────────────────────────────────────────────
+
+
+/**
+ * Debounced autosave function.
+ * We use a trailing debounce: each change resets the timer,
+ * and the save only happens after the user stops typing for 250ms.
+ * @param documentId - The UUID of the document to save.
+ * @param title - The new title to save.
+ * @returns A promise that resolves when the save is complete.
+ */
+
+// Debounced save for the document title
+const AUTOSAVE_DEBOUNCE_MS = 250;
+let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+export function debouncedSaveTitle(documentId: string, title: string) {
+  if (titleSaveTimeout) {
+    clearTimeout(titleSaveTimeout);
+  }
+
+  console.log(`[Editor] Saving title "${title}" for document ${documentId}`);
+  titleSaveTimeout = setTimeout(async () => {
+    try {
+      const { data, error } = await actions.write.updateDocument({
+        id: documentId,
+        title,
+      });
+      if (error) {
+        throw new Error(error.message);
+      }
+      console.log("Title saved successfully:", title);
+    } catch (error) {
+      console.error("Failed to save title:", error);
+      // Revert to previous state? (optional)
+    } finally {
+      titleSaveTimeout = null;
+    }
+  }, AUTOSAVE_DEBOUNCE_MS);
+}
+
+--- File: editorParts/EmptyCanvas.astro ---
+---
+
+
+---
+<div class="canvas-empty">
+  <p class="canvas-empty-heading">Nothing open.</p>
+  <p class="canvas-empty-body font-red-300">
+    Select or create a document to start writing.
+  </p>
+</div>
+
+
+--- File: editorCanvas.css ---
+/* ─────────────────────────────────────────────────────────────────────────────
+   editorCanvas.css
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+
+  /* ── Canvas shell ── */
+  .editor-canvas {
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--space-10, 2.5rem) var(--space-6, 1.5rem);
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* ── Reading column ── */
+  .editor-inner {
+    width: 100%;
+    max-width: 72ch;
+    min-width: 0;
+  }
+
+  /* ── Empty state ── */
+  .canvas-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2, 0.5rem);
+    text-align: center;
+    padding-top: 20vh;
+  }
+
+  .canvas-empty-heading { font-size: var(--fs6xl, 3rem); font-weight: 800; color: var(--color-text); }
+  .canvas-empty-body { font-size: var(--fslg, 1.125rem); color: var(--color-text-muted); line-height: 1.6; max-width: 36ch; }
+
+  /* ── Document title ──
+   * Fluid: 2.25rem mobile → 3.5rem desktop.
+   * Always clearly larger than the largest heading (1.875rem).
+   */
+  .editor-title {
+    font-size: clamp(2.25rem, 6vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--color-accent, var(--accent));
+    margin-top: var(--space-8, 2rem);
+    margin-bottom: var(--space-6, 1.5rem);
+    padding-bottom: var(--space-4, 1rem);
+    border-bottom: 1px solid var(--color-border);
+    outline: none;
+    border-left: none; border-right: none; border-top: none;
+    caret-color: var(--color-accent);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    min-width: 0;
+  }
+
+  .editor-title:empty::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  /* ── Block list ── */
+  .editor-block-list { display: flex; flex-direction: column; gap: 0; }
+
+  /* ── Base block ── */
+  .editor-block {
+    outline: none;
+    background: transparent;
+    color: var(--fg3);
+    caret-color: var(--color-accent);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    min-width: 0;
+    /* FIX b: paragraph is clearly smaller than all headings */
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    line-height: var(--lh-normal, 1.65);
+    min-height: 1.5em;
+    height: auto;
+    padding: 0.1rem 0;
+    margin: 0;
+    display: block;
+    transition: opacity var(--fast, 0.1s) ease;
+  }
+
+  /* Fix 5: Unfocused empty block — very faint placeholder */
+  .editor-block:empty::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-muted);
+    opacity: 0.3;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
+  /* Focused empty block — full-strength placeholder */
+  .editor-block:empty:focus::before {
+    opacity: 1;
+  }
+
+  /* ── Headings ──
+   * FIX b: all headings clearly larger than paragraph, responsive with clamp().
+   * Scale: h1=1.875rem, h2=1.5rem, h3=1.25rem, h4/h5=0.8125rem+uppercase.
+   */
+  .editor-block--heading,
+  .editor-block--heading-1 {
+    font-size: clamp(1.5rem, 4vw, 1.875rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+    margin-top: 2rem;
+    margin-bottom: 0.25rem;
+    padding: 0;
+    white-space: pre-wrap;
+  }
+
+  .editor-block--heading-2 {
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--fg);
+    margin-top: 1.75rem;
+    margin-bottom: 0.25rem;
+    padding: 0;
+    white-space: pre-wrap;
+  }
+
+  .editor-block--heading-3 {
+    font-size: clamp(1.125rem, 2.5vw, 1.25rem);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--fg2);
+    margin-top: 1.5rem;
+    margin-bottom: 0.25rem;
+    padding: 0;
+    white-space: pre-wrap;
+  }
+
+  .editor-block--heading-4,
+  .editor-block--heading-5 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: var(--lh-normal, 1.65);
+    color: var(--fg2);
+    margin-top: 1.25rem;
+    margin-bottom: 0;
+    padding: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: pre-wrap;
+  }
+
+  /*? ── Paragraph ── */
+  /*? .editor-block--paragraph // inherits base */
+
+  /* ── Quote ── */
+  .editor-block--quote {
+    border-left: 3px solid var(--color-accent);
+    padding-left: var(--space-4, 1rem);
+    padding-top: var(--space-1, 0.25rem);
+    padding-bottom: var(--space-1, 0.25rem);
+    font-style: italic;
+    color: var(--fg2);
+    margin: var(--space-3, 0.75rem) 0;
+  }
+
+  /* ── Callout variants ──
+   * FIX 9: five styles, cycled with Ctrl+Left/Right.
+   * Base "callout" = neutral amber (same as before).
+   * Additional variants: info (blue), warning (orange), success (green), danger (red).
+   */
+  .editor-block--callout,
+  .editor-block--callout-info,
+  .editor-block--callout-warning,
+  .editor-block--callout-success,
+  .editor-block--callout-danger {
+    border-radius: 0 6px 6px 0;
+    padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+    margin: var(--space-3, 0.75rem) 0;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    line-height: var(--lh-normal, 1.65);
+    border-left-width: 4px;
+    border-left-style: solid;
+  }
+
+  /* Neutral / default */
+  .editor-block--callout {
+    background-color: color-mix(in srgb, var(--color-accent, #e8c547) 8%, transparent);
+    border-left-color: var(--color-accent, #e8c547);
+    color: var(--fg2);
+  }
+  /* Info — blue */
+  .editor-block--callout-info {
+    background-color: color-mix(in srgb, #60a5fa 8%, transparent);
+    border-left-color: #60a5fa;
+    color: var(--fg2);
+  }
+  /* Warning — orange */
+  .editor-block--callout-warning {
+    background-color: color-mix(in srgb, #fb923c 8%, transparent);
+    border-left-color: #fb923c;
+    color: var(--fg2);
+  }
+  /* Success — green */
+  .editor-block--callout-success {
+    background-color: color-mix(in srgb, #4ade80 8%, transparent);
+    border-left-color: #4ade80;
+    color: var(--fg2);
+  }
+  /* Danger — red */
+  .editor-block--callout-danger {
+    background-color: color-mix(in srgb, #f87171 8%, transparent);
+    border-left-color: #f87171;
+    color: var(--fg2);
+  }
+
+  /* ── Code ── */
+  .editor-block--code {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.875rem;
+    line-height: 1.65;
+    background-color: var(--bg5);
+    border-radius: 6px;
+    padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+    margin: var(--space-2, 0.5rem) 0;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    color: var(--green);
+    caret-color: var(--color-accent);
+  }
+
+  /* ── Checklist ── */
+  .editor-block--checklist {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
+    white-space: pre-wrap;
+  }
+
+  /* FIX c: remove the default browser focus ring on the checkbox.
+   * Interaction feedback comes from the checked state itself. */
+  .checklist-checkbox {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.2rem;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+    border-radius: 3px;
+    outline: none;           /* remove focus ring */
+  }
+
+  /* Keep a subtle custom focus indicator that fits the theme */
+  .checklist-checkbox:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+    border-radius: 3px;
+  }
+
+  .checklist-text {
+    flex: 1;
+    min-width: 0;
+    outline: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .editor-block--checklist[data-checked="true"] .checklist-text {
+    text-decoration: line-through;
+    opacity: 0.55;
+  }
+
+  .editor-block--checklist[data-checked="true"] .checklist-checkbox {
+    opacity: 0.4;
+  }
+
+  .editor-block--checklist .checklist-text:empty::before {
+    content: "To-do item...";
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  /* ── Separator ── */
+  .editor-block--separator {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: var(--space-6, 1.5rem) 0;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  /* ── Prompt ── */
+  .editor-block--prompt {
+    color: var(--color-accent);
+    font-style: italic;
+    opacity: 0.7;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    line-height: var(--lh-loose, 1.8);
+  }
+}
+
+/* ── Navigation hint (Fix 4) ──
+ * Rendered outside :root so it can use fixed positioning freely.
+ * Appears at the bottom of the viewport — never obscures text.
+ */
+.editor-nav-hint {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-surface, #1a1a1a);
+  color: var(--color-text-muted, #888);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  pointer-events: none;
+  z-index: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.editor-nav-hint.is-visible {
+  opacity: 1;
+}
+
+.editor-nav-hint.is-hidden {
+  opacity: 0;
+}
+
+--- File: editorCanvas/consts.ts ---
+// src/components/apps/write/editor/constants.ts
+
+export const BLOCK_TAG: Record<string, string> = {
+  paragraph:  "div",
+  heading:    "h2",   // backwards-compat alias for heading-1
+  "heading-1": "h2",
+  "heading-2": "h3",
+  "heading-3": "h4",
+  "heading-4": "h5",
+  "heading-5": "h6",
+  quote:       "blockquote",
+  checklist:   "div",
+  callout:     "div",
+  code:        "pre",
+  separator:   "hr",
+  prompt:      "div",
+  // Callout variants — all render as <div>, class drives the style
+  "callout-info":    "div",
+  "callout-warning": "div",
+  "callout-success": "div",
+  "callout-danger":  "div",
+};
+ 
+/** Ordered cycle of callout variants for Ctrl+Left/Right. */
+export const CALLOUT_CYCLE = [
+  "callout",
+  "callout-info",
+  "callout-warning",
+  "callout-success",
+  "callout-danger",
+] as const;
+export type CalloutVariant = typeof CALLOUT_CYCLE[number];
+
+
+--- File: editorCanvas/behaviors.ts ---
+// src/components/apps/write/editor/behaviors.ts
+import type { Block, BlockType } from "@/lib/journal/types";
+
+export type EnterContext = {
+  documentId: string;
+  target: HTMLElement;
+  block: Block;
+  cursorOffset: number;
+  createAfter: (newBlock: Omit<Block, "id">) => void;
+  splitBlock: (atOffset?: number) => void;
+  replaceWith: (newType: BlockType) => void;
+};
+ 
+type BlockBehavior = {
+  onEnter?: (ctx: EnterContext) => void;
+  onShiftEnter?: (ctx: EnterContext) => void;
+};
+ 
+/**
+ * Per-block-type keyboard behaviours.
+ * Each entry defines what happens when Enter (or Shift+Enter) is pressed
+ * while that block type is focused.
+ */
+export const blockBehaviors: Record<BlockType, BlockBehavior> = {
+  /**
+   * Paragraph: Enter always creates a new paragraph below.
+   * Empty paragraph: still creates a new one (standard doc-editor behaviour).
+   */
+  /**
+   * Paragraph: Enter splits at the cursor. Text before stays; text after
+   * moves into a new paragraph. Matches behaviour of every modern editor.
+   */
+  paragraph: { onEnter: ({ splitBlock }) => splitBlock() },
+ 
+  /**
+   * Heading: Enter splits at cursor; the new block becomes a paragraph.
+   */
+  heading:   { onEnter: ({ splitBlock }) => splitBlock() },
+  "heading-1": { onEnter: ({ splitBlock }) => splitBlock() },
+  "heading-2": { onEnter: ({ splitBlock }) => splitBlock() },
+  "heading-3": { onEnter: ({ splitBlock }) => splitBlock() },
+  "heading-4": { onEnter: ({ splitBlock }) => splitBlock() },
+  "heading-5": { onEnter: ({ splitBlock }) => splitBlock() },
+ 
+  /**
+   * Quote: Enter on a non-empty line continues the quote.
+   * Enter on an EMPTY quote line escapes to a new paragraph — same UX as
+   * Notion/Bear/Craft where double-Enter exits the block type.
+   */
+  quote: {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      const textContent = target.querySelector<HTMLElement>(".checklist-text")?.textContent
+        ?? target.textContent ?? "";
+      if (textContent.trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "quote", content: "" });
+      }
+    },
+  },
+ 
+  /**
+   * Checklist: Enter on a non-empty item creates another checklist item.
+   * Enter on an EMPTY checklist item escapes to paragraph.
+   */
+  checklist: {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      const textEl = target.querySelector<HTMLElement>(".checklist-text");
+      const text   = textEl?.textContent ?? target.textContent ?? "";
+      if (text.trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "checklist", content: "" });
+      }
+    },
+  },
+ 
+  /**
+   * Callout: Enter on non-empty continues the callout.
+   * Enter on empty escapes to paragraph.
+   */
+  callout: {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      if ((target.textContent ?? "").trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "callout", content: "" });
+      }
+    },
+  },
+
+  "callout-info": {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      if ((target.textContent ?? "").trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "callout-info", content: "" });
+      }
+    },
+  },
+  
+  "callout-warning": {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      if ((target.textContent ?? "").trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "callout-info", content: "" });
+      }
+    },
+  },
+  
+  "callout-success": {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      if ((target.textContent ?? "").trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "callout-info", content: "" });
+      }
+    },
+  },
+  
+  "callout-danger": {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      if ((target.textContent ?? "").trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "callout-info", content: "" });
+      }
+    },
+  },
+ 
+  prompt:    { onEnter: ({ createAfter }) => createAfter({ type: "paragraph", content: "" }) },
+ 
+  /**
+   * Separator: Enter creates a new paragraph immediately after the <hr>
+   * and focuses it, so the user can continue writing below the divider.
+   */
+  separator: { onEnter: ({ createAfter }) => createAfter({ type: "paragraph", content: "" }) },
+  code: {
+    /**
+     * Enter (no modifier) exits the code block by creating a new paragraph
+     * below — same escape hatch as every other block type.
+     *
+     * Shift+Enter inserts a literal newline within the code block.
+     * We let the BROWSER handle this natively by NOT preventing default.
+     * contenteditable + white-space:pre already knows how to insert newlines
+     * and place the caret correctly — fighting it with insertNode is what
+     * caused the stuck-caret bug. onShiftEnter is defined so the dispatcher
+     * knows to call it (and not call onEnter), but we do nothing inside it.
+     */
+    onEnter: ({ createAfter }) => createAfter({ type: "paragraph", content: "" }),
+    onShiftEnter: () => { /* intentionally empty — browser handles the newline */ },
+  },
+};
+
+
+--- File: editorCanvas/helpers.ts ---
+import type { Block, BlockType } from "@/lib/journal/types";
+import { BLOCK_TAG } from "./consts";
+
+/**
+ * Returns the BlockType stored in an element's data-block-type attribute.
+ *
+ * @param el - A block DOM element.
+ */
+export function getBlockType(el: HTMLElement): BlockType {
+  return (el.dataset.blockType as BlockType) || "paragraph";
+}
+ 
+/**
+ * Returns the block ID stored in an element's data-block-id attribute.
+ *
+ * @param el - A block DOM element.
+ */
+export function getBlockId(el: HTMLElement): string | null {
+  return el.dataset.blockId || null;
+}
+ 
+/** Generates a stable random block ID. */
+export function generateBlockId(): string {
+  return `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+ 
+/**
+ * Creates a new block DOM element with the correct tag, classes, and
+ * data attributes for the given Block object.
+ *
+ * @param block - The block data to render into the DOM.
+ */
+/**
+ * Creates a new block DOM element for the given Block object.
+ *
+ * Checklist blocks get special treatment: a real <input type="checkbox">
+ * is inserted before the contenteditable text so clicking it actually works.
+ * The checked state is stored in data-checked on the block element and in
+ * block.meta.checked in the store / database.
+ *
+ * @param block - The block data to render.
+ */
+export function createBlockElement(block: Block): HTMLElement {
+  const tag = BLOCK_TAG[block.type] || "div";
+  const el  = document.createElement(tag) as HTMLElement;
+ 
+  el.className = `editor-block editor-block--${block.type}`;
+  el.setAttribute("data-block-id",   block.id);
+  el.setAttribute("data-block-type", block.type);
+ 
+  if (block.type === "checklist") {
+    const checked = block.meta?.checked === true;
+    el.setAttribute("data-checked", checked ? "true" : "false");
+    el.contentEditable = "true";
+ 
+    // Real checkbox — clicking it toggles data-checked and saves
+    const checkbox = document.createElement("input");
+    checkbox.type      = "checkbox";
+    checkbox.checked   = checked;
+    checkbox.className = "checklist-checkbox";
+    // Prevent the click from also triggering contenteditable cursor placement
+    checkbox.setAttribute("contenteditable", "false");
+    checkbox.setAttribute("aria-label", "Mark complete");
+    checkbox.tabIndex = -1; // tab navigation stays in the text
+ 
+    el.appendChild(checkbox);
+ 
+    // Text node after the checkbox
+    const textSpan = document.createElement("span");
+    textSpan.className = "checklist-text";
+    textSpan.textContent = block.content || "";
+    el.appendChild(textSpan);
+ 
+    el.setAttribute("data-placeholder", "To-do item...");
+  } else if (block.type !== "separator") {
+    el.contentEditable = "true";
+    el.textContent = block.content || "";
+ 
+    if (block.type === "paragraph") {
+      el.setAttribute("data-placeholder", "Start writing...");
+    }
+  }
+ 
+  return el;
+}
+ 
+/**
+ * Reads all current block elements from the blocksContainer and returns
+ * them as a Block array. Always reflects live DOM state.
+ *
+ * @param blocksContainer - The #editor-blocks element.
+ */
+/**
+ * Reads all current block elements from the blocksContainer and returns
+ * them as a Block array. Always reflects live DOM state.
+ *
+ * For checklist blocks, content is read from the .checklist-text span
+ * (not el.textContent which would include the checkbox label), and the
+ * checked state is read from data-checked into block.meta.
+ *
+ * @param blocksContainer - The #editor-blocks element.
+ */
+export function readBlocksFromDOM(blocksContainer: HTMLElement): Block[] {
+  return Array.from(
+    blocksContainer.querySelectorAll<HTMLElement>(".editor-block")
+  ).map((el) => {
+    const type = getBlockType(el);
+ 
+    if (type === "checklist") {
+      const textEl  = el.querySelector<HTMLElement>(".checklist-text");
+      const checked = el.getAttribute("data-checked") === "true";
+      return {
+        id:      getBlockId(el) || generateBlockId(),
+        type,
+        content: textEl?.textContent || "",
+        meta:    { checked },
+      };
+    }
+ 
+    return {
+      id:      getBlockId(el) || generateBlockId(),
+      type,
+      content: el.textContent || "",
+    };
+  });
+}
+
+
+--- File: editorCanvas/editorCanvas.ts ---
+/**
+ * @file src/components/apps/write/editor/editorCanvas.ts
+ * @description Core editor engine with NanoStores integration.
+ *
+ * Fixes in this revision:
+ * 1. Title Enter key now moves focus to the first block instead of
+ *    inserting a newline (keydown listener now covers both title and blocks).
+ * 2. "editor:set-block-type" event is handled here — replaces the focused
+ *    block element in the DOM and calls updateBlocks.
+ * 3. replaceWith() re-reads blocks from the DOM after the swap so the
+ *    store receives the correct post-transform state.
+ */
+
+import type { Block, BlockType } from "@/lib/journal/types";
+import { updateTitle, updateBlock, updateBlocks } from "@/stores/editor";
+import { CALLOUT_CYCLE, type CalloutVariant } from "./consts";
+import { blockBehaviors, type EnterContext } from "./behaviors";
+import { 
+  getBlockType, 
+  getBlockId, 
+  generateBlockId, 
+  createBlockElement, 
+  readBlocksFromDOM 
+} from "./helpers";
+
+//! ──────────────────────────────────────────────────────────────────────────────
+//! ─── Initialization ───────────────────────────────────────────────────────────
+//! ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Bootstraps the editor for a given document.
+ * Called once by EditorCanvas.astro after the DOM is ready.
+ *
+ * Wires up:
+ * - Title input → updateTitle (store + debounced save)
+ * - Block input → updateBlock (store + debounced save)
+ * - Keydown on both title and blocks (Enter, Backspace, Arrows)
+ * - focusin on blocks → broadcasts "editor:block-focused" for the toolbar
+ * - focusin on title → broadcasts "editor:title-focused"
+ * - "editor:set-block-type" window event → transforms the last-focused block
+ *
+ * @param documentId - The UUID of the document being edited.
+ */
+/**
+ * Shows a brief, unobtrusive hint near the block telling the user to use
+ * Ctrl+Arrow or Tab to navigate between blocks.
+ *
+ * The hint fades in, stays for 1.8s, then fades out. Only one hint is shown
+ * at a time — a second call while one is visible resets the timer.
+ *
+ * @param direction - "up" or "down", used to position the hint correctly.
+ */
+let _hintEl: HTMLElement | null = null;
+let _hintTimer: ReturnType<typeof setTimeout> | null = null;
+ 
+function showNavHint(direction: "up" | "down"): void {
+  // Reuse existing element if visible
+  if (!_hintEl) {
+    _hintEl = document.createElement("div");
+    _hintEl.className = "editor-nav-hint";
+    _hintEl.setAttribute("aria-live", "polite");
+    _hintEl.setAttribute("role", "status");
+    document.body.appendChild(_hintEl);
+  }
+ 
+  _hintEl.textContent = direction === "up"
+    ? "↑ Ctrl + ↑ to move to previous block"
+    : "↓ Ctrl + ↓ to move to next block";
+ 
+  _hintEl.classList.remove("is-hidden");
+  _hintEl.classList.add("is-visible");
+ 
+  if (_hintTimer) clearTimeout(_hintTimer);
+  _hintTimer = setTimeout(() => {
+    if (_hintEl) {
+      _hintEl.classList.remove("is-visible");
+      _hintEl.classList.add("is-hidden");
+    }
+  }, 1800);
+}
+ 
+export function initEditor(documentId: string): void {
+  const titleEl         = document.getElementById("editor-title") as HTMLElement | null;
+  const blocksContainer = document.getElementById("editor-blocks")  as HTMLElement | null;
+  if (!blocksContainer) return;
+ 
+  /**
+   * Tracks the last block that received focus.
+   * We store this explicitly because the toolbar button click blurs the block
+   * before the "editor:set-block-type" event fires — document.activeElement
+   * would point at the toolbar button, not the block we want to transform.
+   */
+  let lastFocusedBlock: HTMLElement | null = null;
+ 
+  // ── Title ──────────────────────────────────────────────────────────────────
+ 
+  if (titleEl) {
+    titleEl.addEventListener("input", () => {
+      updateTitle(titleEl.textContent?.trim() || "");
+    });
+ 
+    titleEl.addEventListener("focusin", () => {
+      // Tell the toolbar to show "—" in the block-type selector
+      window.dispatchEvent(new CustomEvent("editor:title-focused"));
+    });
+  }
+ 
+  // ── Block input ────────────────────────────────────────────────────────────
+ 
+  /**
+   * Handles text input on a block. Updates the single changed block in the
+   * store using the stable block ID — avoids re-reading the whole DOM on
+   * every keystroke, which keeps cursor position stable.
+   *
+   * @param e - The native input event.
+   */
+  const handleInput = (e: Event): void => {
+    const target = e.target as HTMLElement;
+ 
+    // Input can fire on a child element (e.g. the checklist text span).
+    // Walk up to the actual editor-block.
+    const blockEl = target.classList.contains("editor-block")
+      ? target
+      : target.closest<HTMLElement>(".editor-block");
+    if (!blockEl) return;
+ 
+    const type    = getBlockType(blockEl);
+    const blockId = blockEl.dataset.blockId;
+ 
+    if (type === "checklist") {
+      // Checklist: always re-read everything because textContent would include
+      // the checkbox label. updateBlocks re-reads .checklist-text correctly.
+      updateBlocks(readBlocksFromDOM(blocksContainer));
+    } else if (blockId) {
+      updateBlock(blockId, blockEl.textContent || "");
+    }
+  };
+ 
+  // ── Keyboard handling ──────────────────────────────────────────────────────
+ 
+  /**
+   * Handles keydown events on both the title and block elements.
+   *
+   * Title:
+   *   Enter → move focus to the first block (never insert a newline)
+   *
+   * Blocks:
+   *   Enter          → delegate to per-type blockBehaviors
+   *   Shift+Enter    → delegate to per-type blockBehaviors (if defined)
+   *   Backspace      → delete empty block, move focus to previous block
+   *   ArrowUp/Down   → move focus between blocks
+   *
+   * @param e - The native keydown event.
+   */
+  const handleKeyDown = (e: KeyboardEvent): void => {
+    const target  = e.target as HTMLElement;
+    const isTitle = target.classList.contains("editor-title");
+    const isBlock = target.classList.contains("editor-block");
+ 
+    if (!isTitle && !isBlock) return;
+ 
+    // ── Enter on the title: jump to first block ──────────────────────────────
+    if (isTitle && e.key === "Enter") {
+      e.preventDefault();
+      const firstBlock = blocksContainer.querySelector<HTMLElement>(".editor-block");
+      firstBlock?.focus();
+      return;
+    }
+ 
+    // Everything below is blocks-only
+    if (!isBlock) return;
+ 
+    const type     = getBlockType(target);
+    const behavior = blockBehaviors[type];
+ 
+    /**
+     * Creates a new block immediately after `target` in the DOM, focuses it,
+     * then syncs the full block array to the store.
+     *
+     * @param newBlockData - The type and content for the new block.
+     */
+    const createAfter = (newBlockData: Omit<Block, "id">): void => {
+      const newBlock: Block = { ...newBlockData, id: generateBlockId() };
+      const newEl           = createBlockElement(newBlock);
+      target.after(newEl);
+      newEl.focus();
+      updateBlocks(readBlocksFromDOM(blocksContainer));
+    };
+ 
+    /**
+     * Replaces `target` with a new element of `newType`, preserving content.
+     * Re-reads the DOM after the swap so the store receives accurate state.
+     *
+     * @param newType - The BlockType to transform `target` into.
+     */
+    const replaceWith = (newType: BlockType): void => {
+      const newBlock: Block = {
+        id:      getBlockId(target) || generateBlockId(),
+        type:    newType,
+        content: target.textContent || "",
+      };
+      const newEl = createBlockElement(newBlock);
+      target.replaceWith(newEl);
+      lastFocusedBlock = newEl;
+      newEl.focus();
+      // Re-read from DOM — store blocks were stale before the swap
+      updateBlocks(readBlocksFromDOM(blocksContainer));
+    };
+ 
+    /**
+     * Splits `target` at the cursor offset: text before stays in the current
+     * block, text after goes into a new block of the same type.
+     *
+     * @param atOffset - Character offset at which to split (defaults to cursor).
+     */
+    const splitBlock = (atOffset = window.getSelection()?.getRangeAt(0)?.startOffset ?? 0): void => {
+      const text   = target.textContent || "";
+      const before = text.slice(0, atOffset);
+      const after  = text.slice(atOffset);
+      target.textContent = before;
+      createAfter({
+        type:    type === "heading" ? "paragraph" : type,
+        content: after,
+      });
+    };
+ 
+    const block: Block = {
+      id:      getBlockId(target) || generateBlockId(),
+      type,
+      content: target.textContent || "",
+    };
+ 
+    const cursorOffset = window.getSelection()?.getRangeAt(0)?.startOffset ?? 0;
+ 
+    const ctx: EnterContext = {
+      documentId,
+      target,
+      block,
+      cursorOffset,
+      createAfter,
+      splitBlock,
+      replaceWith,
+    };
+ 
+    // ── Enter ────────────────────────────────────────────────────────────────────────────
+    if (e.key === "Enter" && behavior) {
+      if (e.shiftKey) {
+        if (behavior.onShiftEnter) {
+          // Code blocks want the browser to insert the newline natively.
+          // All other blocks with onShiftEnter should preventDefault.
+          if (type !== "code") e.preventDefault();
+          behavior.onShiftEnter(ctx);
+        }
+        // No onShiftEnter: let the browser handle Shift+Enter natively
+      } else {
+        // Plain Enter: always intercept so no native newline is inserted
+        e.preventDefault();
+        if (behavior.onEnter) {
+          behavior.onEnter(ctx);
+        }
+      }
+      return;
+    }
+ 
+    // ── Backspace on an empty block ──────────────────────────────────────────
+    if (e.key === "Backspace" && target.textContent === "") {
+      const allBlocks = Array.from(
+        blocksContainer.querySelectorAll<HTMLElement>(".editor-block")
+      );
+      if (allBlocks.length <= 1) return; // keep at least one block
+ 
+      e.preventDefault();
+      const idx    = allBlocks.indexOf(target);
+      const prevEl = allBlocks[idx - 1];
+      target.remove();
+ 
+      if (prevEl) {
+        prevEl.focus();
+        const range = document.createRange();
+        range.selectNodeContents(prevEl);
+        range.collapse(false);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+      }
+ 
+      updateBlocks(readBlocksFromDOM(blocksContainer));
+      return;
+    }
+ 
+    // ── Plain ArrowUp/Down: show navigation hint ─────────────────────────────────
+    // We do NOT intercept plain arrows — the browser handles cursor movement.
+    // But when the user is in a single-line block and hits Up/Down, they get
+    // stuck (the cursor doesn't move, nothing happens). Show a brief hint.
+    if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !e.ctrlKey && !e.metaKey) {
+      const blockRect  = target.getBoundingClientRect();
+      const lineHeight = parseFloat(getComputedStyle(target).lineHeight) || 24;
+      const isSingleLine = blockRect.height <= lineHeight * 1.5;
+ 
+      if (isSingleLine) {
+        // Show the hint — don't preventDefault, let browser try (it will do nothing
+        // on a single-line block which is fine)
+        showNavHint(e.key === "ArrowUp" ? "up" : "down");
+      }
+      // Multi-line blocks: let browser move the cursor normally, no hint needed
+      return;
+    }
+ 
+    // ── Ctrl+Left/Right: cycle callout variant ───────────────────────────────────
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      (e.key === "ArrowLeft" || e.key === "ArrowRight") &&
+      type.startsWith("callout")
+    ) {
+      e.preventDefault();
+      const currentIdx  = CALLOUT_CYCLE.indexOf(type as CalloutVariant);
+      const dir         = e.key === "ArrowRight" ? 1 : -1;
+      const nextVariant = CALLOUT_CYCLE[(currentIdx + dir + CALLOUT_CYCLE.length) % CALLOUT_CYCLE.length] as BlockType;
+ 
+      const newBlock: Block = {
+        id:      getBlockId(target) || generateBlockId(),
+        type:    nextVariant,
+        content: target.textContent || "",
+      };
+      const newEl = createBlockElement(newBlock);
+      target.replaceWith(newEl);
+      lastFocusedBlock = newEl;
+      newEl.focus();
+      window.dispatchEvent(new CustomEvent("editor:block-focused", { detail: { blockType: nextVariant } }));
+      updateBlocks(readBlocksFromDOM(blocksContainer));
+      return;
+    }
+ 
+    // ── Tab / Ctrl+Arrow Up-Down: move between blocks ─────────────────────────
+    //    Tab        → next block
+    //    Shift+Tab  → previous block
+    //    Ctrl+ArrowUp/Down → previous/next block
+    //    Plain ArrowUp/Down → browser default (moves cursor within the block)
+    if (
+      e.key === "Tab" ||
+      ((e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown"))
+    ) {
+      e.preventDefault();
+      const dir = (e.key === "Tab" && !e.shiftKey) || e.key === "ArrowDown" ? 1 : -1;
+ 
+      const allBlocks = Array.from(
+        blocksContainer.querySelectorAll<HTMLElement>(".editor-block")
+      );
+      const idx = allBlocks.indexOf(target);
+ 
+      // Walk in the chosen direction, skipping non-editable separators
+      let focusIdx = idx + dir;
+      while (
+        focusIdx >= 0 &&
+        focusIdx < allBlocks.length &&
+        allBlocks[focusIdx].getAttribute("contenteditable") === null
+      ) {
+        focusIdx += dir;
+      }
+ 
+      const focusTarget = allBlocks[focusIdx];
+      if (!focusTarget) return;
+ 
+      focusTarget.focus();
+      const range = document.createRange();
+      range.selectNodeContents(focusTarget);
+      range.collapse(dir === 1);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(range);
+    }
+  };
+ 
+  // ── Focus tracking ─────────────────────────────────────────────────────────
+ 
+  /**
+   * Keeps lastFocusedBlock up to date and broadcasts the focused block's type
+   * to the toolbar so the block-type selector label stays in sync.
+   *
+   * We use focusin (which bubbles) on the container so we only need one listener.
+   *
+   * @param e - The native focusin event.
+   */
+  const handleFocusIn = (e: Event): void => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains("editor-block")) {
+      lastFocusedBlock = target;
+      window.dispatchEvent(
+        new CustomEvent("editor:block-focused", {
+          detail: { blockType: getBlockType(target) },
+        })
+      );
+    }
+  };
+ 
+  // ── Block type transform (from toolbar) ────────────────────────────────────
+ 
+  /**
+   * Listens for "editor:set-block-type" dispatched by BlockTypeSelector.
+   * Transforms lastFocusedBlock to the requested type using the same
+   * replaceWith logic as keyboard transforms.
+   *
+   * We use lastFocusedBlock rather than document.activeElement because the
+   * toolbar button click causes the block to blur before this event fires.
+   */
+  window.addEventListener("editor:set-block-type", ((e: CustomEvent) => {
+    const blockType = (e.detail as { blockType: BlockType }).blockType;
+    const target    = lastFocusedBlock;
+ 
+    if (!target || !target.isConnected) return;
+    if (getBlockType(target) === blockType) return; // no-op
+ 
+    const newBlock: Block = {
+      id:      getBlockId(target) || generateBlockId(),
+      type:    blockType,
+      content: target.textContent || "",
+    };
+    const newEl = createBlockElement(newBlock);
+    target.replaceWith(newEl);
+    lastFocusedBlock = newEl;
+ 
+    if (blockType !== "separator") {
+      newEl.focus();
+      const range = document.createRange();
+      range.selectNodeContents(newEl);
+      range.collapse(false);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(range);
+    }
+ 
+    // Broadcast updated type back to the toolbar label
+    window.dispatchEvent(
+      new CustomEvent("editor:block-focused", { detail: { blockType } })
+    );
+ 
+    updateBlocks(readBlocksFromDOM(blocksContainer));
+  }) as EventListener);
+ 
+  // ── Checkbox click handler ────────────────────────────────────────────────
+  /**
+   * Delegated click listener for checklist checkboxes.
+   *
+   * When the user clicks a .checklist-checkbox input:
+   * 1. Sync data-checked on the parent block element.
+   * 2. Toggle the text strikethrough via CSS (driven by data-checked).
+   * 3. Re-read all blocks from the DOM and save.
+   *
+   * We use a delegated listener on blocksContainer so dynamically created
+   * checklist blocks are covered without re-attaching anything.
+   */
+  blocksContainer.addEventListener("change", (e: Event) => {
+    const checkbox = e.target as HTMLInputElement;
+    if (!checkbox.classList.contains("checklist-checkbox")) return;
+ 
+    const blockEl = checkbox.closest<HTMLElement>(".editor-block--checklist");
+    if (!blockEl) return;
+ 
+    const checked = checkbox.checked;
+    blockEl.setAttribute("data-checked", checked ? "true" : "false");
+ 
+    updateBlocks(readBlocksFromDOM(blocksContainer));
+  });
+ 
+  // ── Attach listeners ───────────────────────────────────────────────────────
+ 
+  blocksContainer.addEventListener("input",    handleInput);
+  blocksContainer.addEventListener("keydown",  handleKeyDown);
+  blocksContainer.addEventListener("focusin",  handleFocusIn);
+ 
+  // Title keydown needs its own listener since it's outside blocksContainer
+  titleEl?.addEventListener("keydown", handleKeyDown);
+}
+ 
+/** Resets editor state. Call when navigating away from a document. */
+export function disposeEditor(): void {
+  // Store cleanup is handled by stores/editor.ts disposeEditor()
+}
+
+

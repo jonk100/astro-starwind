@@ -1,21 +1,18 @@
 ---
 /**
- * @file src/components/apps/journal/toolbar/ToolbarRight.astro
+ * @file src/components/apps/write/toolbar/ToolbarRight.astro
  * @description Right section of the journal toolbar.
  *
  * Contains, left-to-right:
- *   1. BlockTypeSelector  — changes the type of the focused block
- *   2. PinToggleButton    — pins/unpins the document
- *   3. NoteDeleteButton   — deletes the document
- *
- * Only rendered when a document is open.
+ *   1. BlockToolbar  — icon buttons for common block types + More dropdown
+ *   2. PinToggleButton
+ *   3. NoteDeleteButton
  */
 import NoteDeleteButton from './NoteDeleteButton.astro';
 import PinToggleButton from './PinToggleButton.astro';
-import BlockTypeSelector from './BlockTypeSelector.astro';
+import BlockToolbar from './blocks/BlockToolbar.astro';
 
 interface Props {
-  /** The ID of the currently open document, or null if none is open. */
   activeDocumentId: string | null;
   user: any;
   isPinned: boolean;
@@ -26,17 +23,14 @@ const { activeDocumentId, user, isPinned } = Astro.props;
 
 {activeDocumentId && (
   <div class="toolbar--right">
-    <BlockTypeSelector activeDocumentId={activeDocumentId} />
-
+    {/* <BlockToolbar activeDocumentId={activeDocumentId} /> */}
     <div class="toolbar--divider" aria-hidden="true"></div>
-
     <PinToggleButton activeDocumentId={activeDocumentId} user={user} isPinned={isPinned} />
     <NoteDeleteButton activeDocumentId={activeDocumentId} user={user} />
   </div>
 )}
 
 <style>
-  /* ── Right cluster ── */
   .toolbar--right {
     display: flex;
     align-items: center;
@@ -44,7 +38,6 @@ const { activeDocumentId, user, isPinned } = Astro.props;
     flex-shrink: 0;
   }
 
-  /* Thin vertical rule between the block selector and icon buttons */
   .toolbar--divider {
     width: 1px;
     height: 18px;

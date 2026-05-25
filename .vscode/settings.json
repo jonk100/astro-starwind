@@ -2,7 +2,7 @@
     "workbench.activityBar.autoHide": false,
     "workbench.activityBar.compact": true,
     "workbench.editor.decorations.colors": false,
-    "workbench.colorTheme": "Dark 2026",
+    "workbench.colorTheme": "Eclipse Flare",
     "workbench.colorCustomizations": {
 
         
@@ -28,5 +28,19 @@
         "tabler",
         "virtuals"
     ],
-    "editor.foldingStrategy": "indentation"
+    "editor.foldingStrategy": "indentation",
+    "commentChameleon.customTags": [
+        {
+            "tag": ",",
+            "color": "#FFFFFF4a",
+            "backgroundColor": "#0000001c",
+            "strikethrough": false,
+            "underline": false,
+            "bold": false,
+            "italic": false,
+            "emoji": "✨",
+            "useEmoji": true,
+            "selected": false
+        }
+    ]
 }

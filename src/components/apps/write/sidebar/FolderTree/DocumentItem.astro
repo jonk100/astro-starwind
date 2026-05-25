@@ -1,0 +1,119 @@
+---
+import { formatUpdatedAt } from "../sidebar.utils"; // Fixed path to match local directory relative import
+
+interface Props {
+  doc: {
+    id: string;
+    title: string;
+    updated_at: string;
+    pinned: boolean;
+  };
+  folderId: string | null;
+  activeDocumentId: string | null;
+}
+
+const { doc, folderId, activeDocumentId } = Astro.props;
+const isActive = doc.id === activeDocumentId;
+---
+
+<li
+  class={`doc-item${doc.pinned ? " is-pinned" : ""}`}
+  data-doc-id={doc.id}
+  data-folder-id={folderId}
+>
+  <a
+    href={`/app/write?doc=${doc.id}`}
+    class={`doc-link${doc.id === activeDocumentId ? " is-active" : ""}`}
+    aria-current={doc.id === activeDocumentId ? "page" : undefined}
+  >
+    <span class="doc-title">{doc.title || "Untitled"}</span>
+    <span class="doc-meta">{formatUpdatedAt(doc.updated_at)}</span>
+  </a>
+  <button
+    class="doc-move-btn"
+    type="button"
+    aria-label="Move to folder"
+    title="Move to folder"
+    data-doc-id={doc.id}
+    data-folder-id={folderId ?? null}
+    data-move-trigger
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+  </button>
+</li>
+
+
+<style>
+  .doc-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.1s;
+  }
+
+  /* Make the anchor tag fill the entire list item */
+  .doc-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    width: 100%;
+    padding: 0.5rem 2.5rem 0.5rem 0.6rem; /* Right padding leaves room for the move button */
+    text-decoration: none;
+    color: var(--color-text);
+    border-radius: 5px;
+  }
+
+  /* Active and Hover states */
+  .doc-link.is-active {
+    background-color: var(--color-surface-active, #ff8a9a); /* Adjust to your specific theme variable */
+    color: var(--color-text-active, inherit);
+  }
+
+  .doc-item:hover {
+    background-color: var(--color-surface-hover);
+  }
+
+  /* Typography details */
+  .doc-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .doc-meta {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  /* Move button alignment */
+  .doc-move-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background-color 0.15s;
+  }
+
+  .doc-item:hover .doc-move-btn { 
+    opacity: 1; 
+  }
+  
+  .doc-move-btn:hover { 
+    background-color: var(--color-surface-hover-nested, rgba(0,0,0,0.05)); 
+    color: var(--color-text); 
+  }
+</style>

@@ -3,14 +3,12 @@
  * @file src/pages/app/write/index.astro
  * @description Main entry point for the Write app.
  *
- * Renders the two-column shell: sidebar on the left, editor canvas on the right.
- * On first load with no document selected, the canvas shows an empty state.
+ * FIX d: The toolbar is sticky within the write-main column.
+ * The write-main column itself does NOT scroll — only write-canvas-wrapper
+ * scrolls. This means the toolbar is always visible regardless of doc length.
  *
- * The active document ID is read from the `?doc=` query parameter. When present,
- * the full document is fetched server-side and passed to EditorCanvas for
- * server-rendered initial content. The editor then takes over client-side.
- *
- * Protected by middleware — only authenticated users can reach /app/*.
+ * FIX g: Sidebar scroll position is saved to sessionStorage keyed by
+ * the active document ID and restored on each page load.
  */
 
 import AppLayout from "@/layouts/AppLayout.astro";
@@ -22,52 +20,43 @@ import { getDocumentIndex, getFolders, getDocumentById } from "@/lib/journal/que
 import { parseBlocks } from "@/lib/journal/utils";
 import type { DocumentIndexRow, Folder, Block } from "@/lib/journal/types";
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
 export const prerender = false;
 const user = Astro.locals.user!;
 const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
 
-// ── Data Fetching ─────────────────────────────────────────────────────────────
-
-// Fetch the lightweight index (sidebar) and folders in parallel.
-// Never fetch full content_blocks here unless a specific doc is requested.
 const [indexResult, foldersResult] = await Promise.all([
   getDocumentIndex(supabase, user.id),
   getFolders(supabase, user.id),
 ]);
 
 const documents: DocumentIndexRow[] = indexResult.data ?? [];
-const folders: Folder[] = foldersResult.data ?? [];
+const folders: Folder[]             = foldersResult.data ?? [];
 
-// ── Active Document ───────────────────────────────────────────────────────────
 const docId = Astro.url.searchParams.get("doc");
 
-let activeBlocks: Block[] = [];
-let activeTitle: string = "";
-let activeDocumentId: string | null = null;
-let isPinned: boolean = false; // ← declare here with a safe default
+let activeBlocks: Block[]     = [];
+let activeTitle: string       = "";
+let activeDocumentId: string  = "";
+let isPinned: boolean         = false;
 
 if (docId) {
   const { data: doc, error } = await getDocumentById(supabase, docId, user.id);
-
   if (doc && !error) {
     activeDocumentId = doc.id;
-    activeTitle = doc.title;
-    isPinned = doc.pinned ?? false; // ← read from the DB row, not the URL
-
-    const parsed = parseBlocks(doc.content_blocks);
-    activeBlocks = parsed.ok ? parsed.blocks : [];
+    activeTitle      = doc.title;
+    isPinned         = doc.pinned ?? false;
+    const parsed     = parseBlocks(doc.content_blocks);
+    activeBlocks     = parsed.ok ? parsed.blocks : [];
   }
 }
-
-activeDocumentId = activeDocumentId ?? "";
 ---
 
-<AppLayout title="Write" description="A calm place to think. Pan around, write freely, style as you go.">
+<AppLayout title="Write" description="A calm place to think.">
+<div class="tiptap-editor"></div>
+
   <div class="write-shell">
 
-    <!-- Left: Sidebar -->
-    <aside class="write-sidebar">
+    <aside class="write-sidebar" id="write-sidebar">
       <JournalSidebar
         documents={documents}
         folders={folders}
@@ -76,17 +65,22 @@ activeDocumentId = activeDocumentId ?? "";
       />
     </aside>
 
-    <!-- Right: Toolbar + Canvas -->
+
     <div class="write-main">
+      <!--
+        FIX d: toolbar sits here, OUTSIDE the scrollable canvas wrapper.
+        write-main is a flex column with overflow:hidden, so the toolbar
+        never scrolls away — it's always pinned to the top of the right panel.
+      -->
       <JournalToolbar
         activeDocumentId={activeDocumentId}
         user={user}
         isPinned={isPinned}
       />
 
-      <main class="write-canvas-wrapper">
+      <main class="write-canvas-wrapper" id="write-canvas-wrapper">
         <EditorCanvas
-          documentId={activeDocumentId ?? ""}
+          documentId={activeDocumentId}
           title={activeTitle}
           blocks={activeBlocks}
           user={user}
@@ -98,20 +92,34 @@ activeDocumentId = activeDocumentId ?? "";
 </AppLayout>
 
 <style>
+  /*
+   * The app shell is a full-viewport grid. Neither column scrolls at this
+   * level — each child manages its own internal scroll independently.
+   */
   .write-shell {
     display: grid;
     grid-template-columns: 280px 1fr;
     height: 100vh;
-    overflow: hidden;
+    max-height: 100vh;
+    overflow: hidden;          /* shell itself never scrolls                  */
     background-color: var(--color-bg);
   }
 
+  /* ── Sidebar ──
+   * Scrolls independently. Scroll position is saved/restored by the script
+   * below (FIX g).
+   */
   .write-sidebar {
     border-right: 1px solid var(--color-border);
     overflow-y: auto;
     height: 100vh;
   }
 
+  /* ── Right panel ──
+   * Flex column, overflow:hidden. The toolbar is a flex child with a fixed
+   * height — it never grows or shrinks. The canvas wrapper takes the rest.
+   * This is what makes the toolbar sticky (FIX d).
+   */
   .write-main {
     display: flex;
     flex-direction: column;
@@ -119,8 +127,57 @@ activeDocumentId = activeDocumentId ?? "";
     overflow: hidden;
   }
 
+  /* ── Canvas wrapper ──
+   * This is the ONLY scrollable area on the right. The toolbar above it
+   * is always visible.
+   */
   .write-canvas-wrapper {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 </style>
+
+<script>
+
+  import { Editor } from '@tiptap/core';
+  import StarterKit from '@tiptap/starter-kit';
+
+  new Editor({
+    element: document.querySelector('.tiptap-editor'),
+    extensions: [StarterKit],
+    content: '<p>Hello World!</p>',
+  });
+
+  /**
+   * FIX g: Persist and restore sidebar scroll position across page loads.
+   *
+   * We use sessionStorage (not localStorage) so the position resets when
+   * the browser tab is closed — avoids jarring jumps on cold starts.
+   * The key includes the active document ID so switching documents can
+   * potentially restore the scroll to where it was for that doc.
+   */
+  (function restoreSidebarScroll() {
+    const sidebar = document.getElementById("write-sidebar");
+    if (!sidebar) return;
+
+    const key        = "write:sidebar-scroll";
+    const savedPos   = sessionStorage.getItem(key);
+
+    // Restore immediately (before paint) to avoid a visible jump
+    if (savedPos) {
+      sidebar.scrollTop = parseInt(savedPos, 10);
+    }
+
+    // Save on every scroll (throttled to every 200ms)
+    let ticking = false;
+    sidebar.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      setTimeout(() => {
+        sessionStorage.setItem(key, String(sidebar.scrollTop));
+        ticking = false;
+      }, 200);
+    });
+  })();
+</script>

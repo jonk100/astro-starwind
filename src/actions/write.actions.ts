@@ -87,16 +87,26 @@ const blockSchema = z.object({
   type: z.enum([
     "paragraph",
     "heading",
+    "heading-1",
+    "heading-2",
+    "heading-3",
+    "heading-4",
+    "heading-5",
     "quote",
     "separator",
     "checklist",
     "callout",
+    "callout-info",
+    "callout-warning",
+    "callout-success",
+    "callout-danger",
     "code",
     "prompt",
   ]),
   content: z.string(),
   meta: z.record(z.string(), z.unknown()).optional(),
 });
+
 
 /** A validated array of content blocks from the editor. */
 const blocksSchema = z.array(blockSchema);
@@ -205,6 +215,10 @@ export const write = {
     },
   }),
 
+  /**
+   * 
+   */
+
   // ── Document Actions ────────────────────────────────────────────────────────
 
   /**
@@ -259,9 +273,9 @@ export const write = {
    */
   updateDocument: defineAction({
     input: z.object({
-      id: z.string().uuid("Invalid document ID"),
+      id: z.uuid("Invalid document ID"),
       title: z.string().min(1).max(255).optional(),
-      folder_id: z.string().uuid().nullable().optional(),
+      folder_id: z.uuid().nullable().optional(),
       pinned: z.boolean().optional(),
     }),
     handler: async (input, context) => {

@@ -505,3 +505,160 @@ Avoid:
 They become architecture black holes fast.
 
 Your preferences and current codebase are actually well-suited to a handcrafted editor.
+
+## Long-Term system Architecture
+
+## 1. Current Core (TypeScript / Astro — keep as-is)
+
+This is the real-time UI layer. It should remain entirely in TS.
+
+### Responsibilities
+
+* contenteditable editor
+* block rendering (DOM)
+* keyboard handling (Enter, navigation)
+* selection model (logical state)
+* toolbar + commands
+* autosave triggers
+* Supabase / API calls
+
+### Key principle
+
+> DOM is just a rendering target, not the source of truth.
+
+---
+
+## 2. Intermediate Layer (TypeScript “Engine Layer”)
+
+This is where your app is currently evolving.
+
+### Responsibilities
+
+* Block model (AST-like structure)
+* Selection model (already started)
+* Command system (Enter, slash, toolbar actions)
+* Block transformation rules
+* Undo/redo stack (future)
+* Document state reconciliation
+
+### Structure direction
+
+* `editorEngine.ts`
+* `blockRegistry.ts`
+* `selectionModel.ts`
+* `commandPipeline.ts`
+
+### Key principle
+
+> UI triggers events → engine updates state → DOM re-renders
+
+---
+
+## 3. Optional Rust Layer (future, isolated services)
+
+Rust only enters here if scale or complexity demands it.
+
+---
+
+### A. Sync Engine (highest value use case)
+
+```
+document ops log → Rust engine → merged document state
+```
+
+Responsibilities:
+
+* CRDT / conflict-free merges
+* offline-first sync resolution
+* version history compression
+
+Why Rust fits:
+
+* deterministic merging
+* performance on large histories
+* correctness over convenience
+
+---
+
+### B. Search + Index Engine
+
+```
+notes → Rust indexer → query API → UI
+```
+
+Responsibilities:
+
+* full-text search
+* backlink graph generation
+* ranking / relevance scoring
+* tag + semantic indexing
+
+Why Rust fits:
+
+* fast traversal of large datasets
+* memory efficiency
+* batch processing
+
+---
+
+### C. File / Local Storage Engine (desktop future)
+
+(Tauri or similar)
+
+Responsibilities:
+
+* filesystem access
+* encryption
+* local persistence layer
+* offline vault
+
+Why Rust fits:
+
+* safe system-level access
+* performance + portability
+
+---
+
+## 4. What Rust is NOT for
+
+Avoid using Rust for:
+
+* editor interactions
+* DOM manipulation
+* UI state
+* toolbar logic
+* focus/selection handling
+* Astro components
+
+Reason:
+
+> These are latency-sensitive, event-driven UI concerns tied to the browser.
+
+---
+
+## 5. Long-term Architecture Shape
+
+```
+[ UI Layer (Astro + TS) ]
+        ↓
+[ Editor Engine (TS state system) ]
+        ↓
+[ Optional Rust Services ]
+   ├─ Sync Engine
+   ├─ Search Engine
+   └─ Storage Engine
+```
+
+---
+
+## 6. Core design shift you are already making
+
+You are moving from:
+
+> DOM-driven editor
+
+to:
+
+> state-driven document engine with DOM as a view layer
+
+Rust becomes relevant only after this transition is complete and stable.

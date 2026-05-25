@@ -102,7 +102,7 @@ export async function getDocumentIndex(
 ) {
   return supabase
     .from("document_index")
-    .select("id, user_id, folder_id, title, preview, updated_at")
+    .select("id, user_id, folder_id, title, preview, updated_at, pinned")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .returns<DocumentIndexRow[]>();
@@ -128,7 +128,7 @@ export async function getDocumentIndexByFolder(
 ) {
   return supabase
     .from("document_index")
-    .select("id, user_id, folder_id, title, preview, updated_at")
+    .select("id, user_id, folder_id, title, preview, updated_at, pinned")
     .eq("user_id", userId)
     .eq("folder_id", folderId)
     .order("updated_at", { ascending: false })
@@ -153,7 +153,7 @@ export async function getPinnedDocuments(
 ) {
   return supabase
     .from("documents")
-    .select("id, user_id, folder_id, title, preview, updated_at")
+    .select("id, user_id, folder_id, title, preview, updated_at, pinned")
     .eq("user_id", userId)
     .eq("pinned", true)
     .order("updated_at", { ascending: false })
@@ -282,7 +282,7 @@ export async function searchDocuments(
 
   return supabase
     .from("document_index")
-    .select("id, user_id, folder_id, title, preview, updated_at")
+    .select("id, user_id, folder_id, title, preview, updated_at, pinned")
     .eq("user_id", userId)
     .or(`title.ilike.${term},preview.ilike.${term}`)
     .order("updated_at", { ascending: false })
