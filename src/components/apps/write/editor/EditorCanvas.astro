@@ -6,6 +6,7 @@ import type { Block } from '@/lib/journal/types';
 import { blockTag, blockClass } from "@/lib/journal/types";
 import "./editorCanvas.css";
 import EmptyCanvas from './editorParts/EmptyCanvas.astro';
+import NavHint from './editorCanvas/NavHint.astro';
 
 interface Props {
   documentId: string | null;
@@ -70,20 +71,25 @@ const { documentId, title, blocks } = Astro.props;
     </div>
   )}
 </div>
+<NavHint />
+
 
 <script>
-  import { initEditor } from "./editorCanvas/editorCanvas";
+  import { initEditor, disposeEditor } from "./editorCanvas/editorCanvas";
   import { setActiveDocument } from "@/stores/editor";
 
-  document.addEventListener("DOMContentLoaded", () => {
+  function setupCanvasLifecycle() {
     const canvas = document.getElementById("editor-canvas") as HTMLElement | null;
     if (!canvas) return;
 
     const documentId = canvas.dataset.documentId;
     if (!documentId) return;
 
-    // Sync server-rendered data into NanoStores
-    const titleEl = document.getElementById("editor-title") as HTMLElement;
+    //! 1. Cleanly tear down any active actors running on the previous document framework
+    disposeEditor();
+
+    // 2. Parse initial HTML payloads sent by the server template
+    const titleEl = document.getElementById("editor-title") as HTMLElement | null;
     const initialTitle = titleEl?.textContent?.trim() || "Untitled";
 
     const initialBlocks = Array.from(
@@ -94,8 +100,25 @@ const { documentId, title, blocks } = Astro.props;
       content: el.textContent || "",
     }));
 
+    // 3. Hydrate client state managers
     setActiveDocument(documentId, initialTitle, initialBlocks);
 
+    // 4. Spin up the fresh, debounced XState tracking engine
     initEditor(documentId);
+  }
+
+  // Support classic standard initial document loading cascades
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupCanvasLifecycle);
+  } else {
+    setupCanvasLifecycle();
+  }
+
+  // Support Astro's client-side SPA view transition routing loop layers
+  document.addEventListener("astro:page-load", setupCanvasLifecycle);
+
+  // Clean layout context variables right before navigating away to prevent listener memory drag
+  document.addEventListener("astro:before-swap", () => {
+    disposeEditor();
   });
 </script>

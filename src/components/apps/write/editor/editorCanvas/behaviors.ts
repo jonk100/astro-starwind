@@ -11,7 +11,7 @@ export type EnterContext = {
   replaceWith: (newType: BlockType) => void;
 };
  
-type BlockBehavior = {
+export type BlockBehavior = {
   onEnter?: (ctx: EnterContext) => void;
   onShiftEnter?: (ctx: EnterContext) => void;
 };

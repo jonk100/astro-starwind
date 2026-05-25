@@ -4,29 +4,27 @@
 
 :root {
 
-  /* ── Canvas shell ── */
-  .editor-canvas {
-    min-height: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    /* padding: var(--space-6) var(--space-6); */
-    width: 100%;
-    overflow-x: hidden;
-    box-sizing: border-box;
-  }
+    /* ── Canvas shell ── */
+    .editor-canvas {
+      min-height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: var(--space-6) var(--space-6);
+      width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
 
-  /* ── Reading column ── */
-  .editor-inner {
-    background: rgba(26, 21, 21, 0.065);
-    width: 100%;
-    max-width: 88ch;
-    min-width: 0;
-    /* border-left: 1px dotted #333;
-    border-right: 1px dotted #333; */
-    padding: var(--space-1) var(--space-8);
-    margin: var(--space-5) auto;
-  }
+    /* ── Reading column ── */
+    .editor-inner {
+      width: 100%;
+      max-width: 88ch;
+      min-width: 0;
+      background: rgba(26, 21, 21, 0.065);
+      min-height: 80vh;
+      padding: var(--space-1) var(--space-8);
+    }
 
   /* ── Empty state ── */
   .canvas-empty {

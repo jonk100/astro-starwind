@@ -1,0 +1,70 @@
+---
+// src/components/apps/write/editor/editorCanvas/NavHint.astro
+interface Props {
+  fadeTimeout?: number;
+  upMessage?: string;
+  downMessage?: string;
+}
+
+const { 
+  fadeTimeout = 1800, 
+  upMessage = "↑ Ctrl + ↑ to move to previous block", 
+  downMessage = "↓ Ctrl + ↓ to move to next block" 
+} = Astro.props;
+---
+
+<div id="editor-nav-hint" class="editor-nav-hint is-hidden" aria-live="polite" role="status">
+  <span id="editor-nav-hint-text"></span>
+</div>
+
+<style>
+  .editor-nav-hint {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1e1e2e;
+    color: #a6adc8;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #313244;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .editor-nav-hint.is-hidden {
+    opacity: 0;
+    transform: translate(-50%, 1rem);
+  }
+  .editor-nav-hint.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+</style>
+
+<script define:vars={{ fadeTimeout, upMessage, downMessage }}>
+  let hintTimer = null;
+  const hintEl = document.getElementById("editor-nav-hint");
+  const textEl = document.getElementById("editor-nav-hint-text");
+
+  if (hintEl && textEl) {
+    // Listen for custom arrow edge events dispatched by the canvas handler
+    window.addEventListener("editor:show-nav-hint", (e) => {
+      const { direction } = e.detail;
+
+      textEl.textContent = direction === "up" ? upMessage : downMessage;
+
+      hintEl.classList.remove("is-hidden");
+      hintEl.classList.add("is-visible");
+
+      if (hintTimer) clearTimeout(hintTimer);
+      
+      hintTimer = setTimeout(() => {
+        hintEl.classList.remove("is-visible");
+        hintEl.classList.add("is-hidden");
+      }, fadeTimeout);
+    });
+  }
+</script>
