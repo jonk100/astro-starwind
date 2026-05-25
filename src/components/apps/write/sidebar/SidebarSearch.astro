@@ -96,6 +96,9 @@ import './sidebar.css';
     const clear  = document.getElementById("sidebar-search-clear") as HTMLButtonElement | null;
     const body   = document.getElementById("sidebar-document-list") as HTMLElement | null;
     if (!input || !clear || !body) return;
+    const inputEl = input as HTMLInputElement;
+    const clearEl = clear as HTMLButtonElement;
+    const bodyEl = body as HTMLElement;
 
     // ── Build a dedicated results list that lives inside the sidebar body ──
     const resultsList = document.createElement("ul");
@@ -111,26 +114,26 @@ import './sidebar.css';
 
     /** Shows search results and hides the folder tree. */
     function activateSearch() {
-      body.style.display = "none";
+      bodyEl.style.display = "none";
       resultsList.style.display = "";
-      clear.classList.remove("hidden");
+      clearEl.classList.remove("hidden");
     }
 
     /** Hides search results and restores the folder tree. */
     function deactivateSearch() {
-      body.style.display = "";
+      bodyEl.style.display = "";
       resultsList.style.display = "none";
       resultsList.innerHTML = "";
-      input.value = "";
-      clear.classList.add("hidden");
+      inputEl.value = "";
+      clearEl.classList.add("hidden");
     }
 
     // Start with results hidden
     resultsList.style.display = "none";
 
-    input.addEventListener("input", () => {
+    inputEl.addEventListener("input", () => {
       clearTimeout(debounce);
-      const query = input.value.trim();
+      const query = inputEl.value.trim();
 
       if (!query) {
         deactivateSearch();
@@ -149,13 +152,13 @@ import './sidebar.css';
       }, 300);
     });
 
-    clear.addEventListener("click", () => {
+    clearEl.addEventListener("click", () => {
       deactivateSearch();
-      input.focus();
+      inputEl.focus();
     });
 
     // Esc key exits search
-    input.addEventListener("keydown", (e) => {
+    inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Escape") deactivateSearch();
     });
   }

@@ -6,7 +6,7 @@ import {
   getBlockId,
   readBlocksFromDOM,
   sanitiseAndSendBlocks,
-  createBlockElement, // added static import
+  createBlockElement,
 } from "./helpers";
 
 /**
@@ -22,9 +22,9 @@ export function handleBlockInput(
   editorActor: any
 ): void {
   const target = e.target as HTMLElement;
-  const blockEl = target.classList.contains("editor-block")
+  const blockEl = target.classList.contains("editor-block") || target.classList.contains("editor-block--checklist")
     ? target
-    : target.closest<HTMLElement>(".editor-block");
+    : target.closest<HTMLElement>(".editor-block, .editor-block--checklist");
   if (!blockEl) return;
   const type = getBlockType(blockEl);
   const blockId = blockEl.dataset.blockId;
@@ -59,16 +59,33 @@ export function handleBlockFocus(e: FocusEvent): void {
 
 /**
  * Handles checklist checkbox changes.
+ * Now sends a CHECKLIST_TOGGLED event to the actor instead of
+ * reading the DOM and sanitising blocks.
+ * The actor updates canonical state, and a subscription patches the DOM.
+ *
  * @param e - Change event
- * @param blocksContainer - Container holding all blocks
+ * @param blocksContainer - Container holding all blocks (unused, kept for signature compat)
+ * @param editorActor - XState actor (for sending CHECKLIST_TOGGLED)
  */
-export function handleChecklistChange(e: Event, blocksContainer: HTMLElement): void {
+export function handleChecklistChange(
+  e: Event,
+  blocksContainer: HTMLElement,
+  editorActor: any
+): void {
   const checkbox = e.target as HTMLInputElement;
   if (!checkbox.classList.contains("checklist-checkbox")) return;
   const blockEl = checkbox.closest<HTMLElement>(".editor-block--checklist");
   if (!blockEl) return;
-  blockEl.setAttribute("data-checked", checkbox.checked ? "true" : "false");
-  sanitiseAndSendBlocks(blocksContainer);
+  const blockId = blockEl.dataset.blockId;
+  if (!blockId) return;
+
+  // Send minimal event to actor — let it update canonical state.
+  // A subscription in initEditor will patch the DOM.
+  editorActor?.send({
+    type: "CHECKLIST_TOGGLED",
+    blockId,
+    checked: checkbox.checked,
+  });
 }
 
 /**
@@ -93,8 +110,8 @@ export function handleToolbarBlockType(
     type: blockType,
     content: target.textContent || "",
   };
-  createBlockElement
   const newEl = createBlockElement(newBlock);
+  if (!newEl) return;
   target.replaceWith(newEl);
   // Update the reference (since we can't mutate the parameter, we rely on the caller to update its own reference)
   if (blockType !== "separator") {

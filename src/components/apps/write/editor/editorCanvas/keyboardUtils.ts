@@ -4,6 +4,51 @@ import { CALLOUT_CYCLE, type CalloutVariant } from "./consts";
 import { getBlockType, getBlockId, generateBlockId, createBlockElement } from "./helpers";
 
 /**
+ * Places the cursor inside a block's editable content.
+ * @param block - The block element
+ * @param position - 'start' (before text) or 'end' (after text)
+ */
+export function setBlockCursor(block: HTMLElement, position: 'start' | 'end'): void {
+  let targetNode: Node | null = null;
+  let offset = 0;
+
+  if (block.classList.contains('editor-block--checklist')) {
+    const textSpan = block.querySelector<HTMLElement>('.checklist-text');
+    if (textSpan) {
+      targetNode = textSpan;
+      const textLength = textSpan.textContent ? textSpan.textContent.length : 0;
+      offset = position === 'start' ? 0 : textLength;
+    } else {
+      targetNode = block;
+      const textLength = block.textContent ? block.textContent.length : 0;
+      offset = position === 'start' ? 0 : textLength;
+    }
+  } else {
+    targetNode = block;
+    const textLength = block.textContent ? block.textContent.length : 0;
+    offset = position === 'start' ? 0 : textLength;
+  }
+
+  if (!targetNode) return;
+
+  // Clamp offset within [0, node length]
+  const nodeTextLength = (targetNode.textContent || '').length;
+  if (offset < 0) offset = 0;
+  if (offset > nodeTextLength) offset = nodeTextLength;
+
+  try {
+    const range = document.createRange();
+    range.setStart(targetNode, offset);
+    range.collapse(true);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  } catch (e) {
+    console.warn('Failed to set cursor position:', e);
+  }
+}
+
+/**
  * Moves focus to an adjacent block (Tab / Shift+Tab, Alt+Arrow).
  * @param target - Current focused block
  * @param blocksContainer - Container of all blocks
@@ -15,15 +60,35 @@ export function focusAdjacentBlock(
   blocksContainer: HTMLElement,
   direction: 1 | -1
 ): boolean {
-  const allBlocks = Array.from(blocksContainer.querySelectorAll<HTMLElement>(".editor-block"));
+  const allBlocks = Array.from(blocksContainer.querySelectorAll<HTMLElement>(".editor-block, .editor-block--checklist"));
   const idx = allBlocks.indexOf(target);
   let focusIdx = idx + direction;
   // Skip non-editable blocks (e.g., separators)
-  while (focusIdx >= 0 && focusIdx < allBlocks.length && allBlocks[focusIdx].getAttribute("contenteditable") === null) {
+  while (focusIdx >= 0 && focusIdx < allBlocks.length) {
+    const block = allBlocks[focusIdx];
+    const isContentEditable = block.getAttribute("contenteditable") !== null;
+    const isChecklist = block.classList.contains("editor-block--checklist");
+    // Include if contenteditable or if it's a checklist block
+    if (isContentEditable || isChecklist) break;
     focusIdx += direction;
   }
   const focusTarget = allBlocks[focusIdx];
   if (!focusTarget) return false;
+  
+  // For checklist blocks, focus the .checklist-text span instead
+  if (focusTarget.classList.contains("editor-block--checklist")) {
+    const textSpan = focusTarget.querySelector<HTMLElement>(".checklist-text");
+    if (textSpan) {
+      textSpan.focus();
+      const range = document.createRange();
+      range.selectNodeContents(textSpan);
+      range.collapse(direction === 1);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(range);
+      return true;
+    }
+  }
+  
   focusTarget.focus();
   const range = document.createRange();
   range.selectNodeContents(focusTarget);
@@ -119,6 +184,7 @@ export function cycleBlockVariant(
     content: target.textContent || "",
   };
   const newEl = createBlockElement(newBlock);
+  if (!newEl) return false;
   target.replaceWith(newEl);
   newEl.focus();
   window.dispatchEvent(new CustomEvent("editor:block-focused", { detail: { blockType: nextVariant } }));

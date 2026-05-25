@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase";
 import { getDocumentIndex, getFolders, getDocumentById } from "@/lib/journal/queries";
 import { parseBlocks } from "@/lib/journal/utils";
 import type { DocumentIndexRow, Folder, Block } from "@/lib/journal/types";
+import { editorActor } from "@/components/apps/write/editor/editorCanvas/editorCanvas.ts";
 
 export const prerender = false;
 const user = Astro.locals.user!;
@@ -47,12 +48,26 @@ if (docId) {
     isPinned         = doc.pinned ?? false;
     const parsed     = parseBlocks(doc.content_blocks);
     activeBlocks     = parsed.ok ? parsed.blocks : [];
+    // Ensure checklist blocks have meta.checked set
+    activeBlocks.forEach((block) => {
+      if (block.type === 'checklist') {
+        if (block.meta?.checked === undefined) {
+          if (!block.meta) block.meta = {};
+          block.meta.checked = false;
+        }
+      }
+    });
   }
-}
+  console.log('Loaded blocks:', activeBlocks);
+  if (editorActor) {
+  console.log('Loaded blocks:', activeBlocks);
+  editorActor.send({ type: 'BLOCKS_CHANGED', blocks: activeBlocks });
+  }
+};
 ---
-
+<script type="application/json" id="initial-blocks">{JSON.stringify(activeBlocks)}</script>
 <AppLayout title="Write" description="A calm place to think.">
-<div class="tiptap-editor"></div>
+<!-- <div class="tiptap-editor"></div> -->
 
   <div class="write-shell">
 
@@ -140,14 +155,6 @@ if (docId) {
 
 <script>
 
-  import { Editor } from '@tiptap/core';
-  import StarterKit from '@tiptap/starter-kit';
-
-  new Editor({
-    element: document.querySelector('.tiptap-editor'),
-    extensions: [StarterKit],
-    content: '<p>Hello World!</p>',
-  });
 
   /**
    * FIX g: Persist and restore sidebar scroll position across page loads.

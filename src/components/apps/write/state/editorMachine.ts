@@ -1,3 +1,6 @@
+/**
+ * src/components/apps/write/editor/editorCanvas.ts
+ **/
 import { setup, assign, fromPromise } from 'xstate';
 import { actions } from 'astro:actions';
 import type { Block } from '@/lib/journal/types';
@@ -19,6 +22,7 @@ export const editorMachine = setup({
     events: {} as
       | { type: 'TITLE_CHANGED'; title: string }
       | { type: 'BLOCKS_CHANGED'; blocks: Block[] }
+      | { type: 'CHECKLIST_TOGGLED'; blockId: string; checked: boolean }
       | { type: 'RETRY' }
   },
   actors: {
@@ -81,6 +85,20 @@ export const editorMachine = setup({
         BLOCKS_CHANGED: {
           target: '#state_typing',
           actions: assign({ blocks: ({ event }) => event.blocks, isBlocksDirty: true })
+        },
+        CHECKLIST_TOGGLED: {
+          actions: assign({
+            blocks: ({ context, event }) =>
+              context.blocks.map(block =>
+                block.id === event.blockId
+                  ? {
+                      ...block,
+                      meta: { ...block.meta, checked: event.checked }
+                    }
+                  : block
+              ),
+            isBlocksDirty: true
+          })
         }
       }
     },
@@ -94,6 +112,18 @@ export const editorMachine = setup({
         BLOCKS_CHANGED: {
           target: '#state_reset_timer',
           actions: assign({ blocks: ({ event }) => event.blocks, isBlocksDirty: true })
+        },
+        CHECKLIST_TOGGLED: {
+          target: '#state_reset_timer',
+          actions: assign({
+            blocks: ({ context, event }) =>
+              context.blocks.map(block =>
+                block.id === event.blockId
+                  ? { ...block, meta: { ...block.meta, checked: event.checked } }
+                  : block
+              ),
+            isBlocksDirty: true
+          })
         }
       },
       after: {
@@ -159,6 +189,17 @@ export const editorMachine = setup({
         },
         BLOCKS_CHANGED: {
           actions: assign({ blocks: ({ event }) => event.blocks, isBlocksDirty: true })
+        },
+        CHECKLIST_TOGGLED: {
+          actions: assign({
+            blocks: ({ context, event }) =>
+              context.blocks.map(block =>
+                block.id === event.blockId
+                  ? { ...block, meta: { ...block.meta, checked: event.checked } }
+                  : block
+              ),
+            isBlocksDirty: true
+          })
         }
       }
     },
@@ -173,6 +214,18 @@ export const editorMachine = setup({
         BLOCKS_CHANGED: {
           target: '#state_typing',
           actions: assign({ blocks: ({ event }) => event.blocks, isBlocksDirty: true })
+        },
+        CHECKLIST_TOGGLED: {
+          target: '#state_typing',
+          actions: assign({
+            blocks: ({ context, event }) =>
+              context.blocks.map(block =>
+                block.id === event.blockId
+                  ? { ...block, meta: { ...block.meta, checked: event.checked } }
+                  : block
+              ),
+            isBlocksDirty: true
+          })
         }
       }
     }

@@ -50,6 +50,31 @@ const { documentId, title, blocks } = Astro.props;
           />
         ) : (
           blocks.map((block) => {
+            if (block.type === "checklist") {
+              const checked = (block.meta?.checked as boolean) ?? false;
+              return (
+                <div
+                  class="editor-block editor-block--checklist"
+                  data-block-id={block.id}
+                  data-block-type="checklist"
+                  data-checked={checked ? "true" : "false"}
+                >
+                  <input 
+                    type="checkbox" 
+                    class="checklist-checkbox" 
+                    checked={checked} 
+                    aria-label="Mark as complete"
+                  />
+                  <span 
+                    class="checklist-text" 
+                    contenteditable="true" 
+                    data-placeholder={!block.content ? "To-do item..." : undefined}
+                  >
+                    {block.content}
+                  </span>
+                </div>
+              );
+            }
             const Tag = blockTag(block);
             const isSeparator = block.type === "separator";
             return (
@@ -93,12 +118,25 @@ const { documentId, title, blocks } = Astro.props;
     const initialTitle = titleEl?.textContent?.trim() || "Untitled";
 
     const initialBlocks = Array.from(
-      document.querySelectorAll<HTMLElement>(".editor-block")
-    ).map((el) => ({
-      id: el.dataset.blockId || `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      type: (el.dataset.blockType as any) || "paragraph",
-      content: el.textContent || "",
-    }));
+      document.querySelectorAll<HTMLElement>(".editor-block, .editor-block--checklist")
+    ).map((el) => {
+      const type = (el.dataset.blockType as any) || "paragraph";
+      if (type === "checklist") {
+        const textEl = el.querySelector<HTMLElement>(".checklist-text");
+        const checked = el.getAttribute("data-checked") === "true";
+        return {
+          id: el.dataset.blockId || `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          type,
+          content: textEl?.textContent || "",
+          meta: { checked }
+        };
+      }
+      return {
+        id: el.dataset.blockId || `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        type,
+        content: el.textContent || "",
+      };
+    });
 
     // 3. Hydrate client state managers
     setActiveDocument(documentId, initialTitle, initialBlocks);

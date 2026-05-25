@@ -1,0 +1,325 @@
+---
+/**
+ * @file src/components/apps/write/editor/KeyboardHints.astro
+ *
+ * Two features:
+ *
+ * a) Inactivity toast — after 8 seconds of no keyboard/mouse activity
+ *    inside the editor, a subtle toast appears at the bottom of the canvas
+ *    saying "Press Ctrl+? for keyboard shortcuts". It auto-dismisses after
+ *    5 seconds or when the user interacts.
+ *
+ * b) Ctrl+? shortcut sheet — a full overlay listing every keyboard shortcut.
+ *    Dismissed with Escape or clicking outside.
+ *
+ * Drop this component inside EditorCanvas.astro, below the block list.
+ */
+---
+
+<!-- Inactivity toast (item a) -->
+<div id="kb-hint-toast" class="kb-hint-toast" aria-live="polite" role="status" hidden>
+  Press <kbd>Ctrl+?</kbd> for keyboard shortcuts
+</div>
+
+<!-- Shortcut sheet overlay (Ctrl+?) -->
+<div id="kb-sheet" class="kb-sheet" hidden role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+  <div class="kb-sheet-panel">
+    <div class="kb-sheet-header">
+      <h2 class="kb-sheet-title">Keyboard shortcuts</h2>
+      <button class="kb-sheet-close" id="kb-sheet-close" type="button" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="kb-sheet-body">
+      <section class="kb-section">
+        <h3 class="kb-section-title">Navigation</h3>
+        <dl class="kb-list">
+          <div class="kb-row"><dt><kbd>Tab</kbd></dt><dd>Next block</dd></div>
+          <div class="kb-row"><dt><kbd>Shift+Tab</kbd></dt><dd>Previous block</dd></div>
+          <div class="kb-row"><dt><kbd>Ctrl+↑</kbd></dt><dd>Jump to previous block</dd></div>
+          <div class="kb-row"><dt><kbd>Ctrl+↓</kbd></dt><dd>Jump to next block</dd></div>
+          <div class="kb-row"><dt><kbd>Enter</kbd> on title</dt><dd>Move to first block</dd></div>
+        </dl>
+      </section>
+
+      <section class="kb-section">
+        <h3 class="kb-section-title">Block types</h3>
+        <dl class="kb-list">
+          <div class="kb-row"><dt><kbd>Ctrl+1</kbd> – <kbd>Ctrl+6</kbd></dt><dd>Apply toolbar block type</dd></div>
+          <div class="kb-row"><dt><kbd>Ctrl+←/→</kbd> in callout</dt><dd>Cycle callout style</dd></div>
+          <div class="kb-row"><dt>Right-click toolbar icon</dt><dd>Move to secondary menu</dd></div>
+          <div class="kb-row"><dt>Enter on empty quote/check</dt><dd>Exit to paragraph</dd></div>
+          <div class="kb-row"><dt><kbd>Shift+Enter</kbd> in code</dt><dd>Insert newline</dd></div>
+          <div class="kb-row"><dt><kbd>Enter</kbd> in code</dt><dd>New paragraph below</dd></div>
+        </dl>
+      </section>
+
+      <section class="kb-section">
+        <h3 class="kb-section-title">Editing</h3>
+        <dl class="kb-list">
+          <div class="kb-row"><dt><kbd>Enter</kbd></dt><dd>Split block at cursor</dd></div>
+          <div class="kb-row"><dt><kbd>Backspace</kbd> on empty block</dt><dd>Delete block</dd></div>
+        </dl>
+      </section>
+
+      <section class="kb-section">
+        <h3 class="kb-section-title">General</h3>
+        <dl class="kb-list">
+          <div class="kb-row"><dt><kbd>Ctrl+?</kbd></dt><dd>Toggle this shortcut sheet</dd></div>
+          <div class="kb-row"><dt><kbd>Esc</kbd></dt><dd>Close overlays / dropdowns</dd></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ── Inactivity toast ── */
+  .kb-hint-toast {
+    position: fixed;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    pointer-events: none;
+    z-index: 400;
+    white-space: nowrap;
+
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .kb-hint-toast.is-visible { opacity: 1; }
+  .kb-hint-toast[hidden] { display: none; }
+
+  .kb-hint-toast kbd {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.7rem;
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    padding: 0 0.25rem;
+  }
+
+  /* ── Shortcut sheet overlay ── */
+  .kb-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .kb-sheet[hidden] { display: none; }
+
+  .kb-sheet-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .kb-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+  }
+
+  .kb-sheet-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .kb-sheet-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.1s, color 0.1s;
+  }
+
+  .kb-sheet-close:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .kb-sheet-body {
+    padding: 0.75rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .kb-section-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    margin: 0 0 0.5rem;
+  }
+
+  .kb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+  }
+
+  .kb-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .kb-row dt {
+    flex-shrink: 0;
+    min-width: 10rem;
+  }
+
+  .kb-row dd {
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .kb-row kbd {
+    display: inline-block;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.7rem;
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+</style>
+
+<script>
+  /**
+   * Wires up the inactivity toast (item a) and Ctrl+? shortcut sheet.
+   *
+   * Inactivity logic:
+   * - A timer starts when the user stops typing/clicking inside the editor.
+   * - After INACTIVITY_MS of silence, the toast appears.
+   * - Any interaction resets the timer and hides the toast.
+   * - Once shown, if dismissed at least once, the toast won't reappear
+   *   for the rest of the session (stored in sessionStorage).
+   */
+  function initKeyboardHints(): void {
+    const toast    = document.getElementById("kb-hint-toast") as HTMLElement | null;
+    const sheet    = document.getElementById("kb-sheet") as HTMLElement | null;
+    const closeBtn = document.getElementById("kb-sheet-close") as HTMLElement | null;
+    if (!toast || !sheet || !closeBtn) return;
+    const toastEl = toast as HTMLElement;
+    const sheetEl = sheet as HTMLElement;
+    const closeBtnEl = closeBtn as HTMLElement;
+
+    const INACTIVITY_MS  = 8_000;
+    const TOAST_SHOWN_KEY = "write:kb-toast-shown";
+
+    let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+    let toastVisible = false;
+
+    // ── Toast ──────────────────────────────────────────────────────────────
+
+    function showToast(): void {
+      if (sessionStorage.getItem(TOAST_SHOWN_KEY)) return;
+      toastEl.hidden = false;
+      // Trigger transition after a microtask so the browser registers hidden→visible
+      requestAnimationFrame(() => toastEl.classList.add("is-visible"));
+      toastVisible = true;
+      sessionStorage.setItem(TOAST_SHOWN_KEY, "1");
+
+      // Auto-dismiss after 5s
+      setTimeout(hideToast, 5_000);
+    }
+
+    function hideToast(): void {
+      if (!toastVisible) return;
+      toastEl.classList.remove("is-visible");
+      toastVisible = false;
+      setTimeout(() => { toastEl.hidden = true; }, 300); // wait for fade
+    }
+
+    function resetInactivityTimer(): void {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      if (toastVisible) hideToast();
+      if (sessionStorage.getItem(TOAST_SHOWN_KEY)) return; // shown once, done
+      inactivityTimer = setTimeout(showToast, INACTIVITY_MS);
+    }
+
+    // Reset timer on any editor interaction
+    const editor = document.getElementById("editor-canvas");
+    if (editor) {
+      editor.addEventListener("keydown",   resetInactivityTimer, { passive: true });
+      editor.addEventListener("mousedown", resetInactivityTimer, { passive: true });
+      editor.addEventListener("input",     resetInactivityTimer, { passive: true });
+    }
+
+    // Start the timer immediately on load
+    resetInactivityTimer();
+
+    // ── Shortcut sheet ─────────────────────────────────────────────────────
+
+    function openSheet(): void {
+      sheetEl.hidden = false;
+      hideToast();
+      closeBtnEl.focus();
+    }
+
+    function closeSheet(): void {
+      sheetEl.hidden = true;
+    }
+
+    closeBtnEl.addEventListener("click", closeSheet);
+
+    // Click backdrop to close
+    sheetEl.addEventListener("click", (e) => {
+      if (e.target === sheetEl) closeSheet();
+    });
+
+    // Ctrl+? to toggle
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "?") {
+        e.preventDefault();
+        sheet.hidden ? openSheet() : closeSheet();
+      }
+      if (e.key === "Escape" && !sheet.hidden) {
+        closeSheet();
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initKeyboardHints();
+  });
+</script>

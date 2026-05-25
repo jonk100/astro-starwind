@@ -34,6 +34,8 @@ export const blockBehaviors: Record<BlockType, BlockBehavior> = {
  
   /**
    * Heading: Enter splits at cursor; the new block becomes a paragraph.
+   * This is handled in blockOperations.splitBlock() which converts all
+   * heading types to paragraph on split.
    */
   heading:   { onEnter: ({ splitBlock }) => splitBlock() },
   "heading-1": { onEnter: ({ splitBlock }) => splitBlock() },
@@ -49,8 +51,7 @@ export const blockBehaviors: Record<BlockType, BlockBehavior> = {
    */
   quote: {
     onEnter: ({ target, createAfter, replaceWith }) => {
-      const textContent = target.querySelector<HTMLElement>(".checklist-text")?.textContent
-        ?? target.textContent ?? "";
+      const textContent = target.textContent ?? "";
       if (textContent.trim() === "") {
         replaceWith("paragraph");
       } else {
@@ -104,7 +105,7 @@ export const blockBehaviors: Record<BlockType, BlockBehavior> = {
       if ((target.textContent ?? "").trim() === "") {
         replaceWith("paragraph");
       } else {
-        createAfter({ type: "callout-info", content: "" });
+        createAfter({ type: "callout-warning", content: "" });
       }
     },
   },
@@ -114,7 +115,7 @@ export const blockBehaviors: Record<BlockType, BlockBehavior> = {
       if ((target.textContent ?? "").trim() === "") {
         replaceWith("paragraph");
       } else {
-        createAfter({ type: "callout-info", content: "" });
+        createAfter({ type: "callout-success", content: "" });
       }
     },
   },
@@ -124,7 +125,7 @@ export const blockBehaviors: Record<BlockType, BlockBehavior> = {
       if ((target.textContent ?? "").trim() === "") {
         replaceWith("paragraph");
       } else {
-        createAfter({ type: "callout-info", content: "" });
+        createAfter({ type: "callout-danger", content: "" });
       }
     },
   },

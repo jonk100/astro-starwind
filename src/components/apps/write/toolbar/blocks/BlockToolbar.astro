@@ -2,13 +2,20 @@
 /**
  * @file src/components/apps/write/toolbar/BlockToolbar.astro
  *
+ * Renders quick-access block-type buttons in the toolbar.
+ *
+ * FIX: Previous version used display:block on .bt-icon which caused the
+ * shortcut badge number to stack below the icon text, producing "P1H12..." etc.
+ * Now uses inline SVG icons sized explicitly, with the badge as an absolutely
+ * positioned overlay that only appears in ctrl-mode.
+ *
  * Features:
- * - Primary buttons: shown directly in toolbar, one-click to apply.
- * - Secondary ("More") dropdown: less-used types.
- * - Ctrl+N shortcuts: hold Ctrl to see number overlays, press to apply.
- * - Right-click a primary button to demote it to secondary.
- * - "Pin" button in dropdown to promote to primary.
- * - Preferences saved to localStorage.
+ * - Primary buttons: one-click block type switch.
+ * - "More" dropdown: less-used types.
+ * - Ctrl+1-9: apply primary block by number (badges shown while Ctrl held).
+ * - Right-click a primary button → moves it to secondary.
+ * - "Pin" in dropdown → promotes to primary.
+ * - Preferences persisted to localStorage.
  */
 
 interface Props {
@@ -18,24 +25,63 @@ interface Props {
 const { activeDocumentId } = Astro.props;
 
 /**
- * Blocks shown as direct icon buttons in the toolbar.
- * Keep this to 5–6 max so the toolbar doesn't overflow on small screens.
+ * Each block definition. `svg` is a minimal path string for a 16×16 viewBox.
+ * Using inline SVG guarantees the icon renders identically regardless of
+ * the user's installed fonts — no more text-as-icon problems.
  */
 const ALL_BLOCKS = [
-  { type: "paragraph",  icon: "P",    label: "Paragraph", title: "Paragraph",          defaultPrimary: true  },
-  { type: "heading",    icon: "H1",   label: "H1",        title: "Heading 1",          defaultPrimary: true  },
-  { type: "heading-2",  icon: "H2",   label: "H2",        title: "Heading 2",          defaultPrimary: true  },
-  { type: "heading-3",  icon: "H3",   label: "H3",        title: "Heading 3",          defaultPrimary: true  },
-  { type: "quote",      icon: "SS",   label: "Quote",     title: "Quote",              defaultPrimary: true  },
-  { type: "checklist",  icon: "CL",   label: "Check",     title: "Checklist item",     defaultPrimary: true  },
-  { type: "heading-4",  icon: "H4",   label: "H4",        title: "Heading 4",          defaultPrimary: false },
-  { type: "heading-5",  icon: "H5",   label: "H5",        title: "Heading 5",          defaultPrimary: false },
-  { type: "code",       icon: "{}",   label: "Code",      title: "Code block",         defaultPrimary: false },
-  { type: "callout",    icon: "!!",   label: "Callout",   title: "Callout (Ctrl+</>)", defaultPrimary: false },
-  { type: "separator",  icon: "--",   label: "Divider",   title: "Horizontal rule",    defaultPrimary: false },
-  { type: "prompt",     icon: "**",   label: "Prompt",    title: "Writing prompt",     defaultPrimary: false },
+  {
+    type: "paragraph", label: "Paragraph", defaultPrimary: true,
+    // ¶ pilcrow
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7 2h4a1 1 0 0 1 0 2H9v9a1 1 0 0 1-2 0V4H6a3 3 0 0 0 0 6H5a5 5 0 0 1 0-8z"/></svg>`,
+  },
+  {
+    type: "heading", label: "H1", defaultPrimary: true,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h2v5h4V2h2v12H8V9H4v5H2z"/><text x="11" y="14" font-size="5" font-weight="700" fill="currentColor">1</text></svg>`,
+  },
+  {
+    type: "heading-2", label: "H2", defaultPrimary: true,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h2v5h4V2h2v12H8V9H4v5H2z"/><text x="11" y="14" font-size="5" font-weight="700" fill="currentColor">2</text></svg>`,
+  },
+  {
+    type: "heading-3", label: "H3", defaultPrimary: true,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h2v5h4V2h2v12H8V9H4v5H2z"/><text x="11" y="14" font-size="5" font-weight="700" fill="currentColor">3</text></svg>`,
+  },
+  {
+    type: "quote", label: "Quote", defaultPrimary: true,
+    // left double quotation marks
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 3h3v4H4c0 1.1.9 2 2 2v2a4 4 0 0 1-4-4V3zm7 0h3v4h-2c0 1.1.9 2 2 2v2a4 4 0 0 1-4-4V3z"/></svg>`,
+  },
+  {
+    type: "checklist", label: "Check", defaultPrimary: true,
+    // checkbox tick
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2"/><polyline points="5,8 7,10 11,6"/></svg>`,
+  },
+  {
+    type: "heading-4", label: "H4", defaultPrimary: false,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h2v5h4V2h2v12H8V9H4v5H2z"/><text x="11" y="14" font-size="5" font-weight="700" fill="currentColor">4</text></svg>`,
+  },
+  {
+    type: "heading-5", label: "H5", defaultPrimary: false,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h2v5h4V2h2v12H8V9H4v5H2z"/><text x="11" y="14" font-size="5" font-weight="700" fill="currentColor">5</text></svg>`,
+  },
+  {
+    type: "code", label: "Code", defaultPrimary: false,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polyline points="5,4 1,8 5,12"/><polyline points="11,4 15,8 11,12"/></svg>`,
+  },
+  {
+    type: "callout", label: "Callout", defaultPrimary: false,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 4h2v4H7V8z"/></svg>`,
+  },
+  {
+    type: "separator", label: "Divider", defaultPrimary: false,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="1" y1="8" x2="15" y2="8"/></svg>`,
+  },
+  {
+    type: "prompt", label: "Prompt", defaultPrimary: false,
+    svg: `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1L2 5.6l4.2-.9z"/></svg>`,
+  },
 ];
-
 ---
 
 {activeDocumentId && (
@@ -43,128 +89,210 @@ const ALL_BLOCKS = [
     <div class="bt-primary" id="bt-primary"></div>
     <div class="bt-divider" aria-hidden="true"></div>
     <div class="bt-more-wrapper" id="bt-more-wrapper">
-      <button class="bt-btn bt-more-trigger" id="bt-more-trigger" type="button"
-        aria-haspopup="listbox" aria-expanded="false" title="More block types">
-        <span class="bt-icon" aria-hidden="true">...</span>
+      <button
+        class="bt-btn"
+        id="bt-more-trigger"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        title="More block types (⋯)"
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/>
+        </svg>
       </button>
       <ul class="bt-dropdown" id="bt-dropdown" role="listbox" hidden></ul>
     </div>
   </div>
 )}
 
+<!-- Block config for the client script -->
 <script id="bt-block-defs" type="application/json" set:html={JSON.stringify(ALL_BLOCKS)}></script>
- 
 
+<style>
+  .block-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
 
-<style is:global>
-    .block-toolbar { display: flex; align-items: center; gap: 0.125rem; }
-  .bt-primary    { display: flex; align-items: center; gap: 0.125rem; }
- 
+  .bt-primary {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+
+  /* ── Primary icon buttons ── */
   .bt-btn {
+    /*
+     * KEY FIX: position:relative so the badge can be absolutely positioned
+     * over the corner without pushing the icon around.
+     * No font-family override — buttons contain SVG, not text.
+     */
     position: relative;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
     justify-content: center;
-    min-width: 48px; 
-    height: 48px; 
-    padding: 0 0.3rem;
-    border: none; border-radius: 5px; background: transparent;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
     color: var(--color-text-muted);
-    font-size: 1rem; font-weight: 700;
-    font-family: var(--font-mono, monospace);
     cursor: pointer;
     transition: background-color 0.1s, color 0.1s;
-    white-space: nowrap; user-select: none;
+    flex-shrink: 0;
   }
-  .bt-btn:hover { background-color: var(--color-surface-hover); color: var(--color-text); }
+
+  .bt-btn:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
   .bt-btn[aria-pressed="true"] {
     background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
     color: var(--color-accent);
   }
-  .bt-icon { 
-    display: block; 
-    line-height: 1; 
-  }
- 
-  /* Ctrl+N number badge */
-  .bt-shortcut-badge {
-    position: absolute; 
-    bottom: -10px; 
-    right: 50%;
-    font-size: .9em; 
-    font-weight: 700; 
-    line-height: 1;
-    color: var(--green3);
-    background: #adadad76;
-    opacity: 0; 
-    transition: opacity 0.4s; 
-    pointer-events: none;
-    transform: translateX(50%);
-    padding: 0.2rem 0.4rem;
-    /* border-radius: 50%; */
-  }
-  .block-toolbar.ctrl-mode .bt-shortcut-badge { opacity: 1; }
- 
-  .bt-divider { width: 1px; height: 16px; background-color: var(--color-border); margin: 0 0.25rem; flex-shrink: 0; }
-  .bt-more-wrapper { position: relative; }
- 
-  .bt-dropdown {
-    position: absolute; top: calc(100% + 6px); right: 0; z-index: 200;
-    list-style: none; margin: 0; padding: 0.25rem;
-    background-color: var(--color-surface); border: 1px solid var(--color-border);
-    border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 210px;
-  }
-  .bt-dropdown[hidden] { display: none; }
- 
-  .bt-dropdown-option {
-    display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.35rem 0.6rem; border-radius: 5px;
-    cursor: pointer; font-size: 0.8125rem; color: var(--color-text);
-    transition: background-color 0.1s;
-  }
-  .bt-dropdown-option:hover { background-color: var(--color-surface-hover); }
-  .bt-dropdown-option[aria-selected="true"] { color: var(--color-accent); font-weight: 600; }
- 
-  .bt-dropdown-icon {
-    width: 2rem; text-align: center;
-    font-size: 0.7rem; font-family: var(--font-mono, monospace); font-weight: 700;
-    color: var(--color-text-muted); flex-shrink: 0;
-  }
-  .bt-dropdown-title { color: var(--color-text); font-size: 0.8125rem; flex: 1; }
- 
-  .bt-pin-btn {
-    margin-left: auto; padding: 0.1rem 0.35rem;
-    border: 1px solid var(--color-border); border-radius: 4px;
-    background: transparent; color: var(--color-text-muted);
-    font-size: 0.65rem; cursor: pointer; white-space: nowrap;
-    transition: color 0.1s, border-color 0.1s;
-  }
-  .bt-pin-btn:hover { color: var(--color-accent); border-color: var(--color-accent); }
-  .bt-demote-hint {
-    font-size: 1rem; 
-    color: var(--blue);
-    background: var(--color-bg-secondary);
-    margin-top: 0.5rem; 
-    border-radius: 50%;
-    border: 1px solid var(--green);
-    display: block; 
-    text-align: center;
+
+  /*
+   * FIX: was display:block which stacked badge below icon.
+   * SVG icons are inline-flex naturally — no display override needed.
+   */
+  .bt-btn svg {
+    display: block;
+    flex-shrink: 0;
   }
 
+  /* Ctrl+N number badge — absolutely positioned over top-right corner */
+  .bt-shortcut-badge {
+    position: absolute;
+    top: 1px;
+    right: 2px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    line-height: var(--lh-none);
+    color: var(--color-accent);
+    opacity: 0;
+    transition: opacity 0.1s;
+    pointer-events: none;
+    font-family: var(--font-mono, monospace);
+  }
+
+  /* Reveal badges when Ctrl is held */
+  .block-toolbar.ctrl-mode .bt-shortcut-badge {
+    opacity: 1;
+  }
+
+  /* ── Divider ── */
+  .bt-divider {
+    width: 1px;
+    height: 16px;
+    background-color: var(--color-border);
+    margin: 0 0.25rem;
+    flex-shrink: 0;
+  }
+
+  /* ── More dropdown ── */
+  .bt-more-wrapper {
+    position: relative;
+  }
+
+  .bt-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 200;
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    min-width: 190px;
+  }
+
+  .bt-dropdown[hidden] { display: none; }
+
+  .bt-dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--color-text);
+    transition: background-color 0.1s;
+    user-select: none;
+  }
+
+  .bt-dropdown-option:hover { background-color: var(--color-surface-hover); }
+
+  .bt-dropdown-option[aria-selected="true"] {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .bt-dropdown-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+
+  .bt-dropdown-label {
+    flex: 1;
+    font-size: 0.8125rem;
+  }
+
+  .bt-pin-btn {
+    margin-left: auto;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.65rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.1s, border-color 0.1s;
+  }
+
+  .bt-pin-btn:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .bt-dropdown-footer {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    border-top: 1px solid var(--color-border);
+    margin-top: 0.25rem;
+    text-align: center;
+  }
 </style>
 
 <script>
   const STORAGE_KEY = "write:toolbar-primary";
- 
+
   interface BlockDef {
-    type: string; icon: string; label: string; title: string; defaultPrimary: boolean;
+    type: string;
+    label: string;
+    svg: string;
+    defaultPrimary: boolean;
   }
- 
+
   function loadDefs(): BlockDef[] {
     const el = document.getElementById("bt-block-defs");
-    try { return JSON.parse(el?.textContent ?? "[]") as BlockDef[]; } catch { return []; }
+    try { return JSON.parse(el?.textContent ?? "[]") as BlockDef[]; }
+    catch { return []; }
   }
- 
+
   function loadPrimaryTypes(defs: BlockDef[]): string[] {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -172,72 +300,85 @@ const ALL_BLOCKS = [
     } catch { /* ignore */ }
     return defs.filter((d) => d.defaultPrimary).map((d) => d.type);
   }
- 
+
   function savePrimaryTypes(types: string[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(types));
   }
- 
+
   function initBlockToolbar(): void {
-    const toolbar  = document.getElementById("block-toolbar");
-    const primary  = document.getElementById("bt-primary");
-    const moreBtnEl = document.getElementById("bt-more-trigger") as HTMLButtonElement | null;
-    const dropdownEl = document.getElementById("bt-dropdown")    as HTMLUListElement  | null;
-    const wrapper  = document.getElementById("bt-more-wrapper");
- 
-    if (!toolbar || !primary || !moreBtnEl || !dropdownEl || !wrapper) return;
- 
-    // Re-type as non-null for use inside closures
+    const toolbar     = document.getElementById("block-toolbar");
+    const primaryEl   = document.getElementById("bt-primary");
+    const moreBtnEl   = document.getElementById("bt-more-trigger") as HTMLButtonElement | null;
+    const dropdownEl  = document.getElementById("bt-dropdown")     as HTMLUListElement  | null;
+    const wrapperEl   = document.getElementById("bt-more-wrapper");
+
+    if (!toolbar || !primaryEl || !moreBtnEl || !dropdownEl || !wrapperEl) return;
+
+    // Re-typed as non-null for use in closures
+    const primary:  HTMLElement       = primaryEl;
     const moreBtn:  HTMLButtonElement = moreBtnEl;
     const dropdown: HTMLUListElement  = dropdownEl;
- 
+    const wrapper:  HTMLElement       = wrapperEl;
+
     const defs = loadDefs();
-    let primaryTypes = loadPrimaryTypes(defs);
+    let primaryTypes     = loadPrimaryTypes(defs);
     let lastActiveType: string | null = null;
- 
+
+    /**
+     * Dispatches the block-type change to the editor.
+     * mousedown on the button uses preventDefault so the editor block
+     * keeps focus — lastFocusedBlock in editorCanvas.ts remains valid.
+     */
     function dispatchBlockType(blockType: string): void {
-      window.dispatchEvent(new CustomEvent("editor:set-block-type", { detail: { blockType } }));
+      window.dispatchEvent(
+        new CustomEvent("editor:set-block-type", { detail: { blockType } })
+      );
     }
- 
+
+    /** Highlights the active type in both primary buttons and dropdown. */
     function syncActiveType(activeType: string | null): void {
       lastActiveType = activeType;
-      primary!.querySelectorAll<HTMLButtonElement>("[data-block-type]").forEach((btn) => {
+      primary.querySelectorAll<HTMLButtonElement>("[data-block-type]").forEach((btn) => {
         btn.setAttribute("aria-pressed", String(btn.dataset.blockType === activeType));
       });
       dropdown.querySelectorAll<HTMLElement>("[data-block-type]").forEach((opt) => {
         opt.setAttribute("aria-selected", String(opt.dataset.blockType === activeType));
       });
     }
- 
+
+    /** Renders the primary button row from the current primaryTypes array. */
     function renderPrimary(): void {
-      primary!.innerHTML = "";
+      primary.innerHTML = "";
+
       primaryTypes.forEach((type, idx) => {
         const def = defs.find((d) => d.type === type);
         if (!def) return;
- 
+
         const btn = document.createElement("button");
         btn.className           = "bt-btn";
         btn.type                = "button";
         btn.dataset.blockType   = type;
-        btn.setAttribute("aria-label",   def.title);
+        btn.setAttribute("aria-label",   def.label);
         btn.setAttribute("aria-pressed", "false");
-        btn.title               = `${def.title}${idx < 9 ? ` (Ctrl+${idx + 1})` : ""}`;
- 
-        const icon = document.createElement("span");
-        icon.className   = "bt-icon";
-        icon.textContent = def.icon;
-        btn.appendChild(icon);
- 
+        btn.title = idx < 9
+          ? `${def.label} (Ctrl+${idx + 1})`
+          : def.label;
+
+        // SVG icon — injected directly so it inherits currentColor
+        btn.innerHTML = def.svg;
+
+        // Ctrl+N shortcut badge — absolutely positioned over top-right corner
         if (idx < 9) {
           const badge = document.createElement("span");
           badge.className   = "bt-shortcut-badge";
           badge.textContent = String(idx + 1);
           btn.appendChild(badge);
         }
- 
+
         btn.addEventListener("mousedown", (e) => e.preventDefault());
         btn.addEventListener("click", () => dispatchBlockType(type));
- 
-        // Right-click to demote
+
+        // Right-click → demote to secondary
         btn.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           primaryTypes = primaryTypes.filter((t) => t !== type);
@@ -245,86 +386,85 @@ const ALL_BLOCKS = [
           renderPrimary();
           renderDropdown();
         });
- 
-        primary!.appendChild(btn);
+
+        primary.appendChild(btn);
       });
- 
-      // Hint shown at the bottom of primary area
-      const hint = document.createElement("span");
-      hint.className   = "bt-demote-hint";
-      hint.style.display = "none"; // revealed inside dropdown instead
+
       syncActiveType(lastActiveType);
     }
- 
+
+    /** Renders the secondary dropdown from everything not in primary. */
     function renderDropdown(): void {
       dropdown.innerHTML = "";
+
       const secondaryDefs = defs.filter((d) => !primaryTypes.includes(d.type));
- 
+
       if (secondaryDefs.length === 0) {
         const li = document.createElement("li");
-        li.style.padding = "0.5rem 0.6rem";
-        li.style.fontSize = "0.75rem";
-        li.style.color = "var(--color-text-muted)";
-        li.textContent = "All blocks are in the toolbar";
-        li.className = "bt-dropdown-option";
+        li.className       = "bt-dropdown-footer";
+        li.style.textAlign = "center";
+        li.textContent     = "All blocks are in the toolbar";
         dropdown.appendChild(li);
-      } else {
-        secondaryDefs.forEach((def) => {
-          const li = document.createElement("li");
-          li.className         = "bt-dropdown-option";
-          li.dataset.blockType = def.type;
-          li.setAttribute("role",          "option");
-          li.setAttribute("aria-selected", "false");
- 
-          const iconEl = document.createElement("span");
-          iconEl.className   = "bt-dropdown-icon";
-          iconEl.textContent = def.icon;
- 
-          const titleEl = document.createElement("span");
-          titleEl.className   = "bt-dropdown-title";
-          titleEl.textContent = def.title;
- 
-          const pinBtn = document.createElement("button");
-          pinBtn.className   = "bt-pin-btn";
-          pinBtn.type        = "button";
-          pinBtn.textContent = "Pin";
-          pinBtn.title       = "Add to toolbar";
-          pinBtn.addEventListener("mousedown", (e) => e.preventDefault());
-          pinBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            primaryTypes = primaryTypes.length < 9
-              ? [...primaryTypes, def.type]
-              : [...primaryTypes.slice(1), def.type];
-            savePrimaryTypes(primaryTypes);
-            renderPrimary();
-            renderDropdown();
-            dropdown.hidden = true;
-            moreBtn.setAttribute("aria-expanded", "false");
-          });
- 
-          li.appendChild(iconEl);
-          li.appendChild(titleEl);
-          li.appendChild(pinBtn);
-          dropdown.appendChild(li);
-        });
+        return;
       }
- 
+
+      secondaryDefs.forEach((def) => {
+        const li = document.createElement("li");
+        li.className          = "bt-dropdown-option";
+        li.dataset.blockType  = def.type;
+        li.setAttribute("role",          "option");
+        li.setAttribute("aria-selected", "false");
+
+        // Small SVG icon
+        const iconWrap = document.createElement("span");
+        iconWrap.className = "bt-dropdown-icon";
+        iconWrap.innerHTML = def.svg;
+
+        const labelEl = document.createElement("span");
+        labelEl.className   = "bt-dropdown-label";
+        labelEl.textContent = def.label;
+
+        const pinBtn = document.createElement("button");
+        pinBtn.className   = "bt-pin-btn";
+        pinBtn.type        = "button";
+        pinBtn.textContent = "Pin";
+        pinBtn.title       = "Add to toolbar";
+
+        pinBtn.addEventListener("mousedown", (e) => e.preventDefault());
+        pinBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          primaryTypes = primaryTypes.length < 9
+            ? [...primaryTypes, def.type]
+            : [...primaryTypes.slice(1), def.type];
+          savePrimaryTypes(primaryTypes);
+          renderPrimary();
+          renderDropdown();
+          dropdown.hidden = true;
+          moreBtn.setAttribute("aria-expanded", "false");
+        });
+
+        li.appendChild(iconWrap);
+        li.appendChild(labelEl);
+        li.appendChild(pinBtn);
+        dropdown.appendChild(li);
+      });
+
       // Footer hint
-      const hint = document.createElement("li");
-      hint.style.cssText = "padding: 0.4rem 0.6rem; font-size: 0.65rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border); margin-top: 0.25rem; list-style: none;";
-      hint.textContent = "Right-click toolbar buttons to move here";
-      dropdown.appendChild(hint);
+      const footer = document.createElement("li");
+      footer.className   = "bt-dropdown-footer";
+      footer.textContent = "Right-click toolbar icons to unpin";
+      dropdown.appendChild(footer);
     }
- 
-    // ── Dropdown open/close ────────────────────────────────────────────────
- 
+
+    // ── Dropdown open / close ──────────────────────────────────────────────
+
     moreBtn.addEventListener("mousedown", (e) => e.preventDefault());
     moreBtn.addEventListener("click", () => {
       const isOpen = !dropdown.hidden;
       dropdown.hidden = isOpen;
       moreBtn.setAttribute("aria-expanded", String(!isOpen));
     });
- 
+
     dropdown.addEventListener("mousedown", (e) => e.preventDefault());
     dropdown.addEventListener("click", (e) => {
       const option = (e.target as HTMLElement).closest<HTMLElement>("[data-block-type]");
@@ -334,23 +474,23 @@ const ALL_BLOCKS = [
       dropdown.hidden = true;
       moreBtn.setAttribute("aria-expanded", "false");
     });
- 
+
     document.addEventListener("click", (e) => {
       if (!wrapper.contains(e.target as Node)) {
         dropdown.hidden = true;
         moreBtn.setAttribute("aria-expanded", "false");
       }
     });
- 
+
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         dropdown.hidden = true;
         moreBtn.setAttribute("aria-expanded", "false");
       }
     });
- 
+
     // ── Ctrl+N shortcuts ───────────────────────────────────────────────────
- 
+
     document.addEventListener("keydown", (e) => {
       if (e.ctrlKey || e.metaKey) {
         toolbar.classList.add("ctrl-mode");
@@ -361,26 +501,26 @@ const ALL_BLOCKS = [
         }
       }
     });
- 
+
     document.addEventListener("keyup", (e) => {
       if (e.key === "Control" || e.key === "Meta") {
         toolbar.classList.remove("ctrl-mode");
       }
     });
- 
-    // ── Focus sync ─────────────────────────────────────────────────────────
- 
+
+    // ── Active type sync ───────────────────────────────────────────────────
+
     window.addEventListener("editor:block-focused", ((e: CustomEvent) => {
       syncActiveType((e.detail as { blockType?: string }).blockType ?? null);
     }) as EventListener);
- 
+
     window.addEventListener("editor:title-focused", () => syncActiveType(null));
- 
+
     // ── Initial render ─────────────────────────────────────────────────────
     renderPrimary();
     renderDropdown();
   }
- 
+
   document.addEventListener("DOMContentLoaded", () => {
     initBlockToolbar();
   });

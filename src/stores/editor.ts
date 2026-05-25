@@ -1,7 +1,11 @@
-// src/stores/editor.ts
+/**
+ * @file src/stores/editor.ts
+ * @description Local, synchronous reactive storage cache for the editor canvas.
+ * Network synchronization and debouncing are orchestrated exclusively by XState.
+ */
+
 import { map, computed } from 'nanostores';
 import type { Block } from '@/lib/journal/types';
-import { actions } from 'astro:actions';
 import { extractPreview } from '@/lib/journal/utils';
 
 export interface EditorState {
@@ -22,7 +26,7 @@ export const editorStore = map<EditorState>({
   lastSavedAt: null,
 });
 
-// ─── Computed ─────────────────────────────────────────────────────────────────
+// ─── Computed Values ──────────────────────────────────────────────────────────
 
 export const documentPreview = computed(editorStore, (s) =>
   extractPreview(s.blocks)
@@ -32,11 +36,11 @@ export const wordCount = computed(editorStore, (s) =>
   s.blocks.reduce((acc, b) => acc + (b.content?.trim().split(/\s+/).filter(Boolean).length || 0), 0)
 );
 
-// ─── Actions ──────────────────────────────────────────────────────────────────
+// ─── Store Actions ────────────────────────────────────────────────────────────
 
 /**
  * Resets the store with the data for a newly opened document.
- * Called by EditorCanvas.astro on DOMContentLoaded.
+ * Called by EditorCanvas.astro on custom lifecycle initialization hooks.
  *
  * @param documentId - The UUID of the document being opened.
  * @param title      - The current document title.
@@ -58,8 +62,7 @@ export const setActiveDocument = (
 };
 
 /**
- * Updates the document title in the store and schedules a debounced save.
- * The store's title is updated synchronously so computed values stay current.
+ * Updates the document title in the store for instant local UI reactivity.
  *
  * @param newTitle - The new title string from the contenteditable element.
  */
@@ -70,21 +73,17 @@ export const updateTitle = (newTitle: string) => {
   editorStore.setKey('title', newTitle);
   editorStore.setKey('isDirty', true);
 
-  // Broadcast to sidebar so the doc-link label updates live
+  // Broadcast to sidebar link elements so title updates match typing immediately
   window.dispatchEvent(
     new CustomEvent('journal:title-updated', {
       detail: { documentId: state.documentId, title: newTitle || 'Untitled' },
     })
   );
-
-  debouncedSaveTitle(state.documentId, newTitle);
 };
 
 /**
- * Updates a single block's content in the store by ID, then schedules
- * a debounced save of all blocks.
- *
- * Use this for ordinary typing — it avoids re-reading the whole DOM.
+ * Updates a single block's content in the store by ID.
+ * Keeps local reactive selectors current without re-reading the full DOM tree.
  *
  * @param blockId - The stable ID of the block being edited.
  * @param content - The new plain-text content of the block.
@@ -99,19 +98,11 @@ export const updateBlock = (blockId: string, content: string) => {
 
   editorStore.setKey('blocks', newBlocks);
   editorStore.setKey('isDirty', true);
-
-  debouncedSaveBlocks(state.documentId, newBlocks);
 };
 
 /**
- * Replaces the entire block array in the store and schedules a debounced save.
- *
- * Use this when the DOM structure changes — blocks are added, removed, or
- * reordered (e.g. Enter key creates a new block, Backspace deletes one,
- * or the block-type selector transforms one in place).
- *
- * Re-reads content from the passed array rather than the stale store state,
- * so the save payload always reflects what is currently in the DOM.
+ * Replaces the entire block array in the store.
+ * Use this when the structure of your DOM shifts (Enter splits, Backspace merges).
  *
  * @param blocks - The full, up-to-date block array read from the DOM.
  */
@@ -121,22 +112,20 @@ export const updateBlocks = (blocks: Block[]) => {
 
   editorStore.setKey('blocks', blocks);
   editorStore.setKey('isDirty', true);
-
-  debouncedSaveBlocks(state.documentId, blocks);
 };
 
 /**
  * Marks the document as saved and records the server timestamp.
- * Called by debouncedSaveBlocks after a successful action response.
+ * Call this from within your XState machine's onDone actor transition block.
  *
- * @param savedAt - Optional ISO timestamp returned by the server.
+ * @param savedAt - ISO timestamp returned by the database.
  */
 export const markSaved = (savedAt?: string) => {
   editorStore.setKey('isDirty', false);
   editorStore.setKey('isSaving', false);
   if (savedAt) editorStore.setKey('lastSavedAt', savedAt);
 
-  // Broadcast to the toolbar save-status indicator
+  // Broadcast to toolbar or UI saving feedback trackers
   window.dispatchEvent(
     new CustomEvent('editor:save-status', { detail: { status: 'saved' } })
   );
@@ -144,7 +133,7 @@ export const markSaved = (savedAt?: string) => {
 
 /**
  * Resets the store to its empty initial state.
- * Called when navigating away from a document.
+ * Called when navigating away from a document layout context.
  */
 export function disposeEditor() {
   editorStore.set({
@@ -155,78 +144,4 @@ export function disposeEditor() {
     isSaving: false,
     lastSavedAt: null,
   });
-}
-
-// ─── Debounced saves ──────────────────────────────────────────────────────────
-
-let titleTimeout: ReturnType<typeof setTimeout> | null = null;
-let blocksTimeout: ReturnType<typeof setTimeout> | null = null;
-
-/**
- * Debounces title saves — waits 300 ms after the last keystroke before
- * calling the server action. Each call resets the timer.
- *
- * @param documentId - The document to update.
- * @param title      - The title to save.
- */
-function debouncedSaveTitle(documentId: string, title: string) {
-  if (titleTimeout) clearTimeout(titleTimeout);
-
-  titleTimeout = setTimeout(async () => {
-    try {
-      await actions.write.updateDocument({ id: documentId, title });
-    } catch (err) {
-      console.error('Failed to save title:', err);
-    } finally {
-      titleTimeout = null;
-    }
-  }, 300);
-}
-
-/**
- * Debounces block saves — waits 250 ms after the last change before
- * calling the server action. Updates the toolbar indicator before and after.
- *
- * @param documentId - The document to update.
- * @param blocks     - The full block array to persist.
- */
-function debouncedSaveBlocks(documentId: string, blocks: Block[]) {
-  if (blocksTimeout) clearTimeout(blocksTimeout);
-
-  // Show "Saving…" immediately so the user has feedback
-  window.dispatchEvent(
-    new CustomEvent('editor:save-status', { detail: { status: 'saving' } })
-  );
-  editorStore.setKey('isSaving', true);
-
-  blocksTimeout = setTimeout(async () => {
-    try {
-      const { data, error } = await actions.write.saveBlocks({
-        document_id: documentId,
-        blocks,
-      });
-
-      if (error) throw new Error(error.message);
-
-      markSaved(data?.updated_at);
-
-      // Broadcast so sidebar "Today" meta label refreshes
-      window.dispatchEvent(
-        new CustomEvent('journal:doc-updated', {
-          detail: {
-            documentId,
-            updatedAt: data?.updated_at || new Date().toISOString(),
-          },
-        })
-      );
-    } catch (err) {
-      console.error('Failed to save blocks:', err);
-      editorStore.setKey('isSaving', false);
-      window.dispatchEvent(
-        new CustomEvent('editor:save-status', { detail: { status: 'error' } })
-      );
-    } finally {
-      blocksTimeout = null;
-    }
-  }, 250);
 }

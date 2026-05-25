@@ -1,5 +1,11 @@
 ---
-import { formatUpdatedAt } from "../sidebar.utils"; // Fixed path to match local directory relative import
+/**
+ * @file src/components/apps/write/sidebar/FolderTree/DocumentItem.astro
+ *
+ * Added: .pin-reorder controls CSS (the JS adds the elements dynamically).
+ * Added: .is-pinned indicator via ::before pseudo-element.
+ */
+import { formatUpdatedAt } from "../sidebar.utils";
 
 interface Props {
   doc: {
@@ -13,13 +19,12 @@ interface Props {
 }
 
 const { doc, folderId, activeDocumentId } = Astro.props;
-const isActive = doc.id === activeDocumentId;
 ---
 
 <li
   class={`doc-item${doc.pinned ? " is-pinned" : ""}`}
   data-doc-id={doc.id}
-  data-folder-id={folderId}
+  data-folder-id={folderId ?? ""}
 >
   <a
     href={`/app/write?doc=${doc.id}`}
@@ -35,7 +40,7 @@ const isActive = doc.id === activeDocumentId;
     aria-label="Move to folder"
     title="Move to folder"
     data-doc-id={doc.id}
-    data-folder-id={folderId ?? null}
+    data-folder-id={folderId ?? ""}
     data-move-trigger
   >
     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -43,7 +48,6 @@ const isActive = doc.id === activeDocumentId;
     </svg>
   </button>
 </li>
-
 
 <style>
   .doc-item {
@@ -55,32 +59,31 @@ const isActive = doc.id === activeDocumentId;
     transition: background-color 0.1s;
   }
 
-  /* Make the anchor tag fill the entire list item */
   .doc-link {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
     width: 100%;
-    padding: 0.5rem 2.5rem 0.5rem 0.6rem; /* Right padding leaves room for the move button */
+    /* right padding leaves room for move btn + reorder controls */
+    padding: 0.5rem 2.5rem 0.5rem 0.6rem;
     text-decoration: none;
     color: var(--color-text);
     border-radius: 5px;
   }
 
-  /* Active and Hover states */
   .doc-link.is-active {
-    background-color: var(--color-surface-active, #ff8a9a); /* Adjust to your specific theme variable */
+    background-color: var(--color-surface-active, #ff8a9a);
     color: var(--color-text-active, inherit);
   }
 
-  .doc-item:hover {
-    background-color: var(--color-surface-hover);
-  }
+  .doc-item:hover { background-color: var(--color-surface-hover); }
 
-  /* Typography details */
   .doc-title {
     font-size: 0.875rem;
     font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .doc-meta {
@@ -88,17 +91,24 @@ const isActive = doc.id === activeDocumentId;
     color: var(--color-text-muted);
   }
 
-  /* Move button alignment */
+  /* Pin indicator */
+  .doc-item.is-pinned .doc-title::before {
+    content: "📌 ";
+    font-size: 0.7em;
+    opacity: 0.7;
+  }
+
+  /* Move button */
   .doc-move-btn {
     position: absolute;
-    right: 0.5rem;
+    right: 0.375rem;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
     border: none;
     border-radius: 4px;
     background: transparent;
@@ -108,12 +118,61 @@ const isActive = doc.id === activeDocumentId;
     transition: opacity 0.15s, background-color 0.15s;
   }
 
-  .doc-item:hover .doc-move-btn { 
-    opacity: 1; 
+  .doc-item:hover .doc-move-btn { opacity: 1; }
+  .doc-move-btn:hover { background-color: var(--color-surface-hover); color: var(--color-text); }
+
+  /* Pin reorder controls — injected by sidebar.client.ts */
+  :global(.pin-reorder) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.15s;
   }
-  
-  .doc-move-btn:hover { 
-    background-color: var(--color-surface-hover-nested, rgba(0,0,0,0.05)); 
-    color: var(--color-text); 
+
+  /* Show reorder controls only on pinned items when hovered */
+  :global(.doc-item.is-pinned:hover .pin-reorder) {
+    opacity: 1;
+  }
+
+  :global(.pin-reorder-btn) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.1s, color 0.1s;
+    padding: 0;
+  }
+
+  :global(.pin-reorder-btn:hover) {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.1s, color 0.1s;
+  }
+
+  :global(.pin-reorder-btn:hover) {
+    background-color: var(--color-surface-hover);
+    color: var(--color-accent);
+  }
+
+  /* Slide-in animation target — handled via Web Animations API in sidebar.client.ts */
+  .doc-item.is-pinned {
+    /* Reserve space for the animation to play into */
+    will-change: transform, opacity;
   }
 </style>

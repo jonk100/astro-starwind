@@ -1,24 +1,39 @@
 ---
+/**
+ * @file src/components/apps/write/sidebar/FolderTree.astro
+ *
+ * FIX d: Sidebar flash — an inline <script> immediately after the folder
+ * markup reads localStorage and applies display states synchronously,
+ * before the browser's first paint. This eliminates the flash where all
+ * folders appear collapsed/empty then snap open.
+ */
+
 import type { DocumentIndexRow, Folder } from "@/lib/journal/types";
 import { sortDocumentsForSidebar, groupDocumentsByFolder, formatUpdatedAt } from "./sidebar.utils";
-import DocumentItem from "./FolderTree/DocumentItem.astro"; // Assuming you extracted this too!
-import FolderPicker from "./FolderTree/FolderPicker.astro"; // Assuming you extracted this too!
+import DocumentItem from "./FolderTree/DocumentItem.astro";
+import FolderPicker from "./FolderTree/FolderPicker.astro";
 import "./sidebar.css";
 
 interface Props {
   documents: DocumentIndexRow[];
-  folders: Folder[];
+  folders:   Folder[];
   activeDocumentId: string | null;
   user: any;
 }
 
 const { documents, folders, activeDocumentId } = Astro.props;
 
-const sortedDocuments = sortDocumentsForSidebar(documents);
-const { byFolder, unfiledDocs } = groupDocumentsByFolder(sortedDocuments);
-const foldersJson = JSON.stringify(
+const sortedDocuments            = sortDocumentsForSidebar(documents);
+const { byFolder, unfiledDocs }  = groupDocumentsByFolder(sortedDocuments);
+const foldersJson                = JSON.stringify(
   folders.map((f) => ({ id: f.id, name: f.name, icon: f.icon ?? "📁" }))
 );
+
+/** All folder IDs we render, used by the inline sync script. */
+const allFolderIds = [
+  ...folders.map((f) => f.id),
+  ...(unfiledDocs.length > 0 ? ["__unfiled__"] : []),
+];
 ---
 
 <div
@@ -26,7 +41,6 @@ const foldersJson = JSON.stringify(
   id="sidebar-document-list"
   data-folders={foldersJson}
 >
- 
   {folders.map((folder) => {
     const folderDocs = byFolder.get(folder.id) ?? [];
     return (
@@ -47,8 +61,6 @@ const foldersJson = JSON.stringify(
           <span class="folder-count">{folderDocs.length}</span>
         </button>
 
-
-        {/* <!-- Default hidden; script reveals based on saved state --> */}
         <ul
           id={`folder-docs-${folder.id}`}
           class="folder-doc-list"
@@ -59,11 +71,10 @@ const foldersJson = JSON.stringify(
             <li class="doc-empty">No documents</li>
           ) : (
             folderDocs.map((doc) => (
-
-              <DocumentItem 
-                doc={doc} 
-                folderId={folder.id} 
-                activeDocumentId={activeDocumentId} 
+              <DocumentItem
+                doc={doc}
+                folderId={folder.id}
+                activeDocumentId={activeDocumentId}
               />
             ))
           )}
@@ -88,19 +99,9 @@ const foldersJson = JSON.stringify(
         <span class="folder-name">All Documents</span>
         <span class="folder-count">{unfiledDocs.length}</span>
       </button>
-      <ul
-        id="folder-docs-unfiled"
-        class="folder-doc-list"
-        role="list"
-        style="display: none"
-      >
+      <ul id="folder-docs-unfiled" class="folder-doc-list" role="list" style="display: none">
         {unfiledDocs.map((doc) => (
-
-          <DocumentItem 
-            doc={doc} 
-            folderId={null}
-            activeDocumentId={activeDocumentId} 
-          />
+          <DocumentItem doc={doc} folderId={null} activeDocumentId={activeDocumentId} />
         ))}
       </ul>
     </section>
@@ -114,12 +115,33 @@ const foldersJson = JSON.stringify(
   )}
 
   <FolderPicker />
-
-  
 </div>
 
+<!--
+  FIX d: Inline synchronous script — runs immediately as the browser parses
+  this point in the HTML, before layout/paint. Reads localStorage and
+  applies open/closed states to the folder lists so there is no flash.
+
+  This is intentionally NOT a module or deferred script — it must run
+  synchronously to beat the first paint.
+-->
+<script is:inline>
+  (function applyFolderStates() {
+    try {
+      const saved = JSON.parse(localStorage.getItem("write:folder-state") || "{}");
+      document.querySelectorAll("[data-folder-toggle]").forEach(function(btn) {
+        const folderId = btn.dataset.folderId || btn.getAttribute("aria-controls") || "";
+        const isOpen   = saved[folderId] === true;
+        const listId   = btn.getAttribute("aria-controls");
+        const list     = listId ? document.getElementById(listId) : null;
+        btn.setAttribute("aria-expanded", String(isOpen));
+        if (list) list.style.display = isOpen ? "" : "none";
+      });
+    } catch(e) { /* localStorage unavailable — leave defaults */ }
+  })();
+</script>
+
 <style>
-  /* ── Move button ── */
   .doc-move-btn {
     position: absolute;
     right: 0.375rem;
@@ -139,14 +161,9 @@ const foldersJson = JSON.stringify(
     transition: opacity 0.15s, background-color 0.15s;
   }
 
-
   .doc-item:hover .doc-move-btn { opacity: 1; }
   .doc-move-btn:hover { background-color: var(--color-surface-hover); color: var(--color-text); }
 
-
-  
-
-  /* Chevron animation driven by aria-expanded */
   .folder-toggle[aria-expanded="false"] .folder-chevron { transform: rotate(-90deg); }
   .folder-chevron { transition: transform 0.15s ease; }
 </style>
@@ -154,7 +171,6 @@ const foldersJson = JSON.stringify(
 <script>
   import { initFolderToggles, initRealtimeUpdates } from "./FolderTree/sidebar.client";
 
-  // ── Init ───────────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
     initFolderToggles();
     initRealtimeUpdates();
