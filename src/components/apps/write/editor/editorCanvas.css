@@ -74,7 +74,7 @@
     text-align: center;
   } */
 
-  /* .canvas-empty-body { 
+  /* .canvas-empty-body {
     font-size: var(--fslg); 
     color: var(--color-text-muted); 
     line-height: var(--lh-loose); 
@@ -308,7 +308,7 @@
     background-color: var(--accent);
     border: 1px solid var(--secondary-3);
     accent-color: var(--secondary-2);
-    color: var(--seconday-3)
+    color: var(--seconday-3);
     cursor: pointer;
     outline: none;
   }

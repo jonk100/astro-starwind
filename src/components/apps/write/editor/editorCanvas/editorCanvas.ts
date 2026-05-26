@@ -173,9 +173,21 @@ export function initEditor(documentId: string): void {
             splitBlock: () => splitBlock(target, blocksContainer, type, cursorOffset, syncBlocks),
             replaceWith: (newType) => replaceWith(target, newType, syncBlocks),
           });
+        } else {
+          // FALLBACK: Handle browser default behavior safely
+          if (target.isContentEditable) {
+            // Safely insert HTML line break at cursor position without destroying the container
+            document.execCommand('insertHTML', false, '<br>');
+          } else if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') {
+            const inputTarget = target as HTMLTextAreaElement;
+            const start = inputTarget.selectionStart ?? 0;
+            const end = inputTarget.selectionEnd ?? 0;
+            const text = inputTarget.value;
+            
+            inputTarget.value = text.substring(0, start) + "\n" + text.substring(end);
+            inputTarget.selectionStart = inputTarget.selectionEnd = start + 1;
+          }
         }
-        // For shift+Enter with no custom behavior, browser default creates a newline
-        // (we already prevented default, so we do nothing – but we could insert a <br>)
         return;
       }
 
