@@ -22,6 +22,7 @@ const { class: className, size = "md", ...rest } = Astro.props;
   class={paginationNext({ class: className })}
   {...rest}
   data-slot="pagination-next"
+  type="button"
 >
   <slot />
   <slot name="icon">

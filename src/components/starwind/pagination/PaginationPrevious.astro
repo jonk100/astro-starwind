@@ -21,6 +21,7 @@ const { class: className, size = "md", ...rest } = Astro.props;
   size={size}
   class={paginationPrevious({ class: className })}
   {...rest}
+  type="button"
   data-slot="pagination-previous"
 >
   <slot name="icon">

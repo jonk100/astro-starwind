@@ -158,7 +158,6 @@ const { doc, folderId, activeDocumentId } = Astro.props;
     background-color: var(--color-surface-hover);
     color: var(--color-text);
     border-color: var(--color-border);
-  }
     color: var(--color-text-muted);
     cursor: pointer;
     padding: 0;
@@ -172,7 +171,6 @@ const { doc, folderId, activeDocumentId } = Astro.props;
 
   /* Slide-in animation target — handled via Web Animations API in sidebar.client.ts */
   .doc-item.is-pinned {
-    /* Reserve space for the animation to play into */
     will-change: transform, opacity;
   }
 </style>

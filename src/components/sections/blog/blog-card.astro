@@ -24,8 +24,8 @@ const isFeatured = variant === 'featured';
 
 <Element href={`/blog/${post.id}`} 
   class:list={[
-    "group bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 dark:from-purple-900/40 dark:via-pink-900/40 dark:to-orange-900/40 bg-secondary dark:bg-stone-900 border-2 border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden hover:border-accent transition-all duration-500",
-    isFeatured ? "md:flex md:flex-row min-h-[300px]" : "flex flex-col"
+    "group bg-linear-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 dark:from-purple-900/40 dark:via-pink-900/40 dark:to-orange-900/40 bg-secondary dark:bg-stone-900 border-2 border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden hover:border-accent transition-all duration-500",
+    isFeatured ? "md:flex md:flex-row min-h-300px" : "flex flex-col"
   ]}
 >
   {/* Image Container */}
