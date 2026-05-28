@@ -40,8 +40,8 @@ const allPostsData = posts.map(post => ({
   ]}
 >
   <BlogHero
-    heading="All Posts"
-    subheading="Explore our latest articles, insights, and stories on technology, design, and development."
+    heading="Our Sanctuary Journal"
+    subheading="Delve into deep-dive essays, evidence-based self-care guides, and cognitive science breakthroughs centered around active renewal and emotional restoration."
     variant="card"
     slot="hero-search"
   >
@@ -50,35 +50,9 @@ const allPostsData = posts.map(post => ({
       placeholder="Search articles..."
       showFilters={true}
     />
-  <div 
-    class="flex
-      gap-3
-      justify-center
-      flex-wrap
-      mt-4
-    "
-  >
-    <a
-      href="/blog"
-      class
-      ="
-        px-5
-        py-2
-        rounded-lg
-        border
-        border-border
-        text-sm
-        font-medium
-        hover:bg-muted
-        transition-colors
-      "
-    >
-      ← All Posts
-    </a>
     <a
       href="/blog/tags"
-      class=
-      "
+      class="
         px-5
         py-2
         rounded-lg
@@ -88,21 +62,39 @@ const allPostsData = posts.map(post => ({
         font-medium
         hover:bg-muted
         transition-colors
+        font-sans
       "
     >
       Browse by Tag
+    </a>
+    <a
+      href="/app/journal"
+      class="
+        px-5
+        py-2
+        rounded-lg
+        bg-primary
+        text-primary-foreground
+        text-sm
+        font-medium
+        hover:bg-primary/95
+        transition-colors
+        font-sans
+      "
+    >
+      Open Write Sanctuary →
     </a>
   </div>
   </BlogHero>
 
 
   <div slot="main-top" class=
-    "flex items-center justify-center h-[100vh] w-screen relative left-1/2
-      -translate-x-1/2 dark:bg-slate-900 py-8 my-auto
+    "flex items-center justify-center h-[70vh] w-screen relative left-1/2
+      -translate-x-1/2 bg-background py-8 my-auto
     "
   >
     <div class=
-      "max-w-5xl mx-auto px-4"
+      "max-w-5xl mx-auto px-4 w-full"
     >
       <RecentPostsCarousel
         recentPosts={recentPosts}
@@ -115,12 +107,12 @@ const allPostsData = posts.map(post => ({
 
   <!-- Main Content Section -->
   <section class=
-    "my-auto space-y-2 mx-auto p-32"
+    "my-auto space-y-4 mx-auto py-16 px-6 max-w-5xl"
   >
     <h2 
-      class="text-4xl font-semibold text-[rgb(var(--purple))]"
+      class="text-3xl font-serif font-semibold text-primary"
     >
-      More articles:
+      Featured micro-reflections:
     </h2>
 
     <MinimalBlogSection 
@@ -132,7 +124,7 @@ const allPostsData = posts.map(post => ({
   </section>
 
 
-  <section class="my-auto space-y-2 mx-auto p-32">
+  <section class="my-auto space-y-4 mx-auto py-16 px-6 max-w-5xl">
     <ThreeColumnGrid
       posts={allPostsData}
       cardVariant="colorful"

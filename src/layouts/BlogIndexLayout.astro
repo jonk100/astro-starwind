@@ -47,11 +47,13 @@ import '@/styles/starwind.css';
     )}
     
     <!-- Hero / Search Slot -->
-      <div class="min-h-[95vh] bg-rose-200/80 flex items-center justify-center justify-space-between">
+    {Astro.slots.has('hero-search') && (
+      <div class="min-h-[95vh] bg-muted/10 border-b border-border flex items-center justify-center justify-space-between">
         <div class="w-full">
           <slot name="hero-search" />
         </div>
       </div>
+    )}
 
       <!-- Main Content -->
       <main>

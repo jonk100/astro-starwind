@@ -118,12 +118,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
       </div>
     </div>
 
-    <!-- Word count footer -->
-    {documentId && (
-      <div class="tiptop-footer">
-        <span id="tiptop-word-count" class="tiptop-word-count">0 words</span>
-      </div>
-    )}
+
 
     <!-- Gutter Widgets (Habits, Newsletter & Creative Lab Prompts) -->
     <GutterWidgets />
@@ -256,6 +251,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
     // ── Create TipTap editor ──────────────────────────────────────────────────
     const editorEl = document.getElementById('tiptop-editor');
     if (!editorEl) return;
+    if (editorEl.querySelector('.ProseMirror')) return;
 
     /**
      * Tracks the last known ProseMirror selection before the editor loses
@@ -1151,6 +1147,11 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
   // ─── Boot ─────────────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', () => {
+    initTipTop();
+    initGutterHints();
+  });
+
+  document.addEventListener('astro:page-load', () => {
     initTipTop();
     initGutterHints();
   });

@@ -1,46 +1,52 @@
 ---
 import { Cluster, Stack } from "../layout";
+import { Button } from "@/components/starwind/button";
 ---
 
 <section
   class="
 		flex
 		flex-col
-		bg-gray-200
-		m-auto
-		h-screen
+		bg-background
+		py-16
+    border-t
+    border-border
   "
 >
   <Stack
     class="
       items-center
 			m-auto
+      px-6
+      text-center
     "
+    gap="md"
   >
     <h2
       class="
-        mb-4
-        text-5xl
-        font-bold
+        mb-2
+        text-4xl
+        font-serif
+        font-semibold
         leading-tight
-        text-accent
+        text-foreground
       "
     >
-      Need Immediate Help?
+      Need Immediate Support?
     </h2>
 
     <p
       class="
         mx-auto
         mb-8
-        max-w-150
-        text-2xl
+        max-w-xl
+        text-lg
         leading-relaxed
-        text-accent
-				font-bold
+        text-muted-foreground
+        font-sans
       "
     >
-      If you're in crisis or need urgent support, please reach out to emergency services
+      If you're in crisis, feeling overwhelmed, or need urgent emotional support, please reach out. Safe, compassionate, and entirely confidential help is available 24/7.
     </p>
 
     <Cluster
@@ -50,50 +56,25 @@ import { Cluster, Stack } from "../layout";
         gap-4
       "
     >
-      <a
+      <Button
         href="tel:988"
-        class="
-          rounded-lg
-          bg-primary
-          px-8
-          py-4
-          font-semibold
-          text-white
-          no-underline
-          transition-all
-          duration-300
-          ease-in-out
-          hover:-translate-y-0.5
-          hover:bg-accent
-        "
+        size="lg"
+        variant="primary"
+        class="font-sans px-8 py-3"
       >
         Call 988 (Suicide & Crisis Lifeline)
-      </a>
+      </Button>
 
-      <a
+      <Button
         href="https://www.crisistextline.org"
         target="_blank"
         rel="noopener noreferrer"
-        class="
-          rounded-lg
-          border-2
-          border-primary
-          bg-secondary
-          px-8
-          py-4
-          font-semibold
-          text-accent
-          no-underline
-          transition-all
-          duration-300
-          ease-in-out
-          hover:-translate-y-0.5
-          hover:bg-primary 
-          hover:text-white
-        "
+        size="lg"
+        variant="secondary"
+        class="font-sans px-8 py-3 border border-border"
       >
         Text HOME to 741741
-      </a>
+      </Button>
     </Cluster>
   </Stack>
 </section>

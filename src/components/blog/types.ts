@@ -32,6 +32,7 @@ export interface BlogNavigationPost {
   description?: string;
   slug: string;
   date?: Date | string;
+  tags?: string[];
 }
 
 export interface BlogNavigation {

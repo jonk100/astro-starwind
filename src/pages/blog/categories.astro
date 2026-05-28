@@ -20,9 +20,20 @@ const allPosts = (await getCollection('blog'))
   .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
 
 // Derive unique categories + counts for the search bar
-const categorySet = new Set<string>();
-allPosts.forEach(post => post.data.categories?.forEach(c => categorySet.add(c)));
-const categories = [...categorySet].sort();
+const categoryCounts = new Map<string, number>();
+allPosts.forEach(post => {
+  post.data.categories?.forEach(c => {
+    categoryCounts.set(c, (categoryCounts.get(c) || 0) + 1);
+  });
+});
+const categories = [...categoryCounts.keys()].sort((a, b) => {
+  const countA = categoryCounts.get(a) || 0;
+  const countB = categoryCounts.get(b) || 0;
+  if (countB !== countA) {
+    return countB - countA; // Descending by post count
+  }
+  return a.localeCompare(b); // Alphabetical fallback
+});
 
 // Shape posts for BlogSearch
 const allPostsData = allPosts.map(post => ({
@@ -55,52 +66,26 @@ const allPostsData = allPosts.map(post => ({
       showFilters={true}
     />
 
-    <div 
-      class
-      ="
-        flex
-        gap-3
-        justify-center
-        flex-wrap
-        mt-4
-      "
-    >
-      <a
-        href="/blog"
-        class
-        ="
-          px-5
-          py-2
-          rounded-lg
-          border
-          border-border
-          text-sm
-          font-medium
-          hover:bg-muted
-          transition-colors
-        "
-      >
-        ← All Posts
-      </a>
-      <a
-        href="/blog/tags"
-        class
-        ="
-          px-5
-          py-2
-          rounded-lg
-          border
-          border-border
-          text-sm
-          font-medium
-          hover:bg-muted
-          transition-colors
-        "
-      >
-        Browse by Tag
-      </a>
-    </div
-    >
+      <div class="flex gap-3 justify-center flex-wrap mt-6">
+        <a
+          href="/blog"
+          class="px-5 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors"
+        >
+          All Posts
+        </a>
+        <a
+          href="/blog/categories"
+          class="px-5 py-2.5 rounded-xl border-2 border-primary text-primary bg-primary/5 text-sm font-bold shadow-xs"
+        >
+          Browse by Category
+        </a>
+        <a
+          href="/blog/tags"
+          class="px-5 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors"
+        >
+          Browse by Tag
+        </a>
+      </div>
     </BlogHero>
   </div>
 

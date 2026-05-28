@@ -267,9 +267,16 @@ const completionRate = datesInMonth.length > 0 ? Math.round((completedDates.leng
 </TableCell>
 
 <style>
+  @reference "tailwindcss";
   .habit-name-cell:has([data-state="open"]) {
     z-index: 100 !important;
   }
+
+  .habit-name-cell {
+    background-color: var(--background);
+    border-bottom: 2px solid var(--accent);
+  }
+
 </style>
 
 <script>

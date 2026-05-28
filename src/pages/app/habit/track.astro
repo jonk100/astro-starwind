@@ -81,7 +81,7 @@ const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFull
 const dailyQuote = WELLNESS_QUOTES[dayOfYear % WELLNESS_QUOTES.length];
 ---
 
-<Layout title="Habit Tracker" description="Track your habits">
+<Layout title="Habit Tracker" description="Track your habits" hideGlobalHeader={true}>
   <div class="flex flex-col h-screen bg-slate-50">
     <!-- Month and Progress header -->
     <HeaderRow habits={habitsWithLogs ?? []} currentMonthDate={currentMonthDate} />

@@ -16,7 +16,7 @@ const { habits, dates } = Astro.props;
 {habits.map(habit => {
   const logMap = buildLogMap(habit.logs);
   return (
-    <TableRow class="hover:bg-slate-50 transition-colors">
+    <TableRow class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-900">
       <HabitNameCell habit={habit} />
       {dates.map(date => {
         const log: HabitLog | undefined = logMap.get(date);

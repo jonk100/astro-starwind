@@ -23,7 +23,7 @@ interface Props {
 
 const { 
   heading = "Real Stories", 
-  subheading = "People who have changed their lives with Mindful Habits Studio.", 
+  subheading = "Stories from our community about their somatic and cognitive renewal journey.", 
   headingColor, 
   subheadingColor, 
   headerVariant = 'section', 
@@ -39,7 +39,7 @@ const schemes = ['light', 'dark', 'primary'] as const;
 <!-- 1. Outer container tracks full-bleed background colors -->
 <section class={`w-full ${bgClass} ${className}`}>
   {/* 2. Inner container constrains content layouts horizontally */}
-  <div class={`mx-auto ${maxWidth} px-4 sm:px-6 lg:px-8 py-10 min-h-screen`}>
+  <div class={`mx-auto ${maxWidth} px-4 sm:px-6 lg:px-8 py-10`}>
     <SectionHeader 
       variant={headerVariant}
       headingClass={headingColor}

@@ -6,6 +6,7 @@ import { Image } from "@/components/starwind/image";
 import { tv } from "tailwind-variants";
 import type { BlogPost, BlogCardVariant, BlogCardSize } from "../types";
 import { formatDate } from "../utils";
+import { getTagColorClass } from "@/lib/blog/tagColors";
 
 interface HorizontalBlogCardProps {
   post: BlogPost;
@@ -92,16 +93,16 @@ const wrapperProps = href ? { href, class: "block" } : { class: "block" };
 
         <CardContent class="pb-2">
           {showTags && post.tags && post.tags.length > 0 && (
-            <div class="flex flex-wrap gap-1">
+            <div class="flex flex-wrap gap-1.5">
               {post.tags.slice(0, 2).map((tag: string) => (
-                <Badge size="sm" variant="outline">
+                <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${getTagColorClass(tag)}`}>
                   {tag}
-                </Badge>
+                </span>
               ))}
               {post.tags.length > 2 && (
-                <Badge size="sm" variant="ghost">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border border-border text-muted-foreground bg-muted/40">
                   +{post.tags.length - 2}
-                </Badge>
+                </span>
               )}
             </div>
           )}

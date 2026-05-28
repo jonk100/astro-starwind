@@ -1,12 +1,11 @@
 ---
 /**
  * ContactSection
- * Contact information + optional form slot.
+ * Calming contact layout that neatly integrates with children slots.
  */
 
-import { Section, ContentWidth, Stack, Cluster } from '@/components/layout';
+import { Section, ContentWidth, Stack } from '@/components/layout';
 import { Image } from '@/components/starwind/image';
-
 
 interface Props {
   title?: string;
@@ -21,24 +20,23 @@ const {
 } = Astro.props;
 ---
 
-<Section size="lg">
-  <Cluster>
-    <Image src={imgSrc} inferSize />
-    <Stack>
-      {title && <h2>{title}</h2>}
-      {description && <p>{description}</p>}
-      
-    </Stack>
-  <ContentWidth width="md">
+<Section size="lg" class="py-12 bg-background">
+  <ContentWidth width="md" class="mx-auto px-4">
     <Stack gap="lg">
-
-      <Stack gap="sm">
-        <h2>{title}</h2>
-        {description && <p>{description}</p>}
+      {imgSrc && (
+        <div class="rounded-3xl overflow-hidden aspect-video relative bg-muted shadow-sm">
+          <Image src={imgSrc} alt={title} class="object-cover w-full h-full" inferSize />
+        </div>
+      )}
+      
+      <Stack gap="sm" class="text-center text-balance max-w-2xl mx-auto">
+        <h2 class="text-4xl font-serif font-semibold text-foreground tracking-wide">{title}</h2>
+        {description && <p class="text-muted-foreground text-lg leading-relaxed">{description}</p>}
       </Stack>
 
-      <slot />
-
+      <div class="w-full">
+        <slot />
+      </div>
     </Stack>
   </ContentWidth>
 </Section>

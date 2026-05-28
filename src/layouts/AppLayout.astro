@@ -12,15 +12,16 @@ interface Props {
 	title: string;
 	description: string;
 	user?: User;
+	hideGlobalHeader?: boolean;
 };
 
 
 
-const { title = `App - ${SITE_TITLE}`, description = SITE_DESCRIPTION, user: userProp } = Astro.props;
+const { title = `App - ${SITE_TITLE}`, description = SITE_DESCRIPTION, user: userProp, hideGlobalHeader = false } = Astro.props;
 const user = userProp ?? Astro.locals.user;
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} hideGlobalHeader={hideGlobalHeader}>
   <head>
     <slot name="head" slot="head"/>
   </head>
@@ -51,3 +52,15 @@ const user = userProp ?? Astro.locals.user;
       </footer>
     </main>
 </Layout>
+
+<style>
+  .app-body {
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+  }
+
+  :global(html.dark) .app-body {
+    color: var(--color-background);
+    background-color: var(--color-foreground);
+  }
+</style>

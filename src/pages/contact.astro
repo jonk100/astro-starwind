@@ -3,7 +3,6 @@ import Layout from '@/layouts/Site.astro';
 import HeroSection from '@/components/sections/hero/HeroSection.astro';
 import NewsletterSection from '@/components/sections/newsletter/NewsletterSection.astro';
 import FAQSection from '@/components/sections/faq/FAQSection.astro';
-import Center from '@/components/layout/primitives/Center.astro';
 import SuicideCta from '@/components/sections/SuicideCta.astro';
 import ContactFormSection from '@/components/sections/contact/ContactFormSection.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
@@ -17,35 +16,34 @@ export const prerender = false;
 >
 	<HeroSection 
 		h="Get In Touch"
-		p="We'd love to hear from you. Whether you have questions, feedback, or just want to say hello, our team is here to help."
+		p="We'd love to hear from you. Whether you have questions, feedback, or just want to say hello, our team is here to support your peace of mind."
 		imgSrc="https://res.cloudinary.com/dikyfam2c/image/upload/v1734536831/flower_gvof2g.webp"
 		imgAlt="Contact us"
 		width={2688}
 		height={1920}
 		slot="hero"
-		style="background: linear-gradient(to bottom, var(--purple-5), var(--purple3)) no-repeat;"
 	/>
 
 	<section class="contact-info-section">
-		<div class="container">
-			<h2 class="contact-heading">Ways to Reach Us</h2>
-			<p class="contact-subheading">Choose the method that works best for you</p>
+		<div class="container font-sans">
+			<h2 class="contact-heading font-serif">Ways to Reach Us</h2>
+			<p class="contact-subheading text-muted-foreground">Choose the method that works best for you</p>
 			<div class="contact-grid">
 				<div class="contact-card">
 					<div class="contact-icon">📧</div>
-					<h3 class="contact-title">Email Us</h3>
+					<h3 class="contact-title font-serif">Email Us</h3>
 					<p class="contact-text">For general inquiries and support</p>
 					<a href="mailto:hello@remindmatters.com" class="contact-link">hello@remindmatters.com</a>
 				</div>
 				<div class="contact-card">
 					<div class="contact-icon">📱</div>
-					<h3 class="contact-title">Call Us</h3>
+					<h3 class="contact-title font-serif">Call Us</h3>
 					<p class="contact-text">Mon-Fri, 9am-5pm EST</p>
 					<a href="tel:+1234567890" class="contact-link">+1 (234) 567-890</a>
 				</div>
 				<div class="contact-card">
 					<div class="contact-icon">💬</div>
-					<h3 class="contact-title">Live Chat</h3>
+					<h3 class="contact-title font-serif">Live Chat</h3>
 					<p class="contact-text">Instant support during business hours</p>
 					<a href="#" class="contact-link">Start Chat</a>
 				</div>
@@ -55,12 +53,10 @@ export const prerender = false;
 
 	<ContactFormSection />
 
-	<FAQSection />
+	<FAQSection class="py-16" />
 	<SuicideCta />
 
-	<Center axis="both" class="h-100vh">
-		<NewsletterSection heading="Stay updated" class="h-em "/>
-	</Center>
+	<NewsletterSection heading="Stay updated with our sanctuary" />
 </Layout>
 
 <style>
@@ -71,22 +67,22 @@ export const prerender = false;
 	}
 
 	.contact-info-section {
-		padding: 4em 0;
-		background: var(--surface-primary);
+		padding: 6em 0;
+		background: var(--background);
+    border-bottom: 1px solid var(--border);
 	}
 
 	.contact-heading {
 		font-size: 2.5em;
 		text-align: center;
 		margin-bottom: 0.5em;
-		color: var(--text-primary);
+		color: var(--foreground);
 	}
 
 	.contact-subheading {
-		font-size: 1.25em;
+		font-size: 1.15em;
 		text-align: center;
 		margin-bottom: 3em;
-		color: var(--text-secondary);
 	}
 
 	.contact-grid {
@@ -96,43 +92,44 @@ export const prerender = false;
 	}
 
 	.contact-card {
-		background: var(--surface-secondary);
-		border-radius: 1em;
-		padding: 2em;
+		background: var(--card);
+		border-radius: 1.5em;
+    border: 1px solid var(--border);
+		padding: 3em 2em;
 		text-align: center;
-		transition: transform 0.3s ease, box-shadow 0.3s ease;
+		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.contact-card:hover {
-		transform: translateY(-0.5em);
-		box-shadow: 0 1em 2em rgba(0, 0, 0, 0.1);
+		transform: translateY(-0.35em);
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
 	}
 
 	.contact-icon {
-		font-size: 3em;
-		margin-bottom: 1em;
+		font-size: 2.5em;
+		margin-bottom: 0.5em;
 	}
 
 	.contact-title {
 		font-size: 1.5em;
 		margin-bottom: 0.5em;
-		color: var(--text-primary);
+		color: var(--foreground);
 	}
 
 	.contact-text {
 		font-size: 1em;
-		color: var(--text-secondary);
-		margin-bottom: 1em;
+		color: var(--muted-foreground);
+		margin-bottom: 1.5em;
 	}
 
 	.contact-link {
 		color: var(--primary);
 		text-decoration: none;
 		font-weight: 600;
-		transition: color 0.3s ease;
+		transition: color 0.2s ease;
 	}
 
 	.contact-link:hover {
-		color: var(--primary-dark);
+		color: var(--accent);
 	}
 </style>

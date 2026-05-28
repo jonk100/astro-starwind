@@ -10,7 +10,6 @@ import MinimalBlogSection from '@/components/sections/blog/MinimalBlogSection.as
 import OurTeam from '@/components/sections/team/OurTeam.astro';
 import FullCardCluster from '@/components/FullCardCluster.astro';
 import Card from '@/components/Card.astro';
-import Center from '@/components/layout/primitives/Center.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 import { features as FeatureData, testimonials as TestimonialData } from '@/data/consts';
 
@@ -25,29 +24,28 @@ export const prerender = false;
 	description={SITE_DESCRIPTION}
 >
 	<HeroSection 
-		h="The People Behind Your Journey"
-		p="We're a team of dreamers, doers, and mental health advocates working together to make wellness accessible, joyful, and judgment-free."
+		h="The Guides Behind Your Journey"
+		p="We're a dedicated collective of mental health advocates, science writers, and designers working together to build a safe, judgment-free daily sanctuary."
 		imgSrc="https://res.cloudinary.com/dikyfam2c/image/upload/v1778690604/sssssstrictly-positive2_vdyprb_4bd826.jpg"
 		imgAlt="Team collaboration"
 		width={2688}
 		height={1920}
 		slot="hero"
-		style="background: linear-gradient(to bottom, var(--purple-5), var(--purple3)) no-repeat;"
 	/>
 
 	<section class="who-we-are">
-		<div class="container">
-			<h2>Who We Are</h2>
+		<div class="container font-sans text-justify section--paragraph">
+			<h2 class="font-serif font-semibold">Our Origin Story</h2>
 			<p>
-				It all started on a rainy Tuesday afternoon when we realized that mental health conversations were too often wrapped in clinical jargon or heavy, somber tones. We wanted something different—something that felt like a warm hug from a friend rather than a medical diagnosis. After watching someone we love struggle to find resources that actually resonated with them, we knew there had to be a better way. That spark of frustration mixed with hope became the foundation of everything we do today.
+				It all started on a quiet afternoon when we realized that mental health conversations were too often wrapped in clinical jargon or heavy, somber tones. We wanted something different—something that felt like a warm, supportive conversation with a guide rather than a clinical diagnosis. After watching loved ones struggle to find resources that actually resonated with them, we knew there had to be a better way. That spark of hope mixed with practical psychology became the foundation of everything we do today.
 			</p>
 
 			<p>
-				Our decisions are guided by four core values that we hold close to our hearts. First, <strong>empathy first</strong>—every piece of content we create is filtered through the question "would this make someone feel seen and understood?" Second, <strong>accessibility matters</strong>—we believe mental health wisdom shouldn't require a dictionary to decode. Third, <strong>joy is essential</strong>—we reject the notion that growth has to be painful or boring. And finally, <strong>community over competition</strong>—we're not here to be the only voice in the room, but to add to a chorus of caring voices already making a difference.
+				Our decisions are guided by four core values that we hold close. First, <strong>empathy first</strong>—every piece of content we create is filtered through the question: *does this make someone feel seen and understood?* Second, <strong>actionable science</strong>—we believe mental health wisdom should be backed by neuroscience and CBT, not magical platitudes. Third, <strong>joy is essential</strong>—we reject the notion that self-care has to be cold or clinical. And finally, <strong>restorative pacing</strong>—we create spaces that encourage the mind to slow down and breathe.
 			</p>
 
 			<p>
-				Our goal is simple but ambitious: help people learn and grow their mental health through modern, forward-thinking content that radiates strictly positive vibes. We're crafting resources that meet people where they are—whether that's scrolling through social media on a lunch break or seeking deeper understanding during quiet moments. No shame, no judgment, just genuine support wrapped in beautiful design and words that actually land. Because mental health isn't just about surviving—it's about thriving, and we think that's something worth celebrating.
+				Our goal is simple but ambitious: help people grow their mental well-being through modern, forward-thinking content that radiates strictly positive, constructive vibes. We're crafting resources that meet people where they are—whether that's scrolling through social media or seeking deep, private self-reflection in our Write and Habit tools. No shame, no judgment, just genuine support wrapped in beautiful design and words that actually land.
 			</p>
 		</div>
 	</section>
@@ -55,103 +53,94 @@ export const prerender = false;
 	<OurTeam />
 
 	<section class="stats-section">
-		<div class="container">
-			<h2 class="stats-heading">Our Impact</h2>
+		<div class="container font-sans">
+			<h2 class="stats-heading font-serif font-semibold">Our Shared Impact</h2>
 			<div class="stats-grid">
 				<div class="stat-card">
 					<div class="stat-number">50K+</div>
-					<div class="stat-label">Community Members</div>
+					<div class="stat-label">Sanctuary Members</div>
 				</div>
 				<div class="stat-card">
 					<div class="stat-number">200+</div>
-					<div class="stat-label">Expert Articles</div>
+					<div class="stat-label">Neuroscience Articles</div>
 				</div>
 				<div class="stat-card">
 					<div class="stat-number">15K+</div>
-					<div class="stat-label">Daily Readers</div>
+					<div class="stat-label">Daily Reflectors</div>
 				</div>
 				<div class="stat-card">
 					<div class="stat-number">98%</div>
-					<div class="stat-label">Satisfaction Rate</div>
+					<div class="stat-label">Somatic Ease Rate</div>
 				</div>
 			</div>
 		</div>
 	</section>
 
-	<!-- <section class="container"> -->
-		<MinimalBlogSection variant="blog" o="long" i={0} />
-	<!-- </section> -->
+	<MinimalBlogSection variant="blog" o="long" i={0} />
 
 	<section class="logo-list-section">
-		<div class="container">
-			<h2 class="logo-heading">Trusted By</h2>
-			<p class="logo-subheading">Featured in and partnered with leading organizations</p>
+		<div class="container font-sans">
+			<h2 class="logo-heading font-serif font-semibold">Recognized Authorities</h2>
+			<p class="logo-subheading text-muted-foreground">Supported by and aligned with leading mental wellness publications</p>
 			<div class="logo-grid">
 				<div class="logo-item">Mindful Magazine</div>
 				<div class="logo-item">Wellness Weekly</div>
 				<div class="logo-item">Health Today</div>
 				<div class="logo-item">Psych Central</div>
-				<div class="logo-item">Calm App</div>
+				<div class="logo-item">Calm Space</div>
 				<div class="logo-item">Headspace</div>
 			</div>
 		</div>
 	</section>
 
 	<FeaturesSection
-		heading="What We Believe In"
-		subheading="The principles that guide everything we do"
+		heading="What We Stand For"
+		subheading="The governing principles that shape our self-care ecosystem"
 		features={features}
 		variant="plea"
 	/>
 
-	<Center axis="both" class="h-100vh">
-		<NewsletterSection heading="Join our community" class="h-em "/>
-	</Center>
-
-	<div>
+	<div class="py-12">
 		<FullCardCluster columns={3} schemeMode="alternate">
 			<Card title="Our Story" tag="About" />
 			<Card title="Our Mission" tag="Values" />
-			<Card title="Our Vision" href="/read/slug">
-				Building a world where mental health support is as normal as checking the weather.
+			<Card title="Our Vision" href="/blog">
+				Building a world where daily mental health renewal is as natural as breathing.
 			</Card>
 		</FullCardCluster>
 	</div>
 
 	<TestimonialsSection
-	  heading="What People Say"
-	  subheading="Stories from our community about their journey with us."
+	  heading="Voice of the Sanctuary"
+	  subheading="Stories from our community members about their personal paths of renewal."
 	  testimonials={testimonials}
 	/>
 
-	<FAQSection />
+	<FAQSection class="py-16" />
 
 	<section class="cta-section">
-		<div class="container">
-			<h2 class="cta-heading">Ready to Start Your Journey?</h2>
-			<p class="cta-subheading">Join thousands of people who have transformed their mental wellness with our resources</p>
+		<div class="container font-sans">
+			<h2 class="cta-heading font-serif font-semibold">Ready to Begin Your Path?</h2>
+			<p class="cta-subheading text-muted-foreground">Join thousands who have structured their daily mindfulness and built lasting neuroplastic resilience with our sanctuary.</p>
 			<div class="cta-buttons">
-				<a href="/" class="cta-button primary">Get Started Free</a>
-				<a href="/contact" class="cta-button secondary">Contact Us</a>
+				<a href="/app/habits" class="cta-button primary">Start Tracking Free</a>
+				<a href="/contact" class="cta-button secondary">Speak With a Guide</a>
 			</div>
 		</div>
 	</section>
 
-	<ContactSection />
-	<div>
-		<NewsletterSection heading="Stay connected" class="h-em "/>
-	</div>
+	<NewsletterSection heading="Stay connected to our sanctuary" />
 </Layout>
 
 <style>
 	.who-we-are {
-		padding: 4em 0;
-		background: var(--surface-primary);
+		padding: 6em 0;
+		background: var(--background);
 	}
 
 	.container {
 		max-width: 1200px;
-		margin: 4em auto;
+		margin: 0 auto;
 		padding: 0 2em;
 	}
 
@@ -159,15 +148,18 @@ export const prerender = false;
 		font-size: 2.5em;
 		text-align: center;
 		margin-bottom: 1.5em;
-		color: var(--text-primary);
+		color: var(--foreground);
 	}
 
-	.who-we-are p {
-		font-size: 1.125em;
+	/* .who-we-are p {
+		font-size: var;
 		line-height: 1.8;
 		margin-bottom: 1.5em;
-		color: var(--text-secondary);
-	}
+		color: var(--muted-foreground);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+	} */
 
 	.who-we-are strong {
 		color: var(--primary);
@@ -175,15 +167,16 @@ export const prerender = false;
 	}
 
 	.stats-section {
-		padding: 4em 0;
-		background: linear-gradient(to bottom, var(--purple3), var(--purple-5));
+		padding: 6em 0;
+		background: var(--background);
+    border-bottom: 1px solid var(--border);
 	}
 
 	.stats-heading {
 		font-size: 2.5em;
 		text-align: center;
 		margin-bottom: 3em;
-		color: var(--text-primary);
+		color: var(--foreground);
 	}
 
 	.stats-grid {
@@ -193,46 +186,48 @@ export const prerender = false;
 	}
 
 	.stat-card {
-		background: var(--surface-primary);
-		border-radius: 1em;
-		padding: 2em;
+		background: var(--card);
+		border-radius: 1.5em;
+    border: 1px solid var(--border);
+		padding: 3em 2em;
 		text-align: center;
-		transition: transform 0.3s ease;
+		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.stat-card:hover {
-		transform: translateY(-0.5em);
+		transform: translateY(-0.35em);
 	}
 
 	.stat-number {
 		font-size: 3em;
 		font-weight: 700;
 		color: var(--primary);
-		margin-bottom: 0.5em;
+		margin-bottom: 0.25em;
 	}
 
 	.stat-label {
-		font-size: 1.125em;
-		color: var(--text-secondary);
+		font-size: 1.05em;
+		color: var(--muted-foreground);
 	}
 
 	.logo-list-section {
-		padding: 4em 0;
-		background: var(--surface-primary);
+		padding: 6em 0;
+		background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 	}
 
 	.logo-heading {
 		font-size: 2.5em;
 		text-align: center;
 		margin-bottom: 0.5em;
-		color: var(--text-primary);
+		color: var(--foreground);
 	}
 
 	.logo-subheading {
-		font-size: 1.25em;
+		font-size: 1.15em;
 		text-align: center;
 		margin-bottom: 3em;
-		color: var(--text-secondary);
 	}
 
 	.logo-grid {
@@ -243,36 +238,38 @@ export const prerender = false;
 	}
 
 	.logo-item {
-		background: var(--surface-secondary);
-		border-radius: 0.5em;
+		background: var(--background);
+		border-radius: 0.75em;
+    border: 1px solid var(--border);
 		padding: 1.5em;
 		text-align: center;
 		font-weight: 600;
-		color: var(--text-secondary);
+		color: var(--muted-foreground);
 		transition: all 0.3s ease;
 	}
 
 	.logo-item:hover {
 		background: var(--primary);
-		color: white;
+		color: var(--primary-foreground);
 	}
 
 	.cta-section {
 		padding: 6em 0;
-		background: linear-gradient(to bottom, var(--purple-5), var(--purple3));
+		background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 		text-align: center;
 	}
 
 	.cta-heading {
-		font-size: 3em;
-		margin-bottom: 1em;
-		color: var(--text-primary);
+		font-size: 2.5em;
+		margin-bottom: 0.5em;
+		color: var(--foreground);
 	}
 
 	.cta-subheading {
-		font-size: 1.25em;
+		font-size: 1.15em;
 		margin-bottom: 2em;
-		color: var(--text-secondary);
 		max-width: 600px;
 		margin-left: auto;
 		margin-right: auto;
@@ -287,32 +284,31 @@ export const prerender = false;
 
 	.cta-button {
 		padding: 1em 2em;
-		border-radius: 0.5em;
+		border-radius: 0.75em;
 		font-weight: 600;
 		text-decoration: none;
-		transition: all 0.3s ease;
+		transition: all 0.2s ease;
 	}
 
 	.cta-button.primary {
 		background: var(--primary);
-		color: white;
+		color: var(--primary-foreground);
 	}
 
 	.cta-button.primary:hover {
-		background: var(--primary-dark);
+		background: var(--primary-accent);
 		transform: translateY(-0.125em);
 	}
 
 	.cta-button.secondary {
-		background: var(--surface-primary);
-		color: var(--text-primary);
-		border: 2px solid var(--primary);
+		background: var(--background);
+		color: var(--foreground);
+		border: 1px solid var(--border);
 	}
 
 	.cta-button.secondary:hover {
 		background: var(--primary);
-		color: white;
+		color: var(--primary-foreground);
 		transform: translateY(-0.125em);
 	}
 </style>
-

@@ -8,9 +8,10 @@ interface Props {
   title: string;
   description?: string;
   mainWidth?: number | null;
+  hideGlobalHeader?: boolean;
 }
 
-const { title, description = '', mainWidth } = Astro.props;
+const { title, description = '', mainWidth, hideGlobalHeader = false } = Astro.props;
 const user = Astro.locals.user;
 
 import '@/styles/global.css';
@@ -21,13 +22,40 @@ import '@/styles/starwind.css';
 	<head>
 		<BaseHead title={title} description={description} />
     <slot name="head" />
+    <script is:inline>
+      function initTheme() {
+        const colorTheme = localStorage.getItem("colorTheme");
+        if (!colorTheme) {
+          if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("colorTheme", "dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("colorTheme", "light");
+          }
+        } else {
+          if (colorTheme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else if (colorTheme === "light") {
+            document.documentElement.classList.remove("dark");
+          } else if (colorTheme === "system") {
+            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            document.documentElement.classList.toggle("dark", prefersDark);
+          }
+        }
+      }
+      initTheme();
+      document.addEventListener("astro:after-swap", initTheme);
+    </script>
 	</head>
 
 	<body class="layout-body">
-    <header class="layout-header sticky top-0 z-50">
-      <Header user={user} />
-      <slot name="header" />
-    </header>
+    {!hideGlobalHeader && (
+      <header class="layout-header sticky top-0 z-50">
+        <Header user={user} />
+        <slot name="header" />
+      </header>
+    )}
     <container class="app--hero-slot">
       <slot name="hero" />
     </container>
@@ -61,5 +89,7 @@ import '@/styles/starwind.css';
       background: linear-gradient(135deg, #18122b 0%, #0f0c1b 100%);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
+
+    
   </style>
 </html>

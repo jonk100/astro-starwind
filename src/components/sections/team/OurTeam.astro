@@ -3,60 +3,53 @@ interface TeamMember {
 	name: string;
 	role: string;
 	bio: string;
-	image?: string;
 }
 
 const teamMembers: TeamMember[] = [
 	{
 		name: "Sarah Chen",
 		role: "Founder & CEO",
-		bio: "Former therapist turned entrepreneur. Sarah believes mental health should be accessible, joyful, and free from judgment.",
-		image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=b6e3f4"
+		bio: "Former therapist turned entrepreneur. Sarah believes mental health should be accessible, joyful, and entirely free from judgment."
 	},
 	{
 		name: "Marcus Johnson",
-		role: "Head of Content",
-		bio: "Award-winning writer with a passion for making complex topics feel simple and approachable.",
-		image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus&backgroundColor=c0aede"
+		role: "Head of Editorial",
+		bio: "Award-winning science writer with a passion for translating complex neurobiology into warm, supportive prose."
 	},
 	{
 		name: "Elena Rodriguez",
-		role: "Lead Designer",
-		bio: "Creates beautiful, calming interfaces that make mental health tools feel like a warm embrace.",
-		image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena&backgroundColor=ffdfbf"
+		role: "Lead Experience Designer",
+		bio: "Dedicated to crafting beautiful, calming interfaces that act as a restorative digital harbor for the mind."
 	},
 	{
 		name: "David Kim",
-		role: "Community Manager",
-		bio: "Builds bridges between people and resources, ensuring everyone feels seen and supported.",
-		image: "https://api.dicebear.com/7.x/avataaars/svg?seed=David&backgroundColor=d1d4f9"
+		role: "Community Director",
+		bio: "Builds bridges between individuals and resources, ensuring every member of our sanctuary feels seen and supported."
 	},
 	{
 		name: "Aisha Patel",
-		role: "Research Director",
-		bio: "PhD in psychology with a focus on evidence-based practices that actually work in real life.",
-		image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aisha&backgroundColor=ffd5dc"
+		role: "Director of Neuroscience",
+		bio: "PhD in psychology focusing on validating cognitive-behavioral techniques that integrate seamlessly into daily practice."
 	},
 	{
 		name: "James Wilson",
-		role: "Developer",
-		bio: "Turns ideas into elegant code, building the tools that make mental health support accessible to all.",
-		image: "https://api.dicebear.com/7.x/avataaars/svg?seed=James&backgroundColor=c0aede"
+		role: "Lead Systems Engineer",
+		bio: "Architect of our distraction-free habit loops and private journals, dedicated to performance and digital hygiene."
 	}
 ];
 ---
 
 <section class="team-section">
-	<div class="container">
-		<h2 class="team-heading">Meet Our Team</h2>
-		<p class="team-subheading">The passionate people behind your journey</p>
+	<div class="container font-sans">
+		<h2 class="team-heading font-serif">Meet Our Guides</h2>
+		<p class="team-subheading text-muted-foreground">The passionate voices behind your path of renewal</p>
 		<div class="team-grid">
 			{teamMembers.map((member) => (
 				<div class="team-card">
-					<div class="team-image">
-						<img src={member.image} alt={member.name} />
+					<div class="team-image flex items-center justify-center bg-background border border-border/80 text-primary font-serif text-3xl font-semibold select-none shadow-sm">
+            {member.name.split(' ').map(n => n[0]).join('')}
 					</div>
-					<h3 class="team-name">{member.name}</h3>
+					<h3 class="team-name font-serif">{member.name}</h3>
 					<p class="team-role">{member.role}</p>
 					<p class="team-bio">{member.bio}</p>
 				</div>
@@ -67,8 +60,10 @@ const teamMembers: TeamMember[] = [
 
 <style>
 	.team-section {
-		padding: 4em 0;
-		background: linear-gradient(to bottom, var(--purple-5), var(--purple3));
+		padding: 6em 0;
+		background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 	}
 
 	.container {
@@ -81,66 +76,60 @@ const teamMembers: TeamMember[] = [
 		font-size: 2.5em;
 		text-align: center;
 		margin-bottom: 0.5em;
-		color: var(--text-primary);
+		color: var(--foreground);
 	}
 
 	.team-subheading {
-		font-size: 1.25em;
+		font-size: 1.15em;
 		text-align: center;
 		margin-bottom: 3em;
-		color: var(--text-secondary);
 	}
 
 	.team-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 2em;
+		gap: 2.5em;
 	}
 
 	.team-card {
-		background: var(--surface-primary);
-		border-radius: 1em;
-		padding: 2em;
+		background: var(--background);
+		border-radius: 1.5rem;
+    border: 1px solid var(--border);
+		padding: 3em 2em;
 		text-align: center;
-		transition: transform 0.3s ease, box-shadow 0.3s ease;
+		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.team-card:hover {
-		transform: translateY(-0.5em);
-		box-shadow: 0 1em 2em rgba(0, 0, 0, 0.1);
+		transform: translateY(-0.35em);
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
 	}
 
 	.team-image {
-		width: 120px;
-		height: 120px;
+		width: 100px;
+		height: 100px;
 		margin: 0 auto 1.5em;
 		border-radius: 50%;
-		overflow: hidden;
-		background: var(--purple-2);
-	}
-
-	.team-image img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
 	}
 
 	.team-name {
 		font-size: 1.5em;
 		margin-bottom: 0.25em;
-		color: var(--text-primary);
+		color: var(--foreground);
 	}
 
 	.team-role {
-		font-size: 1em;
+		font-size: 0.95em;
 		color: var(--primary);
-		margin-bottom: 1em;
+		margin-bottom: 1.25em;
 		font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 	}
 
 	.team-bio {
-		font-size: 0.9em;
-		color: var(--text-secondary);
-		line-height: 1.6;
+		font-size: 0.95em;
+		color: var(--muted-foreground);
+		line-height: 1.7;
 	}
 </style>

@@ -2,6 +2,7 @@
 import { Dropdown, DropdownItem, DropdownContent, DropdownTrigger } from "@/components/starwind/dropdown";
 import type { HTMLAttributes } from "astro/types";
 import UserNav from "./UserNav.astro";
+import Skeleton from "@/components/starwind/skeleton/Skeleton.astro";
 
 type Props = HTMLAttributes<"div"> & {
   user?: {
@@ -20,14 +21,14 @@ const { user } = Astro.props;
       Blog
     </DropdownTrigger>
     <DropdownContent class="min-w-48 flex flex-col">
-      <DropdownItem class="menu-item">
-        <a href="/blog">All Posts</a>
+      <DropdownItem as="a" href="/blog" class="menu-item starwind-dropdown-item">
+        All Posts
       </DropdownItem>
-      <DropdownItem class="menu-item">
-        <a href="/blog/categories">Category</a>
+      <DropdownItem as="a" href="/blog/categories" class="menu-item starwind-dropdown-item">
+        Browse by Category
       </DropdownItem>
-      <DropdownItem class="menu-item">
-        <a href="/blog/tags">Tag</a>
+      <DropdownItem as="a" href="/blog/tags" class="menu-item starwind-dropdown-item">
+        Popular Tags
       </DropdownItem>
     </DropdownContent>
   </Dropdown>
@@ -36,9 +37,9 @@ const { user } = Astro.props;
       Site
     </DropdownTrigger>
     <DropdownContent class="min-w-48 flex flex-col">
-      <DropdownItem as="a" href="/" class="menu-item">Home</DropdownItem>
-      <DropdownItem as="a" href="/about" class="menu-item" >About</DropdownItem>
-      <DropdownItem as="a" href="/contact" class="menu-item">Contact</DropdownItem>
+      <DropdownItem as="a" href="/" class="menu-item starwind-dropdown-item">Home</DropdownItem>
+      <DropdownItem as="a" href="/about" class="menu-item starwind-dropdown-item">About</DropdownItem>
+      <DropdownItem as="a" href="/contact" class="menu-item starwind-dropdown-item">Contact</DropdownItem>
     </DropdownContent>
   </Dropdown>
   <Dropdown class="group flex flex-row w-full">
@@ -46,20 +47,17 @@ const { user } = Astro.props;
       Tools
     </DropdownTrigger>
     <DropdownContent class="min-w-48 flex flex-col">
-      <DropdownItem as="a" href="/app/habit/track" class="menu-item">Habit Tracker</DropdownItem>
-      <DropdownItem as="a" href="/app/write" class="menu-item">Journal</DropdownItem>
-      <DropdownItem as="a" href="/app/relax/meditation" class="menu-item">Meditation Guide</DropdownItem>
+      <DropdownItem as="a" href="/app/habit/track" class="menu-item starwind-dropdown-item">Habit Tracker</DropdownItem>
+      <DropdownItem as="a" href="/app/write" class="menu-item starwind-dropdown-item">Journal</DropdownItem>
+      <DropdownItem as="a" href="/app/relax/meditation" class="menu-item starwind-dropdown-item">Meditation Guide</DropdownItem>
     </DropdownContent>
   </Dropdown>
   <UserNav server:defer class="menu-item">
-    <div slot="fallback" class="menu-item animate-pulse opacity-70 flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-        <circle cx="12" cy="7" r="4"></circle>
-      </svg>
-      <span class="text-sm font-medium">Loading account...</span>
+    <div slot="fallback" class="menu-item flex items-center justify-center py-2 px-4 h-9 min-w-24">
+      <Skeleton class="h-4 w-16 rounded-md bg-stone-200 dark:bg-stone-800" />
     </div>
   </UserNav>
+
 
 
 
@@ -69,7 +67,7 @@ const { user } = Astro.props;
 
   .menu-item, .menu-item * {
     @apply w-full my-auto px-4 text-foreground hover:text-primary-accent font-black;
-    font-size: 1.05rem;
+    font-size: var(--fssm)
   }
 
   @keyframes pulse-scale {
@@ -83,20 +81,34 @@ const { user } = Astro.props;
   }
 
   .starwind-dropdown-content a {
-    font-size: 1.125em;
-    font-weight: 500;
-    padding: 0.5rem 0.5rem;
+    display: block;
+    font-size: var(--fsxs);
+    font-weight: 600;
+    padding: var(--space-2);
     text-align: center;
+    background-color: var(--background);
+    position: relative;
+    z-index: 100;
+    margin: var(--space-1) auto;
+    border-radius: var(--radius-xs);
+    color: var(--color-foreground);
+    transition: all 0.2s ease;
+
   }
 
-  .starwind-dropdown-content {
-    background-color: var(--background);
+  .starwind-dropdown-item {
+    transition: all 0.2s ease;
+    color: var(--color-foreground);
     border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    box-shadow: var(--shadow);
-    z-index: 50;
-    overflow: hidden;
-    font-size: smaller;
+    padding: var(--space-2);
+    border-radius: var(--radius-xs);
+  }
+
+  .starwind-dropdown-item:hover {
+    background-color: var(--accent-hover);
+    color: var(--accent-text);
+    animation: none;
+    /* color: var(--accent-text); */
   }
 
   .user-nav {

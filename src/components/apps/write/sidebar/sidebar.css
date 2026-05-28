@@ -21,7 +21,7 @@
     color: var(--journal-sidebar-text);
     background: var(--journal-sidebar-bg);
     border-right: 1px solid var(--journal-sidebar-border);
-    padding: 16px 0; /* Opaque full-bleed selection layout */
+    padding: 16px 0; 
   }
 
   .sidebar-header {

@@ -7,18 +7,18 @@
   /*                                        -*/
   /*/        BACKGROUND, BG, etc.            */
   /*                                        -*/
-  --background: rgb(var(--neutral-9));
-   --background-1: rgba(var(--neutral-9)/0.9);
-   --background-2: rgba(var(--neutral-9)/0.8);
-   --background-3: rgba(var(--neutral-9)/0.7);
-   --background-4: rgba(var(--neutral-9)/0.6);
-   --background-5: rgba(var(--neutral-9)/0.5);
-   --bg: rgb(var(--neutral-9));
-   --bg1: rgba(var(--neutral-9)/0.9);
-   --bg2: rgba(var(--neutral-9)/0.8);
-   --bg3: rgba(var(--neutral-9)/0.7);
-   --bg4: rgba(var(--neutral-9)/0.6);
-   --bg5: rgba(var(--neutral-9)/0.5);
+  --background: rgb(var(--neutral-8));
+   --background-1: rgba(var(--neutral-8)/0.9);
+   --background-2: rgba(var(--neutral-8)/0.8);
+   --background-3: rgba(var(--neutral-8)/0.7);
+   --background-4: rgba(var(--neutral-8)/0.6);
+   --background-5: rgba(var(--neutral-8)/0.5);
+   --bg: rgb(var(--neutral-8));
+   --bg1: rgba(var(--neutral-8)/0.9);
+   --bg2: rgba(var(--neutral-8)/0.8);
+   --bg3: rgba(var(--neutral-8)/0.7);
+   --bg4: rgba(var(--neutral-8)/0.6);
+   --bg5: rgba(var(--neutral-8)/0.5);
 
   /*                                        -*/
   /*/        FOREGROUND, TEXT, etc.          */

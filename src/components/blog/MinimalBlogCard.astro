@@ -10,6 +10,7 @@
 import { Image } from '@/components/starwind/image';
 import type { CollectionEntry } from 'astro:content';
 import type { HTMLTag, Polymorphic } from 'astro/types';
+import { getTagColorClass } from '@/lib/blog/tagColors';
 
 type Variant = 'blog' | 'testimonials' | 'features' | 'faqs' | 'docs' | 'resources';
 
@@ -20,6 +21,7 @@ interface Props extends Polymorphic<{ as: HTMLTag }> {
   image?: string;
   imageAlt?: string;
   href?: string;
+  tags?: string[];
   
   // Metadata props (optional)
   category?: string;
@@ -45,6 +47,7 @@ const {
   image,
   imageAlt = title,
   href,
+  tags,
   category,
   date,
   author,
@@ -122,11 +125,11 @@ const wrapperProps = href ? { href } : {};
     'flex flex-col p-2 flex-1 min-w-0',
     
     // Long: center content vertically in the right-hand column
-    size === 'long' && 'justify-center p-4',
+    size === 'long' && 'justify-center p-4 md:p-6 lg:p-8',
   ]}>
     {/* Category badge — sits above the title for long cards */}
     {category && size === 'long' && (
-      <span class="text-xs font-medium uppercase tracking-wide px-2 py-1 rounded-full" style={categoryStyle}>
+      <span class="text-xs font-medium uppercase tracking-wide px-2 py-1 rounded-full self-start mb-2" style={categoryStyle}>
         {category}
       </span>
     )}
@@ -134,15 +137,37 @@ const wrapperProps = href ? { href } : {};
     {/* Title */}
     <h6 class:list={[
       'font-semibold leading-tight text-stone-900 dark:text-white group-hover:text-accent transition-colors my-0 py-0',
-      size === 'long' ? 'text-lg line-clamp-3' : 'mb-0 line-clamp-2 text-sm',
+      size === 'long' ? 'text-xl md:text-2xl lg:text-3xl font-black mb-3' : 'mb-0 line-clamp-2 text-sm',
     ]}>{title}</h6>
+
+    {/* Tag badges for long layout */}
+    {size === 'long' && tags && tags.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-4">
+        {tags.slice(0, 3).map((tag: string) => (
+          <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getTagColorClass(tag)}`}>
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
 
     {/* Description */}
     {description && (
       <p class:list={[
         'text-stone-600 dark:text-stone-400 leading-relaxed my-0 py-0',
-        size === 'long' ? 'text-sm line-clamp-3 mb-0' : 'text-xs line-clamp-2 my-0',
+        size === 'long' ? 'text-sm md:text-base mb-4 leading-relaxed line-clamp-4' : 'text-xs line-clamp-2 my-0',
       ]}>{description}</p>
+    )}
+
+    {/* Tag badges for default/tall layout */}
+    {size !== 'long' && tags && tags.length > 0 && (
+      <div class="flex flex-wrap gap-1.5 mt-2 mb-2">
+        {tags.slice(0, 2).map((tag: string) => (
+          <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getTagColorClass(tag)}`}>
+            {tag}
+          </span>
+        ))}
+      </div>
     )}
 
     {/* Metadata row: author · date for default/tall cards */}

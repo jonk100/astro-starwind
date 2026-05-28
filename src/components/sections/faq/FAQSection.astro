@@ -1,6 +1,8 @@
 ---
 import { Stack } from '@/components/layout';
 import { Button } from '@/components/starwind/button';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/starwind/accordion';
+import { Image } from '@/components/starwind/image';
 
 interface Props {
   class?: string;
@@ -10,61 +12,62 @@ const { class: className = '' } = Astro.props;
 
 const faqs = [
   {
-    question: "How do I start?",
-    answer: "Simply create an account and choose your first habit to track. Our guided onboarding will help you set up your first habit in under 2 minutes."
+    question: "How do I begin my self-care journey here?",
+    answer: "Simply create a private sanctuary account and choose your first supportive micro-habit. Our guided loops will help you establish a calming routine in under two minutes."
   },
   {
-    question: "Is my data private?",
-    answer: "Absolutely. We use end-to-end encryption for all your data. Your journal entries, habit tracking, and personal information are never shared with third parties."
+    question: "Is my journaling data entirely private and secure?",
+    answer: "Absolutely. We hold emotional safety as a core principle. Your reflective journals, habit tracker metrics, and personal moments are fully encrypted and never shared with anyone."
   },
   {
-    question: "Can I upgrade later?",
-    answer: "Yes! You can start with our free plan and upgrade to Professional or Premium at any time. Your data will seamlessly transfer with you."
+    question: "Can I transition to deeper guides and specialized reflections?",
+    answer: "Yes, you can easily access our extensive library of neuroscience-grounded guides and premium cognitive re-framing structures at any time to support your ongoing growth."
   },
   {
-    question: "What if I need help?",
-    answer: "Our support team is available 24/7. You can reach us via email, phone, or live chat. We also have extensive documentation and video tutorials."
+    question: "What if I need support or have questions?",
+    answer: "Our compassionate support team is ready to guide you. You can reach us via our secure email or support line, and we will happily assist you in finding the right tools."
   },
   {
-    question: "Do the apps work offline?",
-    answer: "Yes, all our apps work offline. Your data syncs automatically when you reconnect, so you never lose your progress."
+    question: "Do the reflection and habit tools work offline?",
+    answer: "Yes, our interactive islands are designed for offline tranquility. Any journals or habits you record will automatically sync to your secure loop when you are next online."
   },
   {
-    question: "Can I export my data?",
-    answer: "Absolutely. You can export all your data at any time in multiple formats including CSV, JSON, and PDF. Your data belongs to you."
+    question: "Can I export my personal growth journals?",
+    answer: "Always. Your words and path belong entirely to you. You can download and export all your journals, prompts, and habit metrics at any time in multiple formats including CSV and JSON."
   }
 ];
 ---
-<div class:list={`"max-w-6xl mx-auto px-4 sm:px-6 lg:px-8", ${className}`}>
+<div class:list={["max-w-6xl mx-auto px-4 sm:px-6 lg:px-8", className]}>
   <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-16 items-start">
 
     <!-- FAQ Section -->
     <div>
-      <h2 class="text-4xl font-bold mb-8 text-stone-900 dark:text-stone-50">
-        Questions
+      <h2 class="text-4xl font-serif font-semibold mb-8 text-foreground">
+        Frequently Asked Questions
       </h2>
 
       <Stack gap="md">
-        {faqs.map((faq) => (
-          <div class="border-b border-stone-200 dark:border-stone-800 pb-6">
-            <h3 class="text-xl font-semibold mb-2 text-stone-900 dark:text-stone-50">
-              {faq.question}
-            </h3>
-
-            <p class="text-stone-600 dark:text-stone-400 leading-relaxed">
-              {faq.answer}
-            </p>
-          </div>
-        ))}
+        <Accordion type="single" defaultValue="faq-0" class="w-full">
+          {faqs.map((faq, i) => (
+            <AccordionItem value={`faq-${i}`} class="border-b border-border pb-2">
+              <AccordionTrigger class="text-lg font-serif font-semibold text-foreground py-4 hover:text-primary transition-colors">
+                {faq.question}
+              </AccordionTrigger>
+              <AccordionContent class="text-muted-foreground leading-relaxed text-base font-sans pb-4">
+                {faq.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </Stack>
 
-      <div class="mt-10 pt-8 border-t border-stone-200 dark:border-stone-800">
-        <p class="text-lg text-stone-700 dark:text-stone-300 mb-4">
-          Need more help?
+      <div class="mt-10 pt-8 border-t border-border">
+        <p class="text-lg text-foreground font-sans mb-4">
+          Need personal guidance or have a custom inquiry?
         </p>
 
-        <Button href="/contact" size="lg">
-          Contact us
+        <Button href="/contact" size="lg" variant="primary">
+          Reach out to our guides
         </Button>
       </div>
     </div>
@@ -74,91 +77,89 @@ const faqs = [
       <div class="
         rounded-3xl
         border
-        border-stone-200
-        dark:border-stone-800
-        bg-white/80
-        dark:bg-stone-900/80
-        backdrop-blur
+        border-border
+        bg-card/85
+        backdrop-blur-md
         p-8
       ">
         <div class="mb-8">
-          <p class="text-sm font-semibold tracking-[0.2em] uppercase text-stone-500 dark:text-stone-400 mb-3">
-            Support
+          <p class="text-xs font-sans font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
+            Sanctuary Support
           </p>
 
-          <h2 class="text-3xl font-bold text-stone-900 dark:text-stone-50 mb-4">
+          <h2 class="text-3xl font-serif font-semibold text-foreground mb-4">
             Get in touch
           </h2>
 
-          <p class="text-stone-600 dark:text-stone-400 leading-relaxed">
-            Questions, feedback, or technical issues — our support team is available every day.
+          <p class="text-muted-foreground font-sans leading-relaxed text-sm">
+            Whether you have questions about our cognitive tools, feedback, or need technical assistance, we are here to support your peace of mind.
           </p>
         </div>
 
-        <Stack gap="lg">
+        <Stack gap="lg" class="font-sans">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
+            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               Email
             </p>
 
             <a
-              href="mailto:support@example.com"
-              class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors"
+              href="mailto:hello@remindmatters.com"
+              class="text-lg text-foreground font-medium hover:text-primary transition-colors"
             >
-              support@example.com
+              hello@remindmatters.com
             </a>
           </div>
 
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
+            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               Phone
             </p>
 
             <a
-              href="tel:+14155550147"
-              class="text-lg text-stone-900 dark:text-stone-50 hover:text-accent transition-colors"
+              href="tel:+1234567890"
+              class="text-lg text-foreground font-medium hover:text-primary transition-colors"
             >
-              +1 (415) 555-0147
+              +1 (234) 567-890
             </a>
           </div>
 
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
-              Office
+            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Sanctuary Office
             </p>
 
-            <address class="not-italic text-stone-700 dark:text-stone-300 leading-relaxed">
-              456 Mindful Lane<br />
-              San Francisco, CA 94105<br />
+            <address class="not-italic text-muted-foreground leading-relaxed text-sm">
+              108 Serene Court<br />
+              Calming Sage Valley, CA 94022<br />
               United States
             </address>
 
             <a
-              href="https://maps.google.com/?q=456+Mindful+Lane+San+Francisco+CA+94105"
+              href="https://maps.google.com/?q=108+Serene+Court+Calming+Sage+Valley+CA"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center mt-3 text-sm font-medium text-accent hover:underline"
+              class="inline-flex items-center mt-3 text-sm font-medium text-primary hover:underline"
             >
               Get directions →
             </a>
           </div>
         </Stack>
 
-        <!-- Optional image / illustration -->
+        <!-- Premium Botanical Illustration (Replaces support placeholder image) -->
         <div class="
           mt-10
           rounded-2xl
           overflow-hidden
           aspect-4/3
-          bg-stone-100
-          dark:bg-stone-800
-          flex
-          items-center
-          justify-center
+          bg-muted
+          relative
         ">
-          <p class="text-sm text-stone-400 dark:text-stone-500">
-            Support image
-          </p>
+          <Image
+            src="https://res.cloudinary.com/dikyfam2c/image/upload/v1734536831/flower_gvof2g.webp"
+            alt="Botanical flower illustration for calming focus"
+            class="object-cover w-full h-full"
+            inferSize
+          />
         </div>
       </div>
     </aside>

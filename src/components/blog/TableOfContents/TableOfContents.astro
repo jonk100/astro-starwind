@@ -100,15 +100,17 @@ const filteredItems = items.filter((item: TableOfContentsItem) => item.level <= 
 
       // Update active link on scroll
       const updateActiveLink = () => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
         // Find the current heading
         let currentHeading: HTMLElement | null = null;
         for (let i = this.headings.length - 1; i >= 0; i--) {
           const heading = this.headings[i];
-          if (heading && heading.offsetTop <= scrollTop + 100) {
-            currentHeading = heading;
-            break;
+          if (heading) {
+            const rect = heading.getBoundingClientRect();
+            // A threshold of 120px matches the sticky headers beautifully
+            if (rect.top <= 120) {
+              currentHeading = heading;
+              break;
+            }
           }
         }
 
@@ -132,7 +134,7 @@ const filteredItems = items.filter((item: TableOfContentsItem) => item.level <= 
           
           if (target) {
             const offset = 80; // Account for fixed headers
-            const targetPosition = target.offsetTop - offset;
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
             
             window.scrollTo({
               top: targetPosition,

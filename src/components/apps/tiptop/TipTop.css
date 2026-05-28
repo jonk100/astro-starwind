@@ -12,8 +12,9 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  margin: 0 auto;
+  min-height: 100%;
+  height: auto;
+  margin: 1.5rem auto;
   padding: 0 var(--space-8) var(--space-8); /* Padding top removed to let toolbar sit flush */
   max-width: 820px; /* A little smaller max-width for perfect writing ergonomics */
   border-right: 1px dashed var(--color-border);

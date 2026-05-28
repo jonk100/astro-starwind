@@ -32,7 +32,6 @@ const {
 const user = Astro.locals.user;
 
 import '@/styles/global.css';
-import '@/styles/starwind.css';
 ---
 
 <html lang="en">
@@ -50,13 +49,13 @@ import '@/styles/starwind.css';
     </header>
     
     <main class="layout-main">
-      <div class="layout-main-content max-w-4xl">
+      <div class="layout-main-content max-w-6xl mx-auto">
         <!-- <div class="mb-8"> -->
         <!-- </div> -->
         
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div class="lg:col-span-3">
-            <article class="prose prose-lg max-w-none">
+            <article class="prose ">
               <slot />
             </article>
             
@@ -73,7 +72,7 @@ import '@/styles/starwind.css';
                   {navigation.next && (
                     <NextPostButton 
                       nextPost={navigation.next}
-                      variant="default"
+                      variant="outline"
                     />
                   )}
                 </div>
@@ -93,7 +92,7 @@ import '@/styles/starwind.css';
           </div>
           
           <aside class="lg:col-span-1">
-            <div class="sticky top-4 space-y-6">
+            <div class="sticky top-4 space-y-6 table-of-contents-wrapper">
               {showToc && post?.content && (
                 <TableOfContents 
                   content={post.content}
@@ -116,4 +115,11 @@ import '@/styles/starwind.css';
       <Footer />
     </footer>
 	</body>
+  <style>
+    main p {
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+      font-size: var(--text-xl);
+    }
+  </style>
 </html>

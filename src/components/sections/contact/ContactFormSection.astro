@@ -10,8 +10,10 @@ import { Button } from "@/components/starwind/button";
   class="
 		flex
 		flex-col
-		bg-gray-200
+		bg-background
 		py-16
+    border-y
+    border-border
   "
 >
   <Stack
@@ -27,10 +29,11 @@ import { Button } from "@/components/starwind/button";
     <h2
       class="
         mb-4
-        text-5xl
-        font-bold
+        text-4xl
+        font-serif
+        font-semibold
        	leading-tight
-        text-accent
+        text-foreground
         text-center
       "
     >
@@ -42,21 +45,21 @@ import { Button } from "@/components/starwind/button";
         mx-auto
         mb-8
         max-w-[37.5rem]
-        text-2xl
+        text-base
         leading-relaxed
-        text-accent
-				font-bold
+        text-muted-foreground
         text-center
+        font-sans
       "
     >
-      Fill out the form below and we'll get back to you within 24 hours
+      Fill out the form below and we'll get back to you within 24 hours to support your journey.
     </p>
 
-    <form class="w-full max-w-2xl mx-auto bg-white rounded-lg p-8 shadow-lg">
+    <form class="w-full max-w-2xl mx-auto bg-card border border-border/80 rounded-2xl p-8 shadow-sm font-sans">
       <Stack gap="lg">
         <Cluster class="flex-wrap gap-4">
           <div class="flex-1 min-w-[200px] space-y-2">
-            <Label for="name" size="lg">Name</Label>
+            <Label for="name" size="lg" class="text-foreground">Name</Label>
             <Input
               id="name"
               name="name"
@@ -66,7 +69,7 @@ import { Button } from "@/components/starwind/button";
             />
           </div>
           <div class="flex-1 min-w-[200px] space-y-2">
-            <Label for="email" size="lg">Email</Label>
+            <Label for="email" size="lg" class="text-foreground">Email</Label>
             <Input
               id="email"
               name="email"
@@ -79,7 +82,7 @@ import { Button } from "@/components/starwind/button";
         </Cluster>
 
         <div class="space-y-2">
-          <Label for="subject" size="lg">Subject</Label>
+          <Label for="subject" size="lg" class="text-foreground">Subject</Label>
           <Input
             id="subject"
             name="subject"
@@ -90,7 +93,7 @@ import { Button } from "@/components/starwind/button";
         </div>
 
         <div class="space-y-2">
-          <Label for="message" size="lg">Message</Label>
+          <Label for="message" size="lg" class="text-foreground">Message</Label>
           <Textarea
             id="message"
             name="message"

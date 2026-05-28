@@ -46,7 +46,14 @@ type Panel = {
 };
 
 const panels: Panel[] = [...categoryMap.entries()]
-  .sort(([a], [b]) => a.localeCompare(b))
+  .sort(([aCat, aPosts], [bCat, bPosts]) => {
+    const countA = aPosts.length;
+    const countB = bPosts.length;
+    if (countB !== countA) {
+      return countB - countA; // Descending by post count
+    }
+    return aCat.localeCompare(bCat); // Alphabetical fallback
+  })
   .map(([category, catPosts]) => ({
     category,
     anchorId:  `cat-${category.toLowerCase().replace(/\s+/g, '-')}`,

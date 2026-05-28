@@ -1,6 +1,40 @@
 ---
-import { Image } from "astro:assets";
+import { Image } from 'astro:assets';
+
 import Logo from '@/assets/logo-black.png';
+import DarkLogo from '@/assets/logo.png';
 ---
 
-<a href="/"><Image src={Logo} alt="Logo" height={25} /></a>
+<div class="site-logo">
+  <Image
+    src={Logo}
+    alt="Logo"
+    height={25}
+    class="logo logo--light"
+  />
+
+  <Image
+    src={DarkLogo}
+    alt="Logo"
+    height={25}
+    class="logo logo--dark"
+  />
+</div>
+
+<style>
+  .logo--dark {
+    display: none;
+  }
+
+  :global(html.dark) .logo--light {
+    display: none;
+  }
+
+  :global(html.dark) .logo--dark {
+    display: block;
+  }
+
+  .logo {
+    transition: opacity 0.5s ease;
+  }
+</style>

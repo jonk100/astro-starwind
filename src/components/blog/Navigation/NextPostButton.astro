@@ -2,8 +2,9 @@
 import { Button } from "@/components/starwind/button";
 import { tv } from "tailwind-variants";
 import type { BlogNavigationPost } from "../types";
+import { getTagColorClass } from "@/lib/blog/tagColors";
 
-interface NextPostButtonProps {
+interface Props {
   nextPost: BlogNavigationPost;
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg";
@@ -20,6 +21,8 @@ const {
   ...rest
 } = Astro.props;
 
+const buttonSize = size === "default" ? "md" : size;
+
 const nextPostButton = tv({
   base: "group flex items-center justify-between w-full",
   variants: {
@@ -35,16 +38,40 @@ const nextPostButton = tv({
 <div class={nextPostButton({ variant, class: className })} {...rest}>
   <Button 
     variant={variant}
-    size={size}
+    size={buttonSize}
     href={`/blog/${nextPost.slug}`}
-    class="w-full justify-start"
+    class="w-full justify-start h-auto p-4 bg-card hover:card-hover transition-colors"
   >
     <div class="flex flex-col items-start gap-2 w-full">
-      <div class="flex items-center gap-2 text-muted-foreground">
+      <div class="flex items-center gap-2 text-muted-foreground w-full">
         <span>Next</span>
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+
+        <svg
+          class="w-4 h-4 group-hover:translate-x-1 transition-transform flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
         </svg>
+
+        {nextPost.tags && nextPost.tags.length > 0 && (
+          <div class="ml-auto flex items-center gap-1.5 flex-wrap">
+            {nextPost.tags.slice(0, 2).map((tag: string) => (
+              <span 
+                onclick={`event.stopPropagation(); window.location.href='/blog/tags#tag-${tag}'`}
+                class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${getTagColorClass(tag)}`}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div class="text-left w-full">
         <div class="font-medium truncate">{nextPost.title}</div>

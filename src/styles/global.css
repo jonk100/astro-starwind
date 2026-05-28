@@ -24,9 +24,10 @@
 		0 16px 32px rgba(var(--gray), 33%);
 }
 html, body {
-
 	height: 100%;
 	margin: 0;
+	background-color: var(--background);
+	color: var(--text);
 }
 body {
 	font-family: var(--alt);
@@ -34,8 +35,8 @@ body {
 	padding: 0;
 	text-align: left;
 	min-height: 95vh;
-
-	color: rgb(var(--gray-dark));
+	background-color: var(--background);
+	color: var(--text);
 }
 header {
 	flex-shrink: 0;
@@ -51,7 +52,7 @@ main {
 }
 
 body {
-	font-size: var(--fs-md);
+	font-size: var(--fs-5xl);
 	line-height: var(--lh-normal);
 	font-family: var(--sans);
 }
@@ -77,7 +78,7 @@ ol {
 .prose h4,
 .prose h5,
 .prose h6 {
-	font-family: var(--sans);
+	font-family: var(--serif);
 	margin: 0 0 1.5rem 0;
 	line-height: 1.25;
 }

@@ -35,7 +35,7 @@ const prevMonthName = prevMonthDate.toLocaleDateString("en-US", { month: "long" 
           </svg>
         </a>
       </TooltipTrigger>
-    <TooltipContent>
+    <TooltipContent side="bottom">
       {prevMonthName}
     </TooltipContent>
   </Tooltip>
@@ -81,5 +81,10 @@ const prevMonthName = prevMonthDate.toLocaleDateString("en-US", { month: "long" 
   .starwind-tooltip-content {
     background-color: var(--card-bg);
     color: var(--accent-text);
+  }
+
+    :global(html.dark) .starwind-tooltip-content {
+    background-color: var(--accent-text);
+    color: var(--card-bg);
   }
 </style>
