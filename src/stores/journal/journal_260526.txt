@@ -1,0 +1,92 @@
+--- File: pin.ts ---
+/**
+ * @file src/stores/pin.ts
+ * @description Nanostores-based pinned state for the currently open document.
+ * Handles optimistic updates + rollback on server failure.
+ */
+
+import { atom } from "nanostores";
+import { actions } from "astro:actions";
+
+interface PinState {
+  pinned: boolean;
+  requesting: boolean;
+}
+
+/**
+ * Store is now keyed by documentId → supports multiple open docs safely.
+ */
+export const pinStore = atom<Record<string, PinState>>({});
+
+/**
+ * Initialize a document's pin state.
+ */
+export function initPinStore(documentId: string, pinned: boolean): void {
+  const current = pinStore.get();
+
+  pinStore.set({
+    ...current,
+    [documentId]: {
+      pinned,
+      requesting: false,
+    },
+  });
+}
+
+/**
+ * Get pinned state for a document.
+ */
+export function getPinned(documentId: string): boolean {
+  return pinStore.get()[documentId]?.pinned ?? false;
+}
+
+/**
+ * Toggle pin for a specific document.
+ */
+export async function togglePin(documentId: string): Promise<boolean> {
+  const store = pinStore.get();
+  const current = store[documentId];
+
+  if (!current || current.requesting) return current?.pinned ?? false;
+
+  const next = !current.pinned;
+
+  // optimistic update
+  pinStore.set({
+    ...store,
+    [documentId]: {
+      pinned: next,
+      requesting: true,
+    },
+  });
+
+  const { error } = await actions.write.updateDocument({
+    id: documentId,
+    pinned: next,
+  });
+
+  if (error) {
+    // rollback
+    pinStore.set({
+      ...store,
+      [documentId]: {
+        pinned: current.pinned,
+        requesting: false,
+      },
+    });
+
+    return current.pinned;
+  }
+
+  // confirm
+  pinStore.set({
+    ...store,
+    [documentId]: {
+      pinned: next,
+      requesting: false,
+    },
+  });
+
+  return next;
+}
+

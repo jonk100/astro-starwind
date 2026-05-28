@@ -82,6 +82,7 @@ export type Database = {
           created_at: string
           folder_id: string | null
           id: string
+          is_archived: boolean
           pinned: boolean
           preview: string | null
           title: string
@@ -93,6 +94,7 @@ export type Database = {
           created_at?: string
           folder_id?: string | null
           id?: string
+          is_archived?: boolean
           pinned?: boolean
           preview?: string | null
           title?: string
@@ -104,6 +106,7 @@ export type Database = {
           created_at?: string
           folder_id?: string | null
           id?: string
+          is_archived?: boolean
           pinned?: boolean
           preview?: string | null
           title?: string
@@ -125,7 +128,9 @@ export type Database = {
           created_at: string
           icon: string | null
           id: string
+          is_archived: boolean
           name: string
+          parent_id: string | null
           updated_at: string
           user_id: string
         }
@@ -133,7 +138,9 @@ export type Database = {
           created_at?: string
           icon?: string | null
           id?: string
+          is_archived?: boolean
           name: string
+          parent_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -141,11 +148,21 @@ export type Database = {
           created_at?: string
           icon?: string | null
           id?: string
+          is_archived?: boolean
           name?: string
+          parent_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       habit_logs: {
         Row: {
@@ -248,6 +265,7 @@ export type Database = {
         Row: {
           folder_id: string | null
           id: string | null
+          pinned: boolean | null
           preview: string | null
           title: string | null
           updated_at: string | null
@@ -256,6 +274,7 @@ export type Database = {
         Insert: {
           folder_id?: string | null
           id?: string | null
+          pinned?: boolean | null
           preview?: string | null
           title?: string | null
           updated_at?: string | null
@@ -264,6 +283,7 @@ export type Database = {
         Update: {
           folder_id?: string | null
           id?: string | null
+          pinned?: boolean | null
           preview?: string | null
           title?: string | null
           updated_at?: string | null

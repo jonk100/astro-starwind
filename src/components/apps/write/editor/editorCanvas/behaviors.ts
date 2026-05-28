@@ -152,4 +152,17 @@ export const blockBehaviors: Record<BlockType, BlockBehavior> = {
     onEnter: ({ createAfter }) => createAfter({ type: "paragraph", content: "" }),
     onShiftEnter: () => { /* intentionally empty — browser handles the newline */ },
   },
+  list: {
+    onEnter: ({ splitBlock }) => splitBlock(),
+  },
+  "list-item": {
+    onEnter: ({ target, createAfter, replaceWith }) => {
+      const textContent = target.textContent ?? "";
+      if (textContent.trim() === "") {
+        replaceWith("paragraph");
+      } else {
+        createAfter({ type: "list-item", content: "" });
+      }
+    },
+  },
 };

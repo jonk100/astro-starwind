@@ -1,0 +1,57 @@
+--- File: Kbd.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"kbd">;
+
+export const kbd = tv({
+  base: [
+    "pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-sm px-1 font-sans text-xs font-medium select-none",
+    "bg-muted text-muted-foreground",
+    "[&_svg:not([class*='size-'])]:size-3",
+    "[[data-slot=tooltip-content]_&]:bg-background/20 [[data-slot=tooltip-content]_&]:text-background dark:[[data-slot=tooltip-content]_&]:bg-background/10",
+  ],
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<kbd class={kbd({ class: className })} {...rest} data-slot="kbd">
+  <slot />
+</kbd>
+
+
+--- File: KbdGroup.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"kbd">;
+
+export const kbdGroup = tv({
+  base: "inline-flex items-center gap-1",
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<kbd class={kbdGroup({ class: className })} {...rest} data-slot="kbd-group">
+  <slot />
+</kbd>
+
+
+--- File: index.ts ---
+import Kbd, { kbd } from "./Kbd.astro";
+import KbdGroup, { kbdGroup } from "./KbdGroup.astro";
+
+const KbdVariants = { kbd, kbdGroup };
+
+export { Kbd, KbdGroup, KbdVariants };
+
+export default {
+  Root: Kbd,
+  Group: KbdGroup,
+};
+
+

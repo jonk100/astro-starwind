@@ -1,5 +1,5 @@
 /**
- * @file src/actions/journal.actions.ts
+ * @file src/actions/write.actions.ts
  * @description Astro Actions for the journal/write app.
  *
  * These are the only entry points for journal data mutations from the client.
@@ -17,6 +17,13 @@
  *   folder_id: null,
  * });
  */
+//. Actions list:___________________________________________________________________________________________
+//*                                                                                                    |
+//*      [ archiveFolder ]    |  [ unarchiveFolder ] \ [createFolder]  [updateFolder]  [deleteFolder] |
+//*    [ archiveDocument ]   |  [ unarchiveDocument ] \    [createDocument]      [updateDocument]    |
+//*   [duplicateDocument]   |  [createTag][deleteTag]  \   [ pinDocument ]       [moveDocument]     |
+//* [addTagToDocumentSafe] | [removeTagFromDocument]   | [setDocumentTags]    [deleteDocument]     |
+//*_______________________________________________________________________________________________|
 
 import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro/zod";
@@ -36,7 +43,11 @@ import {
   addTagToDocumentSafe,
   removeTagFromDocument,
   setDocumentTags,
-  
+  archiveFolder,
+  unarchiveFolder,
+  archiveDocument,
+  unarchiveDocument,
+  duplicateDocument,
 } from "@/lib/journal/mutations";
 import type { Json } from "@/types/supabase";
 import type { Block } from "@/lib/journal/types";
@@ -45,6 +56,8 @@ import { searchDocuments} from "@/lib/journal/queries";
 // ─── Session Helper ───────────────────────────────────────────────────────────
 
 import { getAuthenticatedUser } from "./action.utils";
+import { upsertHabitLog } from "@/lib/habit/mutations";
+import { recalculateStreak } from "@/lib/habit/streak";
 
 // ─── Block Helpers ────────────────────────────────────────────────────────────
 
@@ -61,13 +74,37 @@ import { getAuthenticatedUser } from "./action.utils";
  * @param blocks - The array of Block objects from the editor.
  * @returns A plain-text preview string, or null if the document is empty.
  */
+function extractPreviewText(nodes: any[]): string {
+  if (!nodes || !Array.isArray(nodes)) return "";
+  return nodes
+    .map((node) => {
+      if (node.type === "text") return node.text ?? "";
+      if (node.content) return extractPreviewText(node.content);
+      return "";
+    })
+    .join("");
+}
+
 function extractPreview(blocks: Block[]): string | null {
   for (const block of blocks) {
     if (
       (block.type === "paragraph" || block.type === "heading") &&
       block.content.trim().length > 0
     ) {
-      return block.content.trim().slice(0, 200);
+      try {
+        const parsed = JSON.parse(block.content);
+        if (parsed && Array.isArray(parsed.content)) {
+          const text = extractPreviewText(parsed.content);
+          if (text.trim().length > 0) {
+            return text.trim().slice(0, 200);
+          }
+        }
+      } catch (e) {
+        // Fallback to raw content if not a valid JSON string
+        if (block.content.trim().length > 0) {
+          return block.content.trim().slice(0, 200);
+        }
+      }
     }
   }
   return null;
@@ -102,6 +139,8 @@ const blockSchema = z.object({
     "callout-danger",
     "code",
     "prompt",
+    "list",
+    "list-item"
   ]),
   content: z.string(),
   meta: z.record(z.string(), z.unknown()).optional(),
@@ -127,6 +166,54 @@ export const write = {
 
   // ── Folder Actions ──────────────────────────────────────────────────────────
 
+  
+  archiveFolder: defineAction({
+    input: z.object({
+      id: z.string().uuid("Invalid folder ID"),
+    }),
+    handler: async (input, context) => {
+      const { supabase, user } = await getAuthenticatedUser(context);
+
+      const { error } = await updateFolder(supabase, input.id, user.id, {
+        is_archived: true,
+      });
+
+      if (error) {
+        throw new ActionError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return { success: true };
+    },
+  }),
+
+
+  unarchiveFolder: defineAction({
+    input: z.object({
+      id: z.string().uuid("Invalid folder ID"),
+    }),
+    handler: async (input, context) => {
+      const { supabase, user } = await getAuthenticatedUser(context);
+
+      const { error } = await updateFolder(supabase, input.id, user.id, {
+        is_archived: false,
+      });
+
+      if (error) {
+        throw new ActionError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return { success: true };
+    },
+  }),
+
+
+
   /**
    * Creates a new folder for the authenticated user.
    *
@@ -135,8 +222,9 @@ export const write = {
    */
   createFolder: defineAction({
     input: z.object({
-      name: z.string().min(1, "Folder name is required").max(100),
+      name: z.string().min(1).max(100),
       icon: z.string().max(10).optional(),
+      parent_id: z.string().uuid().nullable().optional(),
     }),
     handler: async (input, context) => {
       const { supabase, user } = await getAuthenticatedUser(context);
@@ -145,6 +233,7 @@ export const write = {
         user_id: user.id,
         name: input.name,
         icon: input.icon ?? null,
+        parent_id: input.parent_id ?? null,
       });
 
       if (error) {
@@ -158,6 +247,7 @@ export const write = {
     },
   }),
 
+
   /**
    * Renames an existing folder.
    *
@@ -167,7 +257,7 @@ export const write = {
    */
   updateFolder: defineAction({
     input: z.object({
-      id: z.string().uuid("Invalid folder ID"),
+      id: z.uuid("Invalid folder ID"),
       name: z.string().min(1).max(100).optional(),
       icon: z.string().max(10).optional(),
     }),
@@ -220,6 +310,75 @@ export const write = {
    */
 
   // ── Document Actions ────────────────────────────────────────────────────────
+
+  archiveDocument: defineAction({
+    input: z.object({
+      id: z.string().uuid("Invalid document ID"),
+    }),
+    handler: async (input, context) => {
+      const { supabase, user } = await getAuthenticatedUser(context);
+
+      const { error } = await updateDocument(supabase, input.id, user.id, {
+        is_archived: true,
+      });
+
+      if (error) {
+        throw new ActionError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return { success: true };
+    },
+  }),
+
+
+  unarchiveDocument: defineAction({
+    input: z.object({
+      id: z.string().uuid("Invalid document ID"),
+    }),
+    handler: async (input, context) => {
+      const { supabase, user } = await getAuthenticatedUser(context);
+
+      const { error } = await updateDocument(supabase, input.id, user.id, {
+        is_archived: false,
+      });
+
+      if (error) {
+        throw new ActionError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return { success: true };
+    },
+  }),
+
+
+  duplicateDocument: defineAction({
+    input: z.object({
+      id: z.string().uuid("Invalid document ID"),
+    }),
+    handler: async (input, context) => {
+      const { supabase, user } = await getAuthenticatedUser(context);
+
+      const { data, error } = await duplicateDocument(supabase, input.id, user.id);
+
+      if (error) {
+        throw new ActionError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return data;
+    },
+  }),
+
+
+
 
   /**
    * Creates a new blank document for the authenticated user.
@@ -339,6 +498,36 @@ export const write = {
           code: "INTERNAL_SERVER_ERROR",
           message: error.message,
         });
+      }
+
+      // Auto-mark journaling/writing habit as complete for today
+      try {
+        const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+        const { data: habits } = await supabase
+          .from("habits")
+          .select("id, name, tracking_type")
+          .eq("user_id", user.id);
+
+        if (habits && habits.length > 0) {
+          const targetHabit = habits.find(h => {
+            const nameLower = h.name.toLowerCase();
+            return nameLower === "write" || nameLower === "writing" || nameLower === "journaling" || nameLower === "journal";
+          });
+
+          if (targetHabit) {
+            console.log(`[saveBlocks] Auto-marking habit '${targetHabit.name}' completed for today (${today})`);
+            await upsertHabitLog(supabase, {
+              habit_id: targetHabit.id,
+              entry_date: today,
+              value: 1, // Default check or count
+              note: "Completed automatically via Journal entry save",
+              user_id: user.id,
+            });
+            await recalculateStreak(supabase, targetHabit.id, user.id, today);
+          }
+        }
+      } catch (err) {
+        console.error("[saveBlocks] Failed to auto-mark writing habit:", err);
       }
 
       return data;

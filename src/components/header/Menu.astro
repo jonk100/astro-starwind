@@ -51,122 +51,25 @@ const { user } = Astro.props;
       <DropdownItem as="a" href="/app/relax/meditation" class="menu-item">Meditation Guide</DropdownItem>
     </DropdownContent>
   </Dropdown>
-  <UserNav user={user} class="menu-item" />
+  <UserNav server:defer class="menu-item">
+    <div slot="fallback" class="menu-item animate-pulse opacity-70 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span class="text-sm font-medium">Loading account...</span>
+    </div>
+  </UserNav>
 
 
-<script>
-  class UserNavHandler {
-    private trigger: HTMLElement | null;
-    private dropdown: HTMLElement | null;
-    private isOpen: boolean = false;
 
-    /**
-     * This is the constructor for the UserNavHandler class.
-     * It initializes the event listeners and sets up the dropdown state.
-     * @param trigger 
-     * @param dropdown 
-     */
-    constructor(trigger: HTMLElement, dropdown: HTMLElement) {
-      this.trigger = trigger;
-      this.dropdown = dropdown;
-      this.setupEventListeners();
-    }
-
-    /**
-     * This method sets up the event listeners for the UserNavHandler class.
-     * It adds event listeners for clicking the trigger, pressing the enter or space key, and clicking outside the dropdown.
-     * It also adds event listeners for closing the dropdown on escape key and clicking outside the dropdown.
-     */
-    private setupEventListeners(): void {
-      this.trigger?.addEventListener('click', () => this.toggle());
-      this.trigger?.addEventListener('keydown', (e) => this.handleKeydown(e));
-      
-      // Close dropdown when clicking outside
-      document.addEventListener('click', (e) => this.handleClickOutside(e));
-      
-      // Close dropdown on escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && this.isOpen) {
-          this.close();
-        }
-      });
-    }
-
-    /**
-     * This method handles keydown events for the UserNavHandler class.
-     * It checks if the key pressed is enter or space, and if so, it prevents the default behavior 
-     * and calls the toggle method. The toggle method is responsible for toggling the dropdown state.
-     * It also checks if the key pressed is arrow down or arrow up, and if so, it prevents the default behavior and calls the toggle method.
-     */
-    private handleKeydown(e: KeyboardEvent): void {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.toggle();
-      }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        this.toggle();
-      }
-    }
-
-    private handleClickOutside(e: Event): void {
-      const target = e.target as HTMLElement;
-      if (!this.trigger?.contains(target) && !this.dropdown?.contains(target)) {
-        this.close();
-      }
-    }
-
-    public toggle(): void {
-      if (this.isOpen) {
-        this.close();
-      } else {
-        this.open();
-      }
-    }
-
-    public open(): void {
-      if (this.dropdown && this.trigger) {
-        this.dropdown.hidden = false;
-        this.trigger.setAttribute('aria-expanded', 'true');
-        this.isOpen = true;
-      }
-    }
-
-    public close(): void {
-      if (this.dropdown && this.trigger) {
-        this.dropdown.hidden = true;
-        this.trigger.setAttribute('aria-expanded', 'false');
-        this.isOpen = false;
-      }
-    }
-  }
-
-  // Initialize dropdown functionality
-  document.addEventListener('astro:after-swap', () => {
-    const trigger = document.querySelector('.user-nav-trigger');
-    const dropdown = document.querySelector('.user-nav-dropdown');
-    
-    if (trigger && dropdown) {
-      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
-    }
-  });
-
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', () => {
-    const trigger = document.querySelector('.user-nav-trigger');
-    const dropdown = document.querySelector('.user-nav-dropdown');
-    
-    if (trigger && dropdown) {
-      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
-    }
-  });
-</script>
 
 <style>
   @reference "@/styles/global.css";
 
   .menu-item, .menu-item * {
     @apply w-full my-auto px-4 text-foreground hover:text-primary-accent font-black;
+    font-size: 1.05rem;
   }
 
   @keyframes pulse-scale {

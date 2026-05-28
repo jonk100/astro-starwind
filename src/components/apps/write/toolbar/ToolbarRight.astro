@@ -1,47 +1,42 @@
 ---
-/**
- * @file src/components/apps/write/toolbar/ToolbarRight.astro
- * @description Right section of the journal toolbar.
- *
- * Contains, left-to-right:
- *   1. BlockToolbar  — icon buttons for common block types + More dropdown
- *   2. PinToggleButton
- *   3. NoteDeleteButton
- */
-import NoteDeleteButton from './NoteDeleteButton.astro';
-import PinToggleButton from './PinToggleButton.astro';
-import BlockToolbar from './blocks/BlockToolbar.astro';
+import ActionPopover from "@/components/apps/write/ActionPopover.astro";
+import PinToggleButton from "./PinToggleButton.astro";
 
 interface Props {
-  activeDocumentId: string | null;
-  user: any;
-  isPinned: boolean;
+  documentId: string | null;
+  title?: string | null;
+  isArchived?: boolean;
+  isPinned?: boolean;
+  user?: any;
 }
 
-const { activeDocumentId, user, isPinned } = Astro.props;
+const { documentId, title = "", isArchived = false, isPinned = false, user } = Astro.props;
 ---
 
-{activeDocumentId && (
-  <div class="toolbar--right">
-    {/* <BlockToolbar activeDocumentId={activeDocumentId} /> */}
-    <div class="toolbar--divider" aria-hidden="true"></div>
-    <PinToggleButton activeDocumentId={activeDocumentId} user={user} isPinned={isPinned} />
-    <NoteDeleteButton activeDocumentId={activeDocumentId} user={user} />
-  </div>
-)}
+<div class="toolbar-right">
+  {documentId && (
+    <>
+      <PinToggleButton activeDocumentId={documentId} isPinned={isPinned} user={user} />
+      <ActionPopover
+        type="document"
+        id={documentId}
+        name={title ?? ""}
+        actions={[
+          "rename",
+          "delete",
+          isArchived ? "unarchive" : "archive",
+          "duplicate",
+          "move"
+        ]}
+      />
+    </>
+  )}
+</div>
 
 <style>
-  .toolbar--right {
+  .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
-    flex-shrink: 0;
-  }
-
-  .toolbar--divider {
-    width: 1px;
-    height: 18px;
-    background-color: var(--color-border);
-    margin: 0 0.25rem;
+    gap: 8px;
   }
 </style>

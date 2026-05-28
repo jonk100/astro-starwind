@@ -69,7 +69,9 @@ export type BlockType =
   | "callout-success"
   | "callout-danger"
   | "code"
-  | "prompt";
+  | "prompt"
+  | "list"
+  | "list-item";
 
 /**
  * A single content block stored inside a document's `content_blocks` JSONB column.
@@ -86,18 +88,23 @@ export type BlockType =
  * }
  */
 export interface Block {
-  /** Stable unique ID for this block. Generated client-side on creation. */
   id: string;
-  /** The visual/semantic type of the block. */
   type: BlockType;
-  /** The plain-text content of the block. */
-  content: string;
-  /**
-   * Optional metadata for blocks that need extra state.
-   * - heading: { level: 1 | 2 | 3 }
-   * - checklist: { checked: boolean }
+  /** 
+   * Change: Content should now store HTML or TipTap JSON fragments 
+   * to preserve inline marks like bold, italic, and text colors. 
    */
-  meta?: Record<string, unknown>;
+  content: string; 
+  meta?: {
+    // Existing fields
+    level?: number;     // For headings [1]
+    checked?: boolean;   // For checklists [3]
+    // New fields for the toolbar [4]
+    fontFamily?: string; 
+    fontSize?: string;
+    textAlign?: 'left' | 'center' | 'right' | 'justify';
+    className?: string;  // For custom callout or block styles
+  } & Record<string, unknown>;
 }
 
 // ─── Composed Types ───────────────────────────────────────────────────────────==//
@@ -136,6 +143,7 @@ export interface DocumentIndexRow {
   preview: string | null;
   updated_at: string;
   pinned: boolean;
+  is_archived: boolean;
 }
 
 // ─── UI State Types ───────────────────────────────────────────────────────────= //

@@ -1,178 +1,311 @@
 ---
-/**
- * @file src/components/apps/write/sidebar/FolderTree.astro
- *
- * FIX d: Sidebar flash — an inline <script> immediately after the folder
- * markup reads localStorage and applies display states synchronously,
- * before the browser's first paint. This eliminates the flash where all
- * folders appear collapsed/empty then snap open.
- */
+import ActionPopover from "@/components/apps/write/ActionPopover.astro";
+import DocumentItem from "@/components/apps/write/sidebar/FolderTree/DocumentItem.astro";
 
-import type { DocumentIndexRow, Folder } from "@/lib/journal/types";
-import { sortDocumentsForSidebar, groupDocumentsByFolder, formatUpdatedAt } from "./sidebar.utils";
-import DocumentItem from "./FolderTree/DocumentItem.astro";
-import FolderPicker from "./FolderTree/FolderPicker.astro";
-import "./sidebar.css";
-
-interface Props {
-  documents: DocumentIndexRow[];
-  folders:   Folder[];
-  activeDocumentId: string | null;
-  user: any;
+interface Folder {
+  id: string;
+  name: string;
+  icon: string | null;
+  parent_id: string | null;
+  is_archived: boolean;
+  children?: Folder[];
 }
 
-const { documents, folders, activeDocumentId } = Astro.props;
+interface Document {
+  id: string;
+  title: string;
+  folder_id: string | null;
+  is_archived: boolean;
+  pinned: boolean;
+  updated_at?: string;
+}
 
-const sortedDocuments            = sortDocumentsForSidebar(documents);
-const { byFolder, unfiledDocs }  = groupDocumentsByFolder(sortedDocuments);
-const foldersJson                = JSON.stringify(
-  folders.map((f) => ({ id: f.id, name: f.name, icon: f.icon ?? "📁" }))
-);
+interface Props {
+  folders: Folder[];
+  documents: Document[];
+  activeFolderId: string | null;
+  activeDocumentId: string | null;
+}
 
-/** All folder IDs we render, used by the inline sync script. */
-const allFolderIds = [
-  ...folders.map((f) => f.id),
-  ...(unfiledDocs.length > 0 ? ["__unfiled__"] : []),
-];
+const { folders, documents, activeFolderId, activeDocumentId } = Astro.props;
 ---
 
-<div
-  class="sidebar-body"
-  id="sidebar-document-list"
-  data-folders={foldersJson}
->
+<div class="folder-tree">
   {folders.map((folder) => {
-    const folderDocs = byFolder.get(folder.id) ?? [];
+    const folderDocs = documents.filter((d) => d.folder_id === folder.id && !d.is_archived);
     return (
-      <section class="sidebar-folder" data-folder-id={folder.id}>
-        <button
-          class="folder-toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls={`folder-docs-${folder.id}`}
-          data-folder-id={folder.id}
-          data-folder-toggle
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-chevron" aria-hidden="true">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          <span class="folder-icon">{folder.icon ?? "📁"}</span>
-          <span class="folder-name">{folder.name}</span>
-          <span class="folder-count">{folderDocs.length}</span>
-        </button>
+      <div class="folder-block">
+        <div class="folder-row">
+          <div class="folder-meta-wrap">
+            <button
+              type="button"
+              class="folder-toggle"
+              data-folder-toggle
+              data-folder-id={folder.id}
+              aria-controls={`folder-children-${folder.id}`}
+              aria-expanded="false"
+            >
+              <svg class="folder-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <polyline points="2,3 5,7 8,3"/>
+              </svg>
+            </button>
+            
+            <a
+              href={`/app/write/${folder.id}`}
+              class={`folder-link ${activeFolderId === folder.id ? "active" : ""}`}
+            >
+              <span class="folder-icon">{folder.icon ?? "📁"}</span>
+              <span class="folder-name">{folder.name}</span>
+            </a>
+          </div>
 
-        <ul
-          id={`folder-docs-${folder.id}`}
-          class="folder-doc-list"
-          role="list"
-          style="display: none"
-        >
-          {folderDocs.length === 0 ? (
-            <li class="doc-empty">No documents</li>
-          ) : (
-            folderDocs.map((doc) => (
-              <DocumentItem
-                doc={doc}
-                folderId={folder.id}
-                activeDocumentId={activeDocumentId}
-              />
-            ))
+          <ActionPopover
+            type="folder"
+            id={folder.id}
+            name={folder.name}
+            actions={[
+              "rename",
+              "delete",
+              folder.is_archived ? "unarchive" : "archive",
+              "new-subfolder"
+            ]}
+          />
+        </div>
+
+        <div id={`folder-children-${folder.id}`} class="folder-children" style="display: none;">
+          <!-- Render nested child folders -->
+          {folder.children && folder.children.length > 0 && (
+            <div class="folder-tree">
+              {folder.children.map((child) => {
+                const childDocs = documents.filter((d) => d.folder_id === child.id && !d.is_archived);
+                return (
+                  <div class="folder-block">
+                    <div class="folder-row">
+                      <div class="folder-meta-wrap">
+                        <button
+                          type="button"
+                          class="folder-toggle"
+                          data-folder-toggle
+                          data-folder-id={child.id}
+                          aria-controls={`folder-children-${child.id}`}
+                          aria-expanded="false"
+                        >
+                          <svg class="folder-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                            <polyline points="2,3 5,7 8,3"/>
+                          </svg>
+                        </button>
+
+                        <a
+                          href={`/app/write/${child.id}`}
+                          class={`folder-link ${activeFolderId === child.id ? "active" : ""}`}
+                        >
+                          <span class="folder-icon">{child.icon ?? "📁"}</span>
+                          <span class="folder-name">{child.name}</span>
+                        </a>
+                      </div>
+
+                      <ActionPopover
+                        type="folder"
+                        id={child.id}
+                        name={child.name}
+                        actions={[
+                          "rename",
+                          "delete",
+                          child.is_archived ? "unarchive" : "archive",
+                          "new-subfolder"
+                        ]}
+                      />
+                    </div>
+
+                    <div id={`folder-children-${child.id}`} class="folder-children" style="display: none;">
+                      <!-- Render grand child folders -->
+                      {child.children && child.children.length > 0 && (
+                        <div class="folder-tree">
+                          {child.children.map((grand) => {
+                            const grandDocs = documents.filter((d) => d.folder_id === grand.id && !d.is_archived);
+                            return (
+                              <div class="folder-block">
+                                <div class="folder-row">
+                                  <div class="folder-meta-wrap">
+                                    <button
+                                      type="button"
+                                      class="folder-toggle"
+                                      data-folder-toggle
+                                      data-folder-id={grand.id}
+                                      aria-controls={`folder-children-${grand.id}`}
+                                      aria-expanded="false"
+                                    >
+                                      <svg class="folder-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                                        <polyline points="2,3 5,7 8,3"/>
+                                      </svg>
+                                    </button>
+
+                                    <a
+                                      href={`/app/write/${grand.id}`}
+                                      class={`folder-link ${activeFolderId === grand.id ? "active" : ""}`}
+                                    >
+                                      <span class="folder-icon">{grand.icon ?? "📁"}</span>
+                                      <span class="folder-name">{grand.name}</span>
+                                    </a>
+                                  </div>
+
+                                  <ActionPopover
+                                    type="folder"
+                                    id={grand.id}
+                                    name={grand.name}
+                                    actions={[
+                                      "rename",
+                                      "delete",
+                                      grand.is_archived ? "unarchive" : "archive",
+                                      "new-subfolder"
+                                    ]}
+                                  />
+                                </div>
+                                
+                                <div id={`folder-children-${grand.id}`} class="folder-children" style="display: none;">
+                                  <!-- Render grand documents -->
+                                  {grandDocs.map((doc) => (
+                                    <DocumentItem
+                                      id={doc.id}
+                                      title={doc.title}
+                                      folderId={doc.folder_id}
+                                      isArchived={doc.is_archived}
+                                      pinned={doc.pinned}
+                                      active={activeDocumentId === doc.id}
+                                      updatedAt={doc.updated_at}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <!-- Render child documents -->
+                      {childDocs.map((doc) => (
+                        <DocumentItem
+                          id={doc.id}
+                          title={doc.title}
+                          folderId={doc.folder_id}
+                          isArchived={doc.is_archived}
+                          pinned={doc.pinned}
+                          active={activeDocumentId === doc.id}
+                          updatedAt={doc.updated_at}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
-        </ul>
-      </section>
+
+          <!-- Render root folder documents -->
+          {folderDocs.map((doc) => (
+            <DocumentItem
+              id={doc.id}
+              title={doc.title}
+              folderId={doc.folder_id}
+              isArchived={doc.is_archived}
+              pinned={doc.pinned}
+              active={activeDocumentId === doc.id}
+              updatedAt={doc.updated_at}
+            />
+          ))}
+        </div>
+      </div>
     );
   })}
-
-  {unfiledDocs.length > 0 && (
-    <section class="sidebar-folder" data-folder-id="__unfiled__">
-      <button
-        class="folder-toggle"
-        type="button"
-        aria-expanded="false"
-        aria-controls="folder-docs-unfiled"
-        data-folder-id="__unfiled__"
-        data-folder-toggle
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-chevron" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-        <span class="folder-name">All Documents</span>
-        <span class="folder-count">{unfiledDocs.length}</span>
-      </button>
-      <ul id="folder-docs-unfiled" class="folder-doc-list" role="list" style="display: none">
-        {unfiledDocs.map((doc) => (
-          <DocumentItem doc={doc} folderId={null} activeDocumentId={activeDocumentId} />
-        ))}
-      </ul>
-    </section>
-  )}
-
-  {documents.length === 0 && (
-    <div class="sidebar-empty">
-      <p>No documents yet.</p>
-      <p>Click <strong>New Document</strong> to start writing.</p>
-    </div>
-  )}
-
-  <FolderPicker />
 </div>
 
-<!--
-  FIX d: Inline synchronous script — runs immediately as the browser parses
-  this point in the HTML, before layout/paint. Reads localStorage and
-  applies open/closed states to the folder lists so there is no flash.
-
-  This is intentionally NOT a module or deferred script — it must run
-  synchronously to beat the first paint.
--->
-<script is:inline>
-  (function applyFolderStates() {
-    try {
-      const saved = JSON.parse(localStorage.getItem("write:folder-state") || "{}");
-      document.querySelectorAll("[data-folder-toggle]").forEach(function(btn) {
-        const folderId = btn.dataset.folderId || btn.getAttribute("aria-controls") || "";
-        const isOpen   = saved[folderId] === true;
-        const listId   = btn.getAttribute("aria-controls");
-        const list     = listId ? document.getElementById(listId) : null;
-        btn.setAttribute("aria-expanded", String(isOpen));
-        if (list) list.style.display = isOpen ? "" : "none";
-      });
-    } catch(e) { /* localStorage unavailable — leave defaults */ }
-  })();
-</script>
-
 <style>
-  .doc-move-btn {
-    position: absolute;
-    right: 0.375rem;
-    top: 50%;
-    transform: translateY(-50%);
+  .folder-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .folder-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .folder-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    margin: 1px 0;
+    border-radius: 0px;
+    transition: all var(--journal-transition-speed, 0.25s) ease;
+  }
+
+  .folder-meta-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .folder-row:hover {
+    background: var(--journal-item-hover, rgba(0, 210, 190, 0.06));
+  }
+
+  .folder-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s, background-color 0.15s;
+    color: var(--journal-sidebar-text, var(--txt-3, #475569));
+    opacity: 0.6;
+    transition: all var(--journal-transition-speed, 0.25s) ease;
   }
 
-  .doc-item:hover .doc-move-btn { opacity: 1; }
-  .doc-move-btn:hover { background-color: var(--color-surface-hover); color: var(--color-text); }
+  .folder-toggle:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 
-  .folder-toggle[aria-expanded="false"] .folder-chevron { transform: rotate(-90deg); }
-  .folder-chevron { transition: transform 0.15s ease; }
+  .folder-chevron {
+    transition: transform var(--journal-transition-speed, 0.25s) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .folder-toggle[aria-expanded="false"] .folder-chevron {
+    transform: rotate(-90deg);
+  }
+
+  .folder-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--journal-sidebar-text, var(--txt-3, #475569));
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .folder-link.active {
+    font-weight: 700;
+    color: var(--journal-accent, var(--accent, #dc3a68));
+  }
+
+  .folder-icon {
+    font-size: 15px;
+  }
+
+  .folder-children {
+    margin-left: 20px;
+    border-left: 1px dashed rgba(15, 18, 25, 0.08);
+    padding-left: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
 </style>
-
-<script>
-  import { initFolderToggles, initRealtimeUpdates } from "./FolderTree/sidebar.client";
-
-  document.addEventListener("DOMContentLoaded", () => {
-    initFolderToggles();
-    initRealtimeUpdates();
-  });
-</script>

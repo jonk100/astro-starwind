@@ -5,9 +5,12 @@
     "**/*"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    "uploads",
+    ".netlify"
   ],
   "compilerOptions": {
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "strictNullChecks": true,
     "baseUrl": ".",
@@ -21,6 +24,15 @@
       "!design/*": [
         "./src/styles/design/*"
       ],
+      "@tiptap/core": [
+        "node_modules/@tiptap/core/src/index"
+      ],
+      "@tiptap/extensions": [
+        "node_modules/@tiptap/extensions/src/index"
+      ],
+      "@tiptap/extension-text-style": [
+        "node_modules/@tiptap/extension-text-style/src/index"
+      ]
     },
     "ignoreDeprecations": "5.0"
   }

@@ -1,7 +1,19 @@
 ---
+/**
+ * @file src/components/apps/habit/Table/HabitDayCell.astro
+ * @description Monthly grid habit completion cell supporting high-intensity heat-map completed backgrounds,
+ * smooth borderless hovers, and rich logging configurations (multi-boolean, target count increments).
+ *
+ * NOTE ON DYNAMIC STYLING & OPACITY OVERLAYS:
+ * This component handles user-customizable per-habit visual styling via dynamic theme colors (theme.primaryColor, theme.lightBg)
+ * and computed opacity overlays (cellOpacity). As authorized by the Project Constitution, these custom HSL/RGB values are
+ * injected dynamically as inline style overrides (`--habit-theme-*`) to power the localized, highly responsive heatmap cell visuals
+ * that change color dynamically on mouse click and hover exit.
+ */
+
 import { TableCell } from '@/components/starwind/table';
 import type { HabitWithLogs, HabitLog } from '@/lib/habit/types';
-import { buildLogMap, generateDateRange } from '@/lib/habit/utils';
+import { getHabitTheme } from '@/lib/habit/theme';
 
 interface Props {
   habit: HabitWithLogs;
@@ -11,33 +23,137 @@ interface Props {
 }
 
 const { habit, date, isDone, log } = Astro.props;
+
+// Fetch the stable theme color for this specific habit
+const theme = getHabitTheme(habit.id, habit.metadata);
+
+// Read configurations from metadata
+const metadata = (habit.metadata && typeof habit.metadata === 'object' ? habit.metadata : {}) as Record<string, any>;
+const maxCompletions = metadata.maxCompletions || 1;
+const isMultiBoolean = metadata.booleanMode === 'multi';
+const countMode = metadata.countMode || 'target';
+const countTarget = metadata.countTarget || 8;
+const countUnit = metadata.countUnit || 'reps';
+const durationMode = metadata.durationMode || 'countdown';
+const durationTarget = metadata.durationTarget || 20;
+
+// Timezone-safe date to UTC day-number helper function
+const getDayNumber = (dateStr: string): number => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / (1000 * 60 * 60 * 24));
+};
+
+// Calculate daily streak leading up to this date to create a beautiful heat-map
+let streakUpToDate = 0;
+if (isDone) {
+  const targetDayNum = getDayNumber(date);
+  const completedDayNumbers = (habit.logs ?? [])
+    .map(l => getDayNumber(l.entry_date))
+    .filter(dayNum => dayNum <= targetDayNum)
+    .sort((a, b) => b - a); // descending order
+  
+  if (completedDayNumbers.length > 0) {
+    streakUpToDate = 1;
+    let prevDay = completedDayNumbers[0];
+    for (let i = 1; i < completedDayNumbers.length; i++) {
+      const currDay = completedDayNumbers[i];
+      if (prevDay - currDay === 1) {
+        streakUpToDate++;
+        prevDay = currDay;
+      } else if (prevDay - currDay > 1) {
+        break;
+      }
+    }
+  }
+}
+
+// Dynamic Opacity calculation
+let cellOpacity = 0.35; // default faint start
+if (habit.tracking_type === 'boolean' && !isMultiBoolean) {
+  if (streakUpToDate >= 10) {
+    cellOpacity = 1.0; // full bold (100%)
+  } else if (streakUpToDate >= 6) {
+    cellOpacity = 0.85; // strong (85%)
+  } else if (streakUpToDate >= 3) {
+    cellOpacity = 0.60; // medium (60%)
+  }
+} else {
+  // Based on completion percentage of the day
+  const value = log?.value ?? 1;
+  let pct = 0.35;
+  if (habit.tracking_type === 'count') {
+    pct = countMode === 'target' ? value / countTarget : 0.6;
+  } else if (habit.tracking_type === 'duration') {
+    pct = durationMode === 'countdown' ? value / durationTarget : 0.6;
+  } else if (isMultiBoolean) {
+    pct = value / maxCompletions;
+  }
+  cellOpacity = Math.max(0.35, Math.min(1.0, pct));
+}
 ---
 
 <TableCell
-  class={`habit-cell p-0 border-b border-l border-slate-200 cursor-pointer ${isDone ? 'is-completed' : ''}`}
+  class={`habit-cell p-0 border-b border-l border-slate-200 cursor-pointer transition-all duration-300 relative w-12 min-w-48px max-w-48px ${isDone ? 'is-completed' : ''}`}
   data-habit-id={habit.id}
+  data-habit-name={habit.name}
+  data-theme-id={theme.id}
   data-date={date}
-  data-type={habit.tracking_type}
+  data-tracking-type={habit.tracking_type}
   data-log-id={log?.id ?? ''}
+  data-value={isDone ? (log?.value ?? 1) : 0}
+  data-max-completions={maxCompletions}
+  data-is-multi-boolean={isMultiBoolean ? 'true' : 'false'}
+  data-count-mode={countMode}
+  data-count-target={countTarget}
+  data-duration-mode={durationMode}
+  data-duration-target={durationTarget}
+  
+  style={`--habit-theme-light: rgb(${theme.lightBg}); --habit-theme-opacity: ${cellOpacity}; --habit-theme-color-rgb: ${theme.primaryColor};`}
 >
-  <div class="cell-trigger h-12 w-full flex items-center justify-center hover:bg-blue-50">
-    <div class="status-indicator h-6 w-6 rounded border-2 border-slate-200 transition-all flex items-center justify-center text-[10px] text-white font-bold">
-      {isDone && habit.tracking_type !== 'boolean' ? log!.value : ''}
-    </div>
+  <div class="cell-trigger h-12 w-full flex flex-col items-center justify-center transition-all duration-200 select-none text-center">
+    <!-- Displays completion value inside cell for counts/durations -->
+    {isDone && (
+      <span class="completion-value text-xs font-bold text-slate-800 drop-shadow-sm leading-none">
+        {habit.tracking_type === 'boolean' && isMultiBoolean && `${log?.value ?? 1}/${maxCompletions}`}
+        {habit.tracking_type === 'count' && `${log?.value ?? 1}${countMode === 'target' ? `/${countTarget}` : ''}`}
+        {habit.tracking_type === 'duration' && `${log?.value ?? durationTarget}m`}
+      </span>
+    )}
+    
+    <!-- Visual dot indicator if simple single boolean -->
+    {!isDone && (
+      <div class="status-indicator h-1.5 w-1.5 rounded-full bg-slate-300 opacity-60 transition-all duration-300"></div>
+    )}
   </div>
 </TableCell>
 
-
-
 <style>
-  .habit-cell.is-completed .status-indicator {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-    transform: scale(1.1);
+  .habit-cell {
+    transition: background-color 0.9s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
 
+  /* Completed cells background and border color */
+  .habit-cell.is-completed {
+    background-color: rgba(var(--habit-theme-color-rgb), var(--habit-theme-opacity)) !important;
+    border-color: rgba(var(--habit-theme-color-rgb), 0.25) !important;
+  }
+
+  /* Custom text coloring for completed cells to maintain contrast */
+  .habit-cell.is-completed .completion-value {
+    color: #1e293b; /* keep text dark and highly readable */
+  }
+
+  /* Soft and clean background hover transition, strictly borderless */
+  .habit-cell:hover {
+    background-color: var(--habit-theme-light) !important;
+    transition: background-color 0.1s ease-out !important; /* fast response on enter */
+  }
+
+  /* Dot expansion on cell hover */
   .habit-cell:hover .status-indicator {
-    border-color: #3b82f6;
+    background-color: rgba(var(--habit-theme-color-rgb), 0.8);
+    transform: scale(1.6);
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease-out !important;
   }
 </style>
 
@@ -45,71 +161,171 @@ const { habit, date, isDone, log } = Astro.props;
   import { actions } from 'astro:actions';
   import { toast } from '@/components/starwind/toast';
 
-  /**
-   * Handles clicking a habit cell to toggle completion for that day.
-   *
-   * Optimistic UI — the cell updates immediately. The action runs in the
-   * background. On failure the cell reverts and a toast error is shown.
-   *
-   * On success, if the action returns a streak milestone, we call
-   * window.showStreakBanner() which is registered by StreakBanner.astro.
-   */
   document.querySelectorAll<HTMLElement>('.habit-cell').forEach(cell => {
-    cell.addEventListener('click', async () => {
-      const habitId   = cell.getAttribute('data-habit-id')!;
+    cell.addEventListener('click', async (e) => {
+      e.stopPropagation();
+
+      const habitId = cell.getAttribute('data-habit-id')!;
       const habitName = cell.getAttribute('data-habit-name')!;
-      const date      = cell.getAttribute('data-date')!;
+      const themeId = cell.getAttribute('data-theme-id')!;
+      const date = cell.getAttribute('data-date')!;
+      const trackingType = cell.getAttribute('data-tracking-type')!;
       const isCompleted = cell.classList.contains('is-completed');
+      
+      const logId = cell.getAttribute('data-log-id')!;
+      const currentValue = parseInt(cell.getAttribute('data-value') || '0', 10);
+      
+      // Configuration values
+      const maxCompletions = parseInt(cell.getAttribute('data-max-completions') || '1', 10);
+      const isMultiBoolean = cell.getAttribute('data-is-multi-boolean') === 'true';
+      const countMode = cell.getAttribute('data-count-mode') || 'target';
+      const countTarget = parseInt(cell.getAttribute('data-count-target') || '8', 10);
+      const durationMode = cell.getAttribute('data-duration-mode') || 'countdown';
+      const durationTarget = parseInt(cell.getAttribute('data-duration-target') || '20', 10);
 
-      if (isCompleted) {
-        const logId = cell.getAttribute('data-log-id')!;
-
-        // Optimistic: remove immediately
-        cell.classList.remove('is-completed');
-        const prevLogId = logId;
-        cell.setAttribute('data-log-id', '');
-
-        const { error } = await actions.habit.deleteLog({
-          id: logId,
-          habit_id: habitId,
-          entry_date: date,
-        });
-
-        if (error) {
-          // Rollback
-          cell.classList.add('is-completed');
-          cell.setAttribute('data-log-id', prevLogId);
-          toast.error('Could not remove log', { description: 'Please try again.' });
+      // ── Scenario A: Uncompleted -> check it ──────────────────────────────
+      if (!isCompleted) {
+        let initialValue = 1;
+        if (trackingType === 'duration' && durationMode === 'countdown') {
+          initialValue = durationTarget;
         }
 
-      } else {
-        // Optimistic: mark done immediately
+        // Optimistic UI update
         cell.classList.add('is-completed');
+        cell.setAttribute('data-value', String(initialValue));
+
+        // Update real-time heat-map opacity --
+        // @TODO - fix this logic - it has something to do with times per day, shouldnt...
+        let initialOpacity = 0.05;
+        if (trackingType === 'boolean' && !isMultiBoolean) {
+          initialOpacity = 0.05; 
+        } else {
+          // set to 0.15 for counts/durations when not multi-boolean
+          let pct = 0.15;
+          if (trackingType === 'count') {
+            pct = countMode === 'target' ? initialValue / countTarget : 0.6;
+          } else if (trackingType === 'duration') {
+            pct = durationMode === 'countdown' ? initialValue / durationTarget : 0.6;
+          } else if (isMultiBoolean) {
+            pct = initialValue / maxCompletions;
+          }
+          initialOpacity = Math.max(0.35, Math.min(1.0, pct));
+        }
+        cell.style.setProperty('--habit-theme-opacity', String(initialOpacity));
+
+        const valSpan = document.createElement('span');
+        valSpan.className = 'completion-value text-xs font-bold text-slate-800 drop-shadow-sm leading-none';
+        
+        if (trackingType === 'boolean') {
+          valSpan.textContent = isMultiBoolean ? `1/${maxCompletions}` : '';
+        } else if (trackingType === 'count') {
+          valSpan.textContent = `1${countMode === 'target' ? `/${countTarget}` : ''}`;
+        } else if (trackingType === 'duration') {
+          valSpan.textContent = `${initialValue}m`;
+        }
+        
+        const trigger = cell.querySelector('.cell-trigger')!;
+        const indicator = trigger.querySelector('.status-indicator');
+        if (indicator) indicator.remove();
+        trigger.appendChild(valSpan);
 
         const { data, error } = await actions.habit.upsertLog({
           habit_id: habitId,
           entry_date: date,
-          value: 1,
+          value: initialValue,
         });
 
         if (error) {
           // Rollback
           cell.classList.remove('is-completed');
+          cell.setAttribute('data-value', '0');
+          valSpan.remove();
+          const dot = document.createElement('div');
+          dot.className = 'status-indicator h-1.5 w-1.5 rounded-full bg-slate-300 opacity-60 transition-all duration-300';
+          trigger.appendChild(dot);
           toast.error('Could not save log', { description: 'Please try again.' });
           return;
         }
 
-        // Store the real log id for future delete
         if (data) {
           cell.setAttribute('data-log-id', data.id);
         }
 
-        // Show streak milestone banner if one was hit
+        // Show streak banner celebration
         const streak = data?.streak;
         if (streak?.milestone) {
           const showBanner = (window as any).showStreakBanner;
           if (typeof showBanner === 'function') {
-            showBanner(habitName, streak.currentStreak);
+            showBanner(habitName, streak.currentStreak, themeId);
+          }
+        }
+
+      // ── Scenario B: Already Completed -> Increment or Delete ─────────────
+      } else {
+        let isMaxReached = false;
+        let newValue = currentValue + 1;
+
+        if (trackingType === 'boolean' && isMultiBoolean) {
+          isMaxReached = currentValue >= maxCompletions;
+        } else if (trackingType === 'count') {
+          isMaxReached = countMode === 'target' ? currentValue >= countTarget : false;
+        } else {
+          isMaxReached = true;
+        }
+
+        // Sub-scenario B1: Limit reached -> Delete completion entry
+        if (isMaxReached) {
+          cell.classList.remove('is-completed');
+          cell.setAttribute('data-value', '0');
+          cell.setAttribute('data-log-id', '');
+          const valSpan = cell.querySelector('.completion-value');
+          if (valSpan) valSpan.remove();
+          
+          const dot = document.createElement('div');
+          dot.className = 'status-indicator h-1.5 w-1.5 rounded-full bg-slate-300 opacity-60 transition-all duration-300';
+          cell.querySelector('.cell-trigger')?.appendChild(dot);
+
+          const { error } = await actions.habit.deleteLog({
+            id: logId,
+            habit_id: habitId,
+            entry_date: date,
+          });
+
+          if (error) {
+            window.location.reload();
+          }
+
+        // Sub-scenario B2: Increment completion value
+        } else {
+          cell.setAttribute('data-value', String(newValue));
+
+          // Update real-time heat-map opacity
+          let incrementedOpacity = 0.35;
+          if (trackingType === 'count') {
+            incrementedOpacity = countMode === 'target' ? newValue / countTarget : 0.6;
+          } else if (isMultiBoolean) {
+            incrementedOpacity = newValue / maxCompletions;
+          }
+          incrementedOpacity = Math.max(0.35, Math.min(1.0, incrementedOpacity));
+          cell.style.setProperty('--habit-theme-opacity', String(incrementedOpacity));
+
+          const valSpan = cell.querySelector('.completion-value');
+          if (valSpan) {
+            if (trackingType === 'boolean' && isMultiBoolean) {
+              valSpan.textContent = `${newValue}/${maxCompletions}`;
+            } else if (trackingType === 'count') {
+              valSpan.textContent = `${newValue}${countMode === 'target' ? `/${countTarget}` : ''}`;
+            }
+          }
+
+          const { error } = await actions.habit.upsertLog({
+            habit_id: habitId,
+            entry_date: date,
+            value: newValue,
+          });
+
+          if (error) {
+            window.location.reload();
           }
         }
       }

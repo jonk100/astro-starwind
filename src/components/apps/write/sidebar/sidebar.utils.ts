@@ -74,6 +74,6 @@ export function formatUpdatedAt(iso: string): string {
     date.getMonth() === yesterday.getMonth() &&
     date.getFullYear() === yesterday.getFullYear();
   if (isYesterday) return "Yesterday";
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 

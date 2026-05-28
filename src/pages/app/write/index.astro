@@ -13,13 +13,15 @@
 
 import AppLayout from "@/layouts/AppLayout.astro";
 import JournalSidebar from "@/components/apps/write/sidebar/JournalSidebar.astro";
-import JournalToolbar from "@/components/apps/write/toolbar/JournalToolbar.astro";
 import EditorCanvas from "@/components/apps/write/editor/EditorCanvas.astro";
 import { createClient } from "@/lib/supabase";
 import { getDocumentIndex, getFolders, getDocumentById } from "@/lib/journal/queries";
 import { parseBlocks } from "@/lib/journal/utils";
 import type { DocumentIndexRow, Folder, Block } from "@/lib/journal/types";
 import { editorActor } from "@/components/apps/write/editor/editorCanvas/editorCanvas.ts";
+import TipTop from "@/components/apps/tiptop/TipTop.astro";
+import CardDisplayPage from "@/components/apps/write/CardDisplayPage.astro";
+
 
 export const prerender = false;
 const user = Astro.locals.user!;
@@ -39,6 +41,7 @@ let activeBlocks: Block[]     = [];
 let activeTitle: string       = "";
 let activeDocumentId: string  = "";
 let isPinned: boolean         = false;
+let isArchived: boolean       = false;
 
 if (docId) {
   const { data: doc, error } = await getDocumentById(supabase, docId, user.id);
@@ -46,6 +49,7 @@ if (docId) {
     activeDocumentId = doc.id;
     activeTitle      = doc.title;
     isPinned         = doc.pinned ?? false;
+    isArchived       = doc.is_archived ?? false;
     const parsed     = parseBlocks(doc.content_blocks);
     activeBlocks     = parsed.ok ? parsed.blocks : [];
     // Ensure checklist blocks have meta.checked set
@@ -64,45 +68,42 @@ if (docId) {
   editorActor.send({ type: 'BLOCKS_CHANGED', blocks: activeBlocks });
   }
 };
+
+const activeFolderId = Astro.url.searchParams.get("folder");
 ---
-<script type="application/json" id="initial-blocks">{JSON.stringify(activeBlocks)}</script>
 <AppLayout title="Write" description="A calm place to think.">
-<!-- <div class="tiptap-editor"></div> -->
+<script type="application/json" id="tiptap-content" set:html={JSON.stringify(activeBlocks)}></script>
 
-  <div class="write-shell">
-
+  <div id="tiptap-meta" data-document-id={activeDocumentId} hidden slot="head"></div>
+   <div class="write-shell">
     <aside class="write-sidebar" id="write-sidebar">
       <JournalSidebar
         documents={documents}
         folders={folders}
         activeDocumentId={activeDocumentId}
         user={user}
+        activeFolderId={activeFolderId}
       />
     </aside>
-
-
     <div class="write-main">
-      <!--
-        FIX d: toolbar sits here, OUTSIDE the scrollable canvas wrapper.
-        write-main is a flex column with overflow:hidden, so the toolbar
-        never scrolls away — it's always pinned to the top of the right panel.
-      -->
-      <JournalToolbar
-        activeDocumentId={activeDocumentId}
-        user={user}
-        isPinned={isPinned}
-      />
-
       <main class="write-canvas-wrapper" id="write-canvas-wrapper">
-        <EditorCanvas
+      {!activeDocumentId ? (
+        <CardDisplayPage
+          folders={folders}
+          documents={documents}
+          activeFolderId={activeFolderId}
+        />
+      ) : (
+        <TipTop
           documentId={activeDocumentId}
           title={activeTitle}
-          blocks={activeBlocks}
+          isArchived={isArchived}
+          isPinned={isPinned}
           user={user}
         />
+      )}
       </main>
     </div>
-
   </div>
 </AppLayout>
 
@@ -114,8 +115,8 @@ if (docId) {
   .write-shell {
     display: grid;
     grid-template-columns: 280px 1fr;
-    height: 100vh;
-    max-height: 100vh;
+    height: calc(100vh - 64px);
+    max-height: calc(100vh - 64px);
     overflow: hidden;          /* shell itself never scrolls                  */
     background-color: var(--color-bg);
   }
@@ -127,7 +128,7 @@ if (docId) {
   .write-sidebar {
     border-right: 1px solid var(--color-border);
     overflow-y: auto;
-    height: 100vh;
+    height: calc(100vh - 64px);
   }
 
   /* ── Right panel ──
@@ -138,7 +139,7 @@ if (docId) {
   .write-main {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: calc(100vh - 64px);
     overflow: hidden;
   }
 

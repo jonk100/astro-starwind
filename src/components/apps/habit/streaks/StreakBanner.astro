@@ -1,23 +1,12 @@
 ---
 /**
- * @file src/components/apps/habit/StreakBanner.astro
+ * @file src/components/apps/habit/streaks/StreakBanner.astro
  * @description Animated celebration banner for habit streak milestones.
  *
  * Hidden by default using the grid-template-rows: 0fr collapse trick.
- * IMPORTANT: this requires a direct child with min-height: 0 (streak-banner__outer)
- * wrapping all visible content — padding on the collapsing element itself
- * prevents it reaching true zero height.
  *
- * Revealed by calling window.showStreakBanner(habitName, streakCount).
+ * Revealed by calling window.showStreakBanner(habitName, streakCount, themeId).
  * Auto-dismisses after 5 seconds or immediately on close button click.
- * 
- * Script structure:
- * 1. getMilestoneCopy() — returns copy for a given streak count.
- * 2. runParticleBurst() — animates confetti particles on the canvas.
- * 3. Queue setup + window.showStreakBanner(sync, top-level) — queues calls
- * 4. One DOMContentLoaded event — wires up the banner elements, assigns _showBanner,
- *    attaches the close listener, and flushes the queue.
- * 
  */
 import CloseBannerButton from './CloseBannerButton.astro';
 ---
@@ -52,18 +41,40 @@ import CloseBannerButton from './CloseBannerButton.astro';
   /* ── Outer shell — no padding, no overflow visible ── */
   .streak-banner {
     position: fixed;
-    top: 0;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: calc(100% - 3rem);
+    max-width: 420px;
     display: grid;
     grid-template-rows: 0fr;   /* collapsed by default */
-    transition: grid-template-rows 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
-    width: 100%;
-    z-index: 100;
-    /* Background on the outer so gradient is visible at full height */
+    transition: grid-template-rows 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease;
+    z-index: 10000;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    /* Default Rainbow Gradient */
     background: linear-gradient(135deg, #1e40af 0%, #7c3aedad 60%, #db277879 100%);
   }
 
   .streak-banner.is-visible {
     grid-template-rows: 1fr;   /* expanded */
+  }
+
+  /* Curated Premium Dynamic Gradients */
+  .streak-banner.theme-emerald {
+    background: linear-gradient(135deg, #065f46 0%, #10b981dd 60%, #fbbf2455 100%);
+  }
+  .streak-banner.theme-rose {
+    background: linear-gradient(135deg, #9f1239 0%, #f43f5edd 60%, #f59e0b55 100%);
+  }
+  .streak-banner.theme-violet {
+    background: linear-gradient(135deg, #5b21b6 0%, #8b5cf6dd 60%, #0ea5e955 100%);
+  }
+  .streak-banner.theme-amber {
+    background: linear-gradient(135deg, #9a3412 0%, #f59e0bdd 60%, #fde04755 100%);
+  }
+  .streak-banner.theme-sky {
+    background: linear-gradient(135deg, #075985 0%, #0ea5e9dd 60%, #10b98155 100%);
   }
 
   /* ── Inner wrapper — min-height: 0 is the magic ingredient ── */
@@ -128,196 +139,199 @@ import CloseBannerButton from './CloseBannerButton.astro';
     font-size: 0.8rem;
     opacity: 0.85;
   }
-
-
 </style>
 
 <script>
   // Extend the global Window interface
-declare global {
-  interface Window {
-    showStreakBanner: (habitName: string, streak: number) => void;
-  }
-}
-
-// Define interfaces
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  color: string;
-  alpha: number;
-  decay: number;
-}
-
-interface BannerCall {
-  habitName: string;
-  streak: number;
-}
-
-interface MilestoneCopy {
-  emoji: string;
-  headline: string;
-  sub: string;
-}
-
-interface ParticleBurst {
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  particles: Particle[];
-  runParticleBurst(canvas: HTMLCanvasElement): void;
-}
-
-interface StreakBanner {
-  showStreakBanner(habitName: string, streak: number): void;
-}
-
-interface StreakBannerConstructor {
-  new (habitName: string, streak: number): StreakBanner;
-}
-
-// Function to get milestone copy
-function getMilestoneCopy(streak: number, habitName: string): MilestoneCopy {
-  if (streak >= 100) return { emoji: '🏆', headline: `${streak}-day streak on ${habitName}!`, sub: "Absolutely legendary. You've made this part of who you are." };
-  if (streak >= 50) return { emoji: '💎', headline: `${streak} days straight — ${habitName}!`, sub: "That's elite-level consistency. Keep going." };
-  if (streak >= 30) return { emoji: '⚡', headline: `${streak}-day streak! ${habitName}!`, sub: "A whole month without breaking the chain. Remarkable." };
-  if (streak >= 20) return { emoji: '🚀', headline: `${streak} days in a row — ${habitName}!`, sub: "You've built real momentum. Don't stop now." };
-  if (streak >= 10) return { emoji: '🔥', headline: `${streak}-day streak on ${habitName}!`, sub: "Double digits. That's a proper habit forming." };
-  if (streak >= 5) return { emoji: '⭐', headline: `5-day streak — ${habitName}!`, sub: "Five days straight. You're building something real." };
-  return { emoji: '✨', headline: `3-day streak on ${habitName}!`, sub: "Three in a row — the streak has begun." };
-}
-
-// Particle burst animation
-function runParticleBurst(canvas: HTMLCanvasElement): void {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-
-  const colors = ['#fbbf24', '#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#fff'];
-  const particles: Particle[] = [];
-
-  for (let i = 0; i < 60; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 1.5 + Math.random() * 3.5;
-    particles.push({
-      x: canvas.width * (0.2 + Math.random() * 0.6),
-      y: canvas.height / 2,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 2,
-      radius: 2 + Math.random() * 3,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      alpha: 1,
-      decay: 0.018 + Math.random() * 0.012,
-    });
+  declare global {
+    interface Window {
+      showStreakBanner: (habitName: string, streak: number, themeId?: string) => void;
+    }
   }
 
-  function frame() {
-    ctx!.clearRect(0, 0, canvas.width, canvas.height);
-    let alive = false;
-    for (const p of particles) {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.12;
-      p.alpha -= p.decay;
-      if (p.alpha > 0) {
-        alive = true;
-        ctx!.save();
-        ctx!.globalAlpha = p.alpha;
-        ctx!.fillStyle = p.color;
-        ctx!.beginPath();
-        ctx!.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx!.fill();
-        ctx!.restore();
+  // Define interfaces
+  interface Particle {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    radius: number;
+    color: string;
+    alpha: number;
+    decay: number;
+  }
+
+  interface BannerCall {
+    habitName: string;
+    streak: number;
+    themeId?: string;
+  }
+
+  interface MilestoneCopy {
+    emoji: string;
+    headline: string;
+    sub: string;
+  }
+
+  // Function to get milestone copy
+  function getMilestoneCopy(streak: number, habitName: string): MilestoneCopy {
+    if (streak >= 100) return { emoji: '🏆', headline: `${streak}-day streak on ${habitName}!`, sub: "Absolutely legendary. You've made this part of who you are." };
+    if (streak >= 50) return { emoji: '💎', headline: `${streak} days straight — ${habitName}!`, sub: "That's elite-level consistency. Keep going." };
+    if (streak >= 30) return { emoji: '⚡', headline: `${streak}-day streak! ${habitName}!`, sub: "A whole month without breaking the chain. Remarkable." };
+    if (streak >= 20) return { emoji: '🚀', headline: `${streak} days in a row — ${habitName}!`, sub: "You've built real momentum. Don't stop now." };
+    if (streak >= 10) return { emoji: '🔥', headline: `${streak}-day streak on ${habitName}!`, sub: "Double digits. That's a proper habit forming." };
+    if (streak >= 5) return { emoji: '⭐', headline: `5-day streak — ${habitName}!`, sub: "Five days straight. You're building something real." };
+    return { emoji: '✨', headline: `3-day streak on ${habitName}!`, sub: "Three in a row — the streak has begun." };
+  }
+
+  // Particle burst animation with theme-specific configurations
+  function runParticleBurst(canvas: HTMLCanvasElement, themeId?: string): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    // Mapping color selectors
+    let colors = ['#fbbf24', '#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#fff']; // Default rainbow
+    
+    if (themeId === 'emerald') {
+      colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#fbbf24', '#fff'];
+    } else if (themeId === 'rose') {
+      colors = ['#f43f5e', '#fb7185', '#fda4af', '#fecdd3', '#f59e0b', '#fff'];
+    } else if (themeId === 'violet') {
+      colors = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#38bdf8', '#fff'];
+    } else if (themeId === 'amber') {
+      colors = ['#f59e0b', '#fbbf24', '#fde047', '#fef08a', '#f97316', '#fff'];
+    } else if (themeId === 'sky') {
+      colors = ['#0ea5e9', '#38bdf8', '#7dd3fc', '#bae6fd', '#34d399', '#fff'];
+    }
+
+    const particles: Particle[] = [];
+
+    // Premium luxury drift: 30 tiny micro-sparkles that float slowly upward and sway gently
+    for (let i = 0; i < 30; i++) {
+      particles.push({
+        x: canvas.width * (0.05 + Math.random() * 0.9),
+        y: canvas.height * 0.85,
+        vx: (Math.random() - 0.5) * 0.8, // subtle horizontal drift
+        vy: -0.6 - Math.random() * 1.0,  // slow, peaceful upward float
+        radius: 0.8 + Math.random() * 1.5, // micro-sized premium specs
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 0.8,
+        decay: 0.008 + Math.random() * 0.008, // slow fade out
+      });
+    }
+
+    function frame() {
+      ctx!.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx += Math.sin(p.y * 0.05) * 0.01; // elegant swaying motion
+        p.alpha -= p.decay;
+        if (p.alpha > 0) {
+          alive = true;
+          ctx!.save();
+          ctx!.globalAlpha = p.alpha;
+          ctx!.fillStyle = p.color;
+          ctx!.shadowColor = p.color;
+          ctx!.shadowBlur = 4; // premium glow highlight
+          ctx!.beginPath();
+          ctx!.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx!.fill();
+          ctx!.restore();
+        }
+      }
+      if (alive) {
+        requestAnimationFrame(frame);
       }
     }
-    if (alive) {
-      requestAnimationFrame(frame);
-    }
+
+    requestAnimationFrame(frame);
   }
 
-  requestAnimationFrame(frame);
-}
+  // Queue for pending calls
+  const pendingCalls: BannerCall[] = [];
 
-// Queue for pending calls
-const pendingCalls: BannerCall[] = [];
+  /**
+   * Internal banner display implementation.
+   * Assigned after DOMContentLoaded.
+   */
+  let _showBanner:
+    | ((habitName: string, streak: number, themeId?: string) => void)
+    | null = null;
 
-/**
- * Internal banner display implementation.
- * Assigned after DOMContentLoaded.
- */
-let _showBanner:
-  | ((habitName: string, streak: number) => void)
-  | null = null;
-
-/**
- * Public global API.
- */
-window.showStreakBanner = function (
-  habitName: string,
-  streak: number
-): void {
-  if (_showBanner) {
-    _showBanner(habitName, streak);
-  } else {
-    pendingCalls.push({ habitName, streak });
-  }
-};
-
-// DOM wiring
-document.addEventListener('DOMContentLoaded', () => {
-  const banner = document.getElementById('streak-banner');
-  const emojiEl = document.getElementById('streak-banner-emoji');
-  const headlineEl = document.getElementById('streak-banner-headline');
-  const subEl = document.getElementById('streak-banner-sub');
-  const closeBtn = document.getElementById('streak-banner-close');
-  const canvas = document.getElementById('streak-canvas');
-
-  let dismissTimer: number | null = null;
-
-  // Define the actual implementation of showStreakBanner
-  _showBanner = function(habitName: string, streak: number): void {
-    if (!banner || !emojiEl || !headlineEl || !subEl || !closeBtn || !canvas) return;
-
-    if (dismissTimer) {
-      clearTimeout(dismissTimer);
+  /**
+   * Public global API.
+   */
+  window.showStreakBanner = function (
+    habitName: string,
+    streak: number,
+    themeId?: string
+  ): void {
+    if (_showBanner) {
+      _showBanner(habitName, streak, themeId);
+    } else {
+      pendingCalls.push({ habitName, streak, themeId });
     }
-
-    const copy = getMilestoneCopy(streak, habitName);
-    emojiEl.textContent = copy.emoji;
-    headlineEl.textContent = copy.headline;
-    subEl.textContent = copy.sub;
-
-    banner.classList.add('is-visible');
-    // Wait for transition
-    setTimeout(() => {
-      runParticleBurst(canvas as HTMLCanvasElement);
-    }, 420);
-    dismissTimer = window.setTimeout(() => {
-      banner.classList.remove('is-visible');
-    }, 5000);
   };
 
-  // Close button event
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      if (banner) banner.classList.remove('is-visible');
+  // DOM wiring
+  document.addEventListener('DOMContentLoaded', () => {
+    const banner = document.getElementById('streak-banner');
+    const emojiEl = document.getElementById('streak-banner-emoji');
+    const headlineEl = document.getElementById('streak-banner-headline');
+    const subEl = document.getElementById('streak-banner-sub');
+    const closeBtn = document.getElementById('streak-banner-close');
+    const canvas = document.getElementById('streak-canvas');
+
+    let dismissTimer: number | null = null;
+
+    // Define the actual implementation of showStreakBanner
+    _showBanner = function(habitName: string, streak: number, themeId?: string): void {
+      if (!banner || !emojiEl || !headlineEl || !subEl || !closeBtn || !canvas) return;
+
       if (dismissTimer) {
         clearTimeout(dismissTimer);
-        dismissTimer = null;
       }
-    });
-  }
 
-  // Process any calls made before DOMContentLoaded
-  for (const call of pendingCalls) {
-    _showBanner?.(call.habitName, call.streak);
-  }
-  pendingCalls.length = 0;
-});
+      const copy = getMilestoneCopy(streak, habitName);
+      emojiEl.textContent = copy.emoji;
+      headlineEl.textContent = copy.headline;
+      subEl.textContent = copy.sub;
 
-export {}; // To ensure this is a module
+      // Apply the active theme color class dynamically to transition the background gradient!
+      banner.className = `streak-banner is-visible theme-${themeId || 'default'}`;
+
+      // Wait for slide-down animation before bursting particles
+      setTimeout(() => {
+        runParticleBurst(canvas as HTMLCanvasElement, themeId);
+      }, 420);
+
+      dismissTimer = window.setTimeout(() => {
+        banner.className = 'streak-banner';
+      }, 5000);
+    };
+
+    // Close button event
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        if (banner) banner.className = 'streak-banner';
+        if (dismissTimer) {
+          clearTimeout(dismissTimer);
+          dismissTimer = null;
+        }
+      });
+    }
+
+    // Process any calls made before DOMContentLoaded
+    for (const call of pendingCalls) {
+      _showBanner?.(call.habitName, call.streak, call.themeId);
+    }
+    pendingCalls.length = 0;
+  });
+
+  export {}; // To ensure this is a module
 </script>

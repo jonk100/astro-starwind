@@ -1,0 +1,201 @@
+@import "./colorRaw.tokens.css";
+
+:root {
+  /* -------------------------
+    Surfaces
+    ------------------------- */
+  /*                                        -*/
+  /*/        BACKGROUND, BG, etc.            */
+  /*                                        -*/
+  --background: rgb(var(--neutral-9));
+   --background-1: rgba(var(--neutral-9)/0.9);
+   --background-2: rgba(var(--neutral-9)/0.8);
+   --background-3: rgba(var(--neutral-9)/0.7);
+   --background-4: rgba(var(--neutral-9)/0.6);
+   --background-5: rgba(var(--neutral-9)/0.5);
+   --bg: rgb(var(--neutral-9));
+   --bg1: rgba(var(--neutral-9)/0.9);
+   --bg2: rgba(var(--neutral-9)/0.8);
+   --bg3: rgba(var(--neutral-9)/0.7);
+   --bg4: rgba(var(--neutral-9)/0.6);
+   --bg5: rgba(var(--neutral-9)/0.5);
+
+  /*                                        -*/
+  /*/        FOREGROUND, TEXT, etc.          */
+  /*                                        -*/
+  --text: rgb(var(--neutral-0));
+   --fg: rgb(var(--neutral-0));
+   --fg1: rgba(var(--neutral-0)/0.9);
+   --fg2: rgba(var(--neutral-0)/0.8);
+   --fg3: rgba(var(--neutral-0)/0.7);
+   --fg4: rgba(var(--neutral-0)/0.6);
+   --fg5: rgba(var(--neutral-0)/0.5);
+   --txt: rgb(var(--neutral-0));
+   --txt-1: rgba(var(--neutral-0)/0.9);
+   --txt-2: rgba(var(--neutral-0)/0.8);
+   --txt-3: rgba(var(--neutral-0)/0.7);
+   --txt-4: rgba(var(--neutral-0)/0.6);
+   --txt-5: rgba(var(--neutral-0)/0.5);
+   --text: rgb(var(--neutral-0));
+   --text-1: rgba(var(--neutral-0)/0.9);
+   --text-2: rgba(var(--neutral-0)/0.8);
+   --text-3: rgba(var(--neutral-0)/0.7);
+   --text-4: rgba(var(--neutral-0)/0.6);
+   --text-5: rgba(var(--neutral-0)/0.5);
+
+  /*                                        -*/
+  /*/        CARDS, POPOVERS, etc.            */
+  /*                                        -*/
+  --card-bg: rgb(var(--neutral-8));
+     --card-text: rgb(var(--neutral-0));
+
+     --popover-bg: rgb(var(--neutral-7));
+     --popover-text: rgb(var(--neutral-0));
+
+     --muted-bg: rgb(var(--neutral-8));
+     --muted-text: rgb(var(--neutral-3));               
+
+  /*                                        -*/
+  /*/        PRIMARY                         |
+  /*                                        -*/
+  --primary-bg: rgb(var(--blue-5));
+   --primary-text: rgb(var(--neutral-9));
+
+   --primary-hover: rgb(var(--blue-6));
+   --primary-active: rgb(var(--blue-7));
+   --primary-disabled: rgb(var(--neutral-5));
+   --primary-border: rgb(var(--blue-4));
+
+  /*                                        -*/
+  /*/        SECONDARY                       |
+  /*                                        -*/
+  --secondary-bg: rgb(var(--neutral-7));
+   --secondary-text: rgb(var(--neutral-1));
+   --secondary-hover: rgb(var(--neutral-6));
+   --secondary-active: rgb(var(--neutral-5));
+   --secondary-disabled: rgb(var(--neutral-5));
+   --secondary-border: rgb(var(--neutral-6));
+
+
+     /* Accent */
+
+  --accent-bg: rgb(var(--red-4));
+  --accent-text: rgb(var(--accent-9));
+
+  --accent-hover: rgb(var(--red-7));
+  --accent-active: rgb(var(--red-8));
+  --accent-disabled: rgb(var(--neutral-5));
+  --accent-border: rgb(var(--red-4));
+
+     /* States */
+     
+
+  --info-bg: rgb(var(--blue-5));
+  --info-text: rgb(var(--neutral-9));
+
+  --success-bg: rgb(var(--green-5));
+  --success-text: rgb(var(--neutral-9));
+
+  --warning-bg: rgb(var(--yellow-0));
+  --warning-text: rgb(var(--neutral-0));
+
+  --error-bg: rgb(var(--red-4));
+  --error-text: rgb(var(--neutral-9));
+
+
+     /* UI structure */
+
+
+  --border: rgb(var(--neutral-7));
+  --input: rgb(var(--neutral-7));
+  --outline: rgb(var(--neutral-5));
+
+     /* Sidebar */     
+
+  --sidebar-bg: rgb(var(--neutral-8));
+  --sidebar-text: rgb(var(--neutral-0));
+
+  --sidebar-primary-bg: rgb(var(--blue-5));
+  --sidebar-primary-text: rgb(var(--neutral-9));
+  --sidebar-primary-hover: rgb(var(--blue-6));
+  --sidebar-primary-border: rgb(var(--blue-4));
+
+  --sidebar-accent-bg: rgb(var(--neutral-7));
+  --sidebar-accent-text: rgb(var(--neutral-0));
+  --sidebar-accent-hover: rgb(var(--neutral-6));
+
+  --sidebar-border: rgb(var(--neutral-7));
+  --sidebar-outline: rgb(var(--neutral-5));
+}
+
+/* =========================================================*/
+   /* 2. DARK THEME OVERRIDES */
+   /*========================================================= */
+
+.dark {
+  --background: rgb(var(--neutral-0));
+  --text: rgb(var(--neutral-9));
+
+  --card-bg: rgb(var(--neutral-1));
+  --card-text: rgb(var(--neutral-9));
+
+  --popover-bg: rgb(var(--neutral-1));
+  --popover-text: rgb(var(--neutral-9));
+
+  --muted-bg: rgb(var(--neutral-1));
+  --muted-text: rgb(var(--neutral-5));
+
+  /* Primary */
+  --primary-bg: rgb(var(--blue-4));
+  --primary-text: rgb(var(--neutral-9));
+
+  --primary-hover: rgb(var(--blue-5));
+  --primary-active: rgb(var(--blue-6));
+  --primary-disabled: rgb(var(--neutral-4));
+  --primary-border: rgb(var(--blue-3));
+
+  /* Secondary */
+  --secondary-bg: rgb(var(--neutral-2));
+  --secondary-text: rgb(var(--neutral-9));
+
+  --secondary-hover: rgb(var(--neutral-3));
+  --secondary-active: rgb(var(--neutral-4));
+  --secondary-disabled: rgb(var(--neutral-4));
+  --secondary-border: rgb(var(--neutral-3));
+
+  /* Accent */
+  --accent-bg: rgb(var(--red-5));
+  --accent-text: rgb(var(--neutral-9));
+
+  --accent-hover: rgb(var(--red-6));
+  --accent-active: rgb(var(--red-7));
+  --accent-disabled: rgb(var(--neutral-4));
+  --accent-border: rgb(var(--red-4));
+
+  /* States */
+  --info-bg: rgb(var(--blue-4));
+  --success-bg: rgb(var(--green-4));
+  --warning-bg: rgb(var(--yellow-1));
+  --error-bg: rgb(var(--red-3));
+
+  /* UI */
+  --border: rgb(var(--neutral-2));
+  --input: rgb(var(--neutral-2));
+  --outline: rgb(var(--neutral-4));
+
+  /* Sidebar */
+  --sidebar-bg: rgb(var(--neutral-1));
+  --sidebar-text: rgb(var(--neutral-9));
+
+  --sidebar-primary-bg: rgb(var(--blue-4));
+  --sidebar-primary-text: rgb(var(--neutral-9));
+  --sidebar-primary-hover: rgb(var(--blue-5));
+  --sidebar-primary-border: rgb(var(--blue-3));
+
+  --sidebar-accent-bg: rgb(var(--neutral-2));
+  --sidebar-accent-text: rgb(var(--neutral-9));
+  --sidebar-accent-hover: rgb(var(--neutral-3));
+
+  --sidebar-border: rgb(var(--neutral-2));
+  --sidebar-outline: rgb(var(--neutral-4));
+}

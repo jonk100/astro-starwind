@@ -1,0 +1,110 @@
+---
+/**
+ * @file src/pages/app/write/[folder].astro
+ * @description Dynamic endpoint for viewing a specific folder inside the Write app.
+ */
+
+import AppLayout from "@/layouts/AppLayout.astro";
+import JournalSidebar from "@/components/apps/write/sidebar/JournalSidebar.astro";
+import { createClient } from "@/lib/supabase";
+import { getDocumentIndex, getFolders } from "@/lib/journal/queries";
+import type { DocumentIndexRow, Folder } from "@/lib/journal/types";
+import CardDisplayPage from "@/components/apps/write/CardDisplayPage.astro";
+
+export const prerender = false;
+const user = Astro.locals.user!;
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
+
+const { folder: paramFolderId } = Astro.params;
+const activeFolderId = paramFolderId ?? null;
+
+const [indexResult, foldersResult] = await Promise.all([
+  getDocumentIndex(supabase, user.id),
+  getFolders(supabase, user.id),
+]);
+
+const documents: DocumentIndexRow[] = indexResult.data ?? [];
+const folders: Folder[]             = foldersResult.data ?? [];
+
+// In folder list view, we do not have an open document active by default
+const activeDocumentId = "";
+const isPinned = false;
+---
+
+<AppLayout title="Write - Folder" description="A calm place to think.">
+  <div id="tiptap-meta" data-document-id={activeDocumentId} hidden slot="head"></div>
+  <div class="write-shell">
+    <aside class="write-sidebar" id="write-sidebar">
+      <JournalSidebar
+        documents={documents}
+        folders={folders}
+        activeDocumentId={activeDocumentId}
+        user={user}
+        activeFolderId={activeFolderId}
+      />
+    </aside>
+    <div class="write-main">
+      <main class="write-canvas-wrapper" id="write-canvas-wrapper">
+        <CardDisplayPage
+          folders={folders}
+          documents={documents}
+          activeFolderId={activeFolderId}
+        />
+      </main>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .write-shell {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: calc(100vh - 64px);
+    max-height: calc(100vh - 64px);
+    overflow: hidden;
+    background-color: var(--color-bg);
+  }
+
+  .write-sidebar {
+    border-right: 1px solid var(--color-border);
+    overflow-y: auto;
+    height: calc(100vh - 64px);
+  }
+
+  .write-main {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+  }
+
+  .write-canvas-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+</style>
+
+<script>
+  (function restoreSidebarScroll() {
+    const sidebar = document.getElementById("write-sidebar");
+    if (!sidebar) return;
+
+    const key        = "write:sidebar-scroll";
+    const savedPos   = sessionStorage.getItem(key);
+
+    if (savedPos) {
+      sidebar.scrollTop = parseInt(savedPos, 10);
+    }
+
+    let ticking = false;
+    sidebar.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      setTimeout(() => {
+        sessionStorage.setItem(key, String(sidebar.scrollTop));
+        ticking = false;
+      }, 200);
+    });
+  })();
+</script>

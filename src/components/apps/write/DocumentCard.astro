@@ -1,0 +1,279 @@
+---
+/**
+ * @file src/components/apps/write/DocumentCard.astro
+ * @description Premium Google Keep style document/note card with text clean fallback.
+ */
+import FormattedDate from "@/components/FormattedDate.astro";
+import ActionPopover from "./ActionPopover.astro";
+
+interface Props {
+  id: string;
+  title: string;
+  preview: string | null;
+  updatedAt: string | Date;
+  pinned: boolean;
+  folderName?: string | null;
+}
+
+const { id, title, preview: rawPreview, updatedAt, pinned, folderName = null } = Astro.props;
+
+// Recursively extracts plain text from a TipTap content node array
+function extractTextFromNodes(nodes: any[]): string {
+  if (!nodes || !Array.isArray(nodes)) return "";
+  return nodes
+    .map((node) => {
+      if (node.type === "text") return node.text ?? "";
+      if (node.content) return extractTextFromNodes(node.content);
+      return "";
+    })
+    .join("");
+}
+
+// Cleans previews that are stored as raw TipTap JSON block strings in the database
+function cleanPreviewText(preview: string | null): string {
+  if (!preview) return "";
+  const trimmed = preview.trim();
+  if (!trimmed.startsWith("{")) return trimmed; // Already plain text
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && Array.isArray(parsed.content)) {
+      return extractTextFromNodes(parsed.content);
+    }
+    if (parsed && parsed.text) {
+      return parsed.text;
+    }
+  } catch (e) {
+    // Ignore and fallback to raw
+  }
+  return trimmed;
+}
+
+const cleanPreview = cleanPreviewText(rawPreview);
+
+// Consistent dynamic visual border gradient using red accent and green primary variables
+const uniqueHash = title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+const colorSeed = uniqueHash % 3;
+let cardBorderClass = "border-l-[4px] border-l-slate-200";
+let dotColor = "bg-slate-300";
+
+if (colorSeed === 0) {
+  cardBorderClass = "border-l-[4px] border-l-emerald-500/80"; // primary green
+  dotColor = "bg-emerald-400";
+} else if (colorSeed === 1) {
+  cardBorderClass = "border-l-[4px] border-l-rose-500/80";    // accent red
+  dotColor = "bg-rose-400";
+} else {
+  cardBorderClass = "border-l-[4px] border-l-violet-500/80";  // secondary lavender/purple
+  dotColor = "bg-violet-400";
+}
+
+const displayDate = typeof updatedAt === "string" ? new Date(updatedAt) : updatedAt;
+---
+
+<div class={`document-card ${cardBorderClass} ${pinned ? "is-pinned" : ""}`} data-card-id={id}>
+  <div class="card-inner">
+    <div class="card-header">
+      <div class="header-left">
+        <span class={`status-dot ${dotColor}`}></span>
+        <h3 class="card-title">
+          <a href={`/app/write?doc=${id}`} class="title-link">{title || "Untitled Note"}</a>
+        </h3>
+      </div>
+      
+      <div class="header-actions">
+        {pinned && <span class="pinned-badge" title="Pinned note">📌</span>}
+        <ActionPopover
+          type="document"
+          id={id}
+          name={title}
+          actions={[
+            "rename",
+            "delete",
+            "duplicate",
+            "move"
+          ]}
+        />
+      </div>
+    </div>
+
+    <!-- Body Preview (Cleaned plain text) -->
+    <p class="card-preview">
+      {cleanPreview ? cleanPreview : <em class="no-preview">Empty document. Start writing…</em>}
+    </p>
+
+    <!-- Footer metadata -->
+    <div class="card-footer">
+      <div class="footer-meta">
+        <span class="footer-date">
+          📅 <FormattedDate date={displayDate} />
+        </span>
+        {folderName && (
+          <span class="folder-badge">
+            📁 {folderName}
+          </span>
+        )}
+      </div>
+
+      <div class="footer-actions">
+        <a href={`/app/write?doc=${id}`} class="btn-quick-edit" aria-label="Open document in editor">
+          ✍️ Open
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .document-card {
+    background: hsl(var(--back-3-hsl)/0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(15, 18, 25, 0.06);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    max-width: 720px;
+  }
+
+  .document-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(0, 210, 190, 0.15); /* pri green tint border */
+  }
+
+  .document-card.is-pinned {
+    background: hsl(var(--back-3-hsl)/0.25);
+    border-color: rgba(220, 58, 104, 0.12); /* accent red border hint */
+  }
+
+  .card-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 99px;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .title-link {
+    color: var(--txt-3, #1e293b);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .title-link:hover {
+    color: var(--accent, #dc3a68);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  .pinned-badge {
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+
+  .card-preview {
+    font-size: 0.8rem;
+    color: var(--txt-3, #475569);
+    margin: 0;
+    opacity: 0.85;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.4rem;
+  }
+
+  .no-preview {
+    opacity: 0.5;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+    border-t: 1px solid rgba(15, 18, 25, 0.03);
+    padding-top: 0.5rem;
+    gap: 1rem;
+  }
+
+  .footer-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--txt-3, #64748b);
+  }
+
+  .folder-badge {
+    background: rgba(0, 210, 190, 0.08); /* primary green badge background */
+    color: var(--pri, #00b46e);
+    padding: 0.15rem 0.45rem;
+    border-radius: 99px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .footer-actions {
+    flex-shrink: 0;
+  }
+
+  .btn-quick-edit {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.725rem;
+    font-weight: 600;
+    color: var(--txt-3, #1e293b);
+    background: rgba(15, 18, 25, 0.04);
+    border: 1px solid rgba(15, 18, 25, 0.08);
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-quick-edit:hover {
+    color: #fff;
+    background: var(--pri, #00d2be);
+    border-color: var(--pri, #00d2be);
+  }
+</style>

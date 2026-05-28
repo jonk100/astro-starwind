@@ -30,6 +30,34 @@ type TypedSupabaseClient = SupabaseClient<Database>;
 
 // ─── Folders ──────────────────────────────────────────────────────────────────
 
+export async function archiveFolder(
+  supabase: TypedSupabaseClient,
+  folderId: string,
+  userId: string
+  ) {
+  return supabase
+    .from("folders")
+    .update({ is_archived: true })
+    .eq("id", folderId)
+    .eq("user_id", userId)
+    .select()
+    .single();
+}
+
+export async function unarchiveFolder(
+  supabase: TypedSupabaseClient,
+  folderId: string,
+  userId: string
+) {
+  return supabase
+    .from("folders")
+    .update({ is_archived: false })
+    .eq("id", folderId)
+    .eq("user_id", userId)
+    .select()
+    .single();
+} 
+
 /**
  * Creates a new folder for a user.
  *
@@ -114,6 +142,71 @@ export async function deleteFolder(
 }
 
 // ─── Documents ────────────────────────────────────────────────────────────────
+
+export async function archiveDocument(
+  supabase: TypedSupabaseClient,
+  documentId: string,
+  userId: string
+  ) {
+  return supabase
+    .from("documents")
+    .update({ is_archived: true })
+    .eq("id", documentId)
+    .eq("user_id", userId)
+    .select()
+    .single();
+}
+
+export async function unarchiveDocument(
+  supabase: TypedSupabaseClient,
+  documentId: string,
+  userId: string
+) {
+  return supabase
+    .from("documents")
+    .update({ is_archived: false })
+    .eq("id", documentId)
+    .eq("user_id", userId)
+    .select()
+    .single();
+}
+
+export async function duplicateDocument(
+  supabase: TypedSupabaseClient,
+  documentId: string,
+  userId: string
+) {
+  // 1. Fetch original
+  const { data: original, error: fetchError } = await supabase
+    .from("documents")
+    .select("*")
+    .eq("id", documentId)
+    .eq("user_id", userId)
+    .single();
+
+  if (fetchError) return { data: null, error: fetchError };
+
+  // 2. Insert new document
+  const { data: copy, error: insertError } = await supabase
+    .from("documents")
+    .insert({
+      user_id: userId,
+      title: original.title + " (copy)",
+      folder_id: original.folder_id,
+      pinned: false,
+      is_archived: false,
+      preview: original.preview,
+      content_blocks: original.content_blocks,
+    })
+    .select()
+    .single();
+
+  if (insertError) return { data: null, error: insertError };
+
+  return { data: copy, error: null };
+}
+
+
 
 /**
  * Creates a new document for a user.

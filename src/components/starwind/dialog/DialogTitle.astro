@@ -2,13 +2,7 @@
 import type { HTMLAttributes } from "astro/types";
 import { tv } from "tailwind-variants";
 
-type Props = Omit<HTMLAttributes<"h2">, "id"> & {
-  /**
-   * The content to be rendered inside the dialog title
-   */
-
-  children: string;
-};
+type Props = Omit<HTMLAttributes<"h2">, "id">;
 
 export const dialogTitle = tv({
   base: "font-heading text-xl leading-none font-semibold tracking-tight",

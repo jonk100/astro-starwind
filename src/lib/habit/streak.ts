@@ -16,7 +16,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /** Milestone day counts that trigger a celebration banner. */
-export const STREAK_MILESTONES = [3, 5, 10, 20, 30, 50, 100] as const;
+export const STREAK_MILESTONES = [1, 2, 3, 5, 10, 20, 30, 50, 100] as const;
 export type StreakMilestone = (typeof STREAK_MILESTONES)[number];
 
 /**
@@ -196,7 +196,7 @@ export async function recalculateStreak(
   // ── 4. Determine whether this log extended an active streak ───────────────
   // Only celebrate if the user logged TODAY (not backdating).
   const today = todayUTC();
-  const streakExtended = currentStreak >= 2;
+  const streakExtended = currentStreak >= 1;
 
   // ── 5. Check for a milestone hit ──────────────────────────────────────────
   // We check if currentStreak exactly matches a milestone value.

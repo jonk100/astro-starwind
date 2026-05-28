@@ -1,0 +1,382 @@
+---
+import Popover from '@/components/starwind/popover/Popover.astro';
+import PopoverTrigger from '@/components/starwind/popover/PopoverTrigger.astro';
+import PopoverContent from '@/components/starwind/popover/PopoverContent.astro';
+
+import AlertDialog from '@/components/starwind/alert-dialog/AlertDialog.astro';
+import AlertDialogTrigger from '@/components/starwind/alert-dialog/AlertDialogTrigger.astro';
+import AlertDialogContent from '@/components/starwind/alert-dialog/AlertDialogContent.astro';
+import AlertDialogHeader from '@/components/starwind/alert-dialog/AlertDialogHeader.astro';
+import AlertDialogTitle from '@/components/starwind/alert-dialog/AlertDialogTitle.astro';
+import AlertDialogDescription from '@/components/starwind/alert-dialog/AlertDialogDescription.astro';
+import AlertDialogFooter from '@/components/starwind/alert-dialog/AlertDialogFooter.astro';
+import AlertDialogCancel from '@/components/starwind/alert-dialog/AlertDialogCancel.astro';
+import AlertDialogAction from '@/components/starwind/alert-dialog/AlertDialogAction.astro';
+
+import FolderPicker from '@/components/apps/write/sidebar/FolderTree/FolderPicker.astro';
+import { actions } from "astro:actions";
+
+interface Props {
+  type: "folder" | "document";
+  id: string;
+  name: string;
+  actions: string[];
+}
+
+const { type, id, name } = Astro.props;
+const enabled = new Set(Astro.props.actions);
+---
+
+<Popover>
+  <PopoverTrigger asChild>
+    <button class="action-trigger" aria-label="Actions">⋯</button>
+  </PopoverTrigger>
+
+  <PopoverContent class="action-menu">
+    <slot name="menu" />
+
+    {Astro.slots.menu ? null : (
+      <>
+        <!-- RENAME -->
+        {enabled.has("rename") && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button class="action-item">Rename</button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Rename {type}</AlertDialogTitle>
+                <AlertDialogDescription>Enter a new name.</AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <form id={`rename-${type}-form-${id}`} class="rename-form">
+                <input
+                  type="text"
+                  name="name"
+                  class="rename-input"
+                  value={name}
+                  required
+                />
+              </form>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-blue-600 text-white hover:bg-blue-700"
+                  data-action="rename"
+                  data-type={type}
+                  data-id={id}
+                >
+                  Save
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        <!-- DELETE -->
+        {enabled.has("delete") && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button class="action-item action-danger">Delete</button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this {type}?</AlertDialogTitle>
+                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-red-600 text-white hover:bg-red-700"
+                  data-action="delete"
+                  data-type={type}
+                  data-id={id}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        <!-- ARCHIVE -->
+        {enabled.has("archive") && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button class="action-item">Archive</button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Archive this {type}?</AlertDialogTitle>
+                <AlertDialogDescription>You can restore it later.</AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-blue-600 text-white hover:bg-blue-700"
+                  data-action="archive"
+                  data-type={type}
+                  data-id={id}
+                >
+                  Archive
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        <!-- UNARCHIVE -->
+        {enabled.has("unarchive") && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button class="action-item">Restore</button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Restore this {type}?</AlertDialogTitle>
+                <AlertDialogDescription>It will reappear in your sidebar.</AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-blue-600 text-white hover:bg-blue-700"
+                  data-action="unarchive"
+                  data-type={type}
+                  data-id={id}
+                >
+                  Restore
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        <!-- DUPLICATE -->
+        {enabled.has("duplicate") && type === "document" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button class="action-item">Duplicate</button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Duplicate this document?</AlertDialogTitle>
+                <AlertDialogDescription>A copy will be created.</AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-blue-600 text-white hover:bg-blue-700"
+                  data-action="duplicate"
+                  data-type="document"
+                  data-id={id}
+                >
+                  Duplicate
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        <!-- MOVE -->
+        {enabled.has("move") && type === "document" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button class="action-item">Move</button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Move document</AlertDialogTitle>
+                <AlertDialogDescription>Select a destination folder.</AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <FolderPicker documentId={id} />
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Close</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        <!-- NEW SUBFOLDER -->
+        {enabled.has("new-subfolder") && type === "folder" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button class="action-item">New subfolder</button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>New subfolder</AlertDialogTitle>
+                <AlertDialogDescription>Enter a name.</AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <form id={`new-subfolder-form-${id}`} class="rename-form">
+                <input type="text" name="name" class="rename-input" required />
+              </form>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-blue-600 text-white hover:bg-blue-700"
+                  data-action="new-subfolder"
+                  data-type="folder"
+                  data-id={id}
+                >
+                  Create
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </>
+    )}
+  </PopoverContent>
+</Popover>
+
+<style>
+  .action-trigger {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0;
+  }
+
+  .action-trigger:hover {
+    background: var(--color-surface-hover);
+  }
+
+  .action-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .action-item {
+    padding: 6px 10px;
+    text-align: left;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+  .action-item:hover {
+    background: var(--color-surface-hover);
+  }
+
+  .action-danger {
+    color: var(--color-danger);
+  }
+
+  .rename-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+  }
+</style>
+
+<script>
+  import { actions } from "astro:actions";
+
+  function initActionPopover() {
+    document.querySelectorAll("[data-action]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const action = btn.getAttribute("data-action");
+        const type = btn.getAttribute("data-type");
+        const id = btn.getAttribute("data-id");
+        if (!id) return;
+
+        // RENAME
+        if (action === "rename") {
+          const form = document.getElementById(`rename-${type}-form-${id}`) as HTMLFormElement | null;
+          if (!form) return;
+          const formData = new FormData(form);
+          const name = formData.get("name") as string | null;
+          if (!name) return;
+
+          if (type === "folder") {
+            await actions.write.updateFolder({ id, name });
+          } else {
+            await actions.write.updateDocument({ id, title: name });
+          }
+
+          window.location.reload();
+          return;
+        }
+
+        // DELETE
+        if (action === "delete") {
+          if (type === "folder") {
+            await actions.write.deleteFolder({ id });
+          } else {
+            await actions.write.deleteDocument({ id });
+          }
+          window.location.reload();
+          return;
+        }
+
+        // ARCHIVE
+        if (action === "archive") {
+          if (type === "folder") {
+            await actions.write.archiveFolder({ id });
+          } else {
+            await actions.write.archiveDocument({ id });
+          }
+          window.location.reload();
+          return;
+        }
+
+        // UNARCHIVE
+        if (action === "unarchive") {
+          if (type === "folder") {
+            await actions.write.unarchiveFolder({ id });
+          } else {
+            await actions.write.unarchiveDocument({ id });
+          }
+          window.location.reload();
+          return;
+        }
+
+        // DUPLICATE
+        if (action === "duplicate") {
+          await actions.write.duplicateDocument({ id });
+          window.location.reload();
+          return;
+        }
+
+        // NEW SUBFOLDER
+        if (action === "new-subfolder") {
+          const form = document.getElementById(`new-subfolder-form-${id}`) as HTMLFormElement | null;
+          if (!form) return;
+          const formData = new FormData(form);
+          const name = formData.get("name") as string | null;
+          if (!name) return;
+
+          await actions.write.createFolder({ name, parent_id: id });
+          window.location.reload();
+          return;
+        }
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initActionPopover);
+</script>

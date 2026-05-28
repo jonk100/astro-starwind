@@ -1,28 +1,35 @@
 ---
-const { activeDocumentId } = Astro.props;
+interface Props {
+  documentId: string | null;
+}
 
+const { documentId } = Astro.props;
 ---
-<!-- Left: App identity -->
-  <div class="toolbar--left">
-    <span class="toolbar--app-name">Write</span>
-  </div>
 
+<div class="toolbar-left">
+  <span class="app-name">Write</span>
+
+  {documentId && (
+    <div class="word-count">
+      <slot name="wordcount" />
+    </div>
+  )}
+</div>
 
 <style>
-  /* ── Left ── */
-  .toolbar--left {
+  .toolbar-left {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
+    gap: 12px;
   }
 
-  .toolbar--app-name {
-    font-size: 0.8125rem;
+  .app-name {
     font-weight: 600;
-    color: var(--color-text-muted);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    flex-shrink: 0;
+    font-size: 14px;
+  }
+
+  .word-count {
+    opacity: 0.7;
+    font-size: 12px;
   }
 </style>

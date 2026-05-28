@@ -1,0 +1,53 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/ListTools.astro
+ * @description List formatting tools (bullet list, ordered list, task list) for the TipTap editor.
+ */
+import ToolButton from "./ToolButton.astro";
+import { ButtonGroup } from "@/components/starwind/button-group";
+---
+<ButtonGroup aria-label="List type">
+  <ToolButton id="tb-bullet" ariaLabel="Bullet list" title="Bullet list">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>
+  </ToolButton>
+  <ToolButton id="tb-ordered" ariaLabel="Ordered list" title="Ordered list">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10H6"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </ToolButton>
+  <ToolButton id="tb-task" ariaLabel="Task list" title="Task list">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6" rx="1"/><polyline points="7 8 8 9 10 7"/><line x1="13" y1="8" x2="21" y2="8"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="13" y1="16" x2="21" y2="16"/></svg>
+  </ToolButton>
+</ButtonGroup>
+
+<script>
+  import { dispatch } from './toolbarUtils.ts';
+  import type { SelectionState } from './toolbarUtils.ts';
+
+  function initListTool(): void {
+    const listButtons = {
+      'tb-bullet':  'bulletList',
+      'tb-ordered': 'orderedList',
+      'tb-task':    'taskList',
+    };
+
+    // Bind click events to toggle lists
+    for (const [id, listType] of Object.entries(listButtons)) {
+      document.getElementById(id)?.addEventListener('click', () => {
+        dispatch('toggleList', { listType });
+      });
+    }
+
+    // Reflect selection active list node types
+    window.addEventListener('tiptop:selection-changed', (e: Event) => {
+      const state = (e as CustomEvent<SelectionState>).detail;
+      for (const [id, listType] of Object.entries(listButtons)) {
+        const btn = document.getElementById(id);
+        if (!btn) continue;
+        const isActive = state.nodeType === listType;
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        btn.classList.toggle('is-active', isActive);
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initListTool);
+</script>

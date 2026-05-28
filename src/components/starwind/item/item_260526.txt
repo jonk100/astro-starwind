@@ -1,0 +1,311 @@
+--- File: Item.astro ---
+---
+import type { HTMLTag, Polymorphic } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag }> & {
+  /**
+   * Variant of the item
+   * @default "default"
+   */
+  variant?: "default" | "outline" | "muted";
+  /**
+   * Size of the item
+   * @default "default"
+   */
+  size?: "default" | "sm";
+};
+
+export const item = tv({
+  base: [
+    "group/item flex flex-wrap items-center rounded-md border border-transparent text-sm transition-colors",
+    "[a]:hover:bg-accent/50 [a]:transition-colors",
+    "focus-visible:border-ring focus-visible:ring-outline/50 outline-none focus-visible:ring-[3px]",
+  ],
+  variants: {
+    variant: {
+      default: "bg-transparent",
+      outline: "border-border",
+      muted: "bg-muted/50",
+    },
+    size: {
+      default: "gap-4 p-4",
+      sm: "gap-2.5 px-4 py-3",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+    size: "default",
+  },
+});
+
+const {
+  variant = "default",
+  size = "default",
+  class: className,
+  as: Tag = "div",
+  ...rest
+} = Astro.props;
+---
+
+<Tag class={item({ variant, size, class: className })} data-slot="item" {...rest}>
+  <slot />
+</Tag>
+
+
+--- File: ItemActions.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"div">;
+
+export const itemActions = tv({
+  base: "flex items-center gap-2",
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class={itemActions({ class: className })} {...rest} data-slot="item-actions">
+  <slot />
+</div>
+
+
+--- File: ItemContent.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"div">;
+
+export const itemContent = tv({
+  base: "flex flex-1 flex-col gap-1.5 [&+[data-slot=item-content]]:flex-none",
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class={itemContent({ class: className })} {...rest} data-slot="item-content">
+  <slot />
+</div>
+
+
+--- File: ItemDescription.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"p">;
+
+export const itemDescription = tv({
+  base: [
+    "text-muted-foreground line-clamp-2 leading-snug font-normal text-balance",
+    "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
+  ],
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<p class={itemDescription({ class: className })} {...rest} data-slot="item-description">
+  <slot />
+</p>
+
+
+--- File: ItemFooter.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"div">;
+
+export const itemFooter = tv({
+  base: "flex basis-full items-center justify-between gap-2",
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class={itemFooter({ class: className })} {...rest} data-slot="item-footer">
+  <slot />
+</div>
+
+
+--- File: ItemGroup.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"div">;
+
+export const itemGroup = tv({
+  base: "group/item-group flex flex-col",
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div role="list" class={itemGroup({ class: className })} {...rest} data-slot="item-group">
+  <slot />
+</div>
+
+
+--- File: ItemHeader.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"div">;
+
+export const itemHeader = tv({
+  base: "flex basis-full items-center justify-between gap-2",
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class={itemHeader({ class: className })} {...rest} data-slot="item-header">
+  <slot />
+</div>
+
+
+--- File: ItemMedia.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"div"> & {
+  /**
+   * Variant of the item media
+   * @default "default"
+   */
+  variant?: "default" | "icon" | "image";
+};
+
+export const itemMedia = tv({
+  base: [
+    "flex shrink-0 items-center justify-center gap-2 [&_svg]:pointer-events-none",
+    "group-has-[[data-slot=item-description]]/item:translate-y-0.5 group-has-[[data-slot=item-description]]/item:self-start",
+  ],
+  variants: {
+    variant: {
+      default: "bg-transparent",
+      icon: "bg-muted size-8 rounded-sm border [&_svg:not([class*='size-'])]:size-4",
+      image: "size-10 overflow-hidden rounded-sm [&_img]:size-full [&_img]:object-cover",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+const { variant = "default", class: className, ...rest } = Astro.props;
+---
+
+<div
+  class={itemMedia({ variant, class: className })}
+  data-variant={variant}
+  {...rest}
+  data-slot="item-media"
+>
+  <slot />
+</div>
+
+
+--- File: ItemSeparator.astro ---
+---
+import type { ComponentProps } from "astro/types";
+import { tv } from "tailwind-variants";
+
+import { Separator } from "@/components/starwind/separator";
+
+type Props = ComponentProps<typeof Separator>;
+
+export const itemSeparator = tv({
+  base: "my-0",
+});
+
+const { class: className, orientation = "horizontal", ...rest } = Astro.props;
+---
+
+<Separator
+  orientation={orientation}
+  class={itemSeparator({ class: className })}
+  {...rest}
+  data-slot="item-separator"
+/>
+
+
+--- File: ItemTitle.astro ---
+---
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+type Props = HTMLAttributes<"div">;
+
+export const itemTitle = tv({
+  base: "flex w-fit items-center gap-2 leading-snug font-medium",
+});
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class={itemTitle({ class: className })} {...rest} data-slot="item-title">
+  <slot />
+</div>
+
+
+--- File: index.ts ---
+import Item, { item } from "./Item.astro";
+import ItemActions, { itemActions } from "./ItemActions.astro";
+import ItemContent, { itemContent } from "./ItemContent.astro";
+import ItemDescription, { itemDescription } from "./ItemDescription.astro";
+import ItemFooter, { itemFooter } from "./ItemFooter.astro";
+import ItemGroup, { itemGroup } from "./ItemGroup.astro";
+import ItemHeader, { itemHeader } from "./ItemHeader.astro";
+import ItemMedia, { itemMedia } from "./ItemMedia.astro";
+import ItemSeparator, { itemSeparator } from "./ItemSeparator.astro";
+import ItemTitle, { itemTitle } from "./ItemTitle.astro";
+
+const ItemVariants = {
+  item,
+  itemActions,
+  itemContent,
+  itemDescription,
+  itemFooter,
+  itemGroup,
+  itemHeader,
+  itemMedia,
+  itemSeparator,
+  itemTitle,
+};
+
+export {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemGroup,
+  ItemHeader,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+  ItemVariants,
+};
+
+export default {
+  Root: Item,
+  Actions: ItemActions,
+  Content: ItemContent,
+  Description: ItemDescription,
+  Footer: ItemFooter,
+  Group: ItemGroup,
+  Header: ItemHeader,
+  Media: ItemMedia,
+  Separator: ItemSeparator,
+  Title: ItemTitle,
+};
+
+

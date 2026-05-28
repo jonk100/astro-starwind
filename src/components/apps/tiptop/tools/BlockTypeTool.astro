@@ -1,0 +1,130 @@
+---
+/**
+ * @file src/components/apps/tiptop/ToolGroups/BlockTypeSelect.astro
+ * @description Block type selector (H1–H5, paragraph, quote, code block, lists)
+ * for the TipTop toolbar.
+ *
+ * Renders a ToolMenu dropdown of. When the
+ * user selects an item, dispatches a 'tiptop:command' event with command
+ * 'setBlockType'. Listens for 'tiptop:selection-changed' to keep the trigger
+ * label and active highlight in sync with the editor cursor position.
+ *
+ * Events dispatched:
+ *   'tiptop:command' — { command: 'setBlockType', attrs: { blockType: string } }
+ *
+ * Events consumed:
+ *   'tiptop:selection-changed' — { marks: string[], nodeType: string, attrs: Record<string, unknown> }
+ *
+ * Dependencies:
+ *   ToolMenu.astro     — details/summary dropdown shell
+ *   toolbarUtils.ts    — dispatch(), initDropdown(), setLabel()
+ *   tiptap.consts.ts   — BLOCK_TYPES
+ */
+import ToolMenu from "./ToolMenu.astro";
+import { BLOCK_TYPES } from '../tiptap.consts';
+---
+<ToolMenu
+  id="tb-block-type-details"
+  labelId="tb-block-type-label"
+  defaultLabel="¶ Para"
+  ariaLabel="Block type"
+>
+  {BLOCK_TYPES.map((block) => (
+    <div data-block-value={block.type} class="tb-block-item">
+      {block.label}
+    </div>
+  ))}
+</ToolMenu>
+
+<style>
+  .toolbar-menu--details {
+    position: relative;
+  }
+
+  .toolbar-menu--content {
+    position: fixed; /* ← try fixed instead of absolute temporarily */
+    top: auto;
+    z-index: 1000;
+  }
+</style>
+
+<script>
+  import { dispatch, initDropdown, setLabel } from './toolbarUtils.ts';
+  import type { SelectionState } from './toolbarUtils.ts';
+
+  // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  /**
+   * Derives the block-type key from a TipTop selection state payload.
+   *
+   * Headings are stored as nodeType 'heading' with the level in `attrs.level`,
+   * so they need to be normalised to the 'heading-N' key format used by
+   * BLOCK_TYPES and `data-block-value` attributes. All other node types map
+   * directly, defaulting to 'paragraph' if nodeType is absent.
+   *
+   * @param state - The SelectionState broadcast by TipTop.astro.
+   * @returns     A block-type key matching a `data-block-value` attribute in the DOM.
+   *
+   * @example
+   * // Editor cursor is inside an H2:
+   * getBlockValue({ nodeType: 'heading', attrs: { level: 2 }, marks: [] });
+   * // → 'heading-2'
+   */
+  function getBlockValue(state: SelectionState): string {
+    if (state.nodeType === 'heading') {
+      return `heading-${state.attrs.level ?? 1}`;
+    }
+    return state.nodeType ?? 'paragraph';
+  }
+
+  /**
+   * Synchronises the dropdown trigger label and item highlight with the
+   * currently active block type.
+   *
+   * Reads the label text directly from the matching DOM item's `textContent`
+   * so it stays in sync with whatever BLOCK_TYPES renders, without needing a
+   * separate label map.
+   *
+   * @param value - A block-type key matching a `data-block-value` attribute,
+   *                e.g. 'paragraph', 'heading-2', 'codeBlock'.
+   */
+  function syncDropdownState(value: string): void {
+    const activeItem = document.querySelector<HTMLElement>(
+      `#tb-block-type-details [data-block-value="${value}"]`
+    );
+    setLabel('tb-block-type-label', activeItem?.textContent?.trim() ?? value);
+
+    document
+      .querySelectorAll<HTMLElement>('#tb-block-type-details [data-block-value]')
+      .forEach(item => {
+        item.classList.toggle('is-active', item.dataset.blockValue === value);
+      });
+  }
+
+  // ─── Init ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Wires all interactivity for the block-type dropdown.
+   *
+   * - Delegates item selection to `initDropdown()`, which handles mousedown
+   *   focus prevention, click delegation, and closing the dropdown.
+   * - On selection: dispatches 'setBlockType' and calls `syncDropdownState`
+   *   immediately for optimistic UI (no need to wait for a selection-changed event).
+   * - On 'tiptop:selection-changed': calls `syncDropdownState` so the label
+   *   tracks the cursor when it moves inside the editor without a toolbar click.
+   */
+  function initBlockTypeTool(): void {
+    initDropdown('tb-block-type-details', '[data-block-value]', (item: HTMLElement) => {
+      const value = item.dataset.blockValue ?? 'paragraph';
+      dispatch('setBlockType', { blockType: value });
+      syncDropdownState(value);
+    });
+
+    window.addEventListener('tiptop:selection-changed', (e: Event) => {
+      const state = (e as CustomEvent<SelectionState>).detail;
+      syncDropdownState(getBlockValue(state));
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initBlockTypeTool);
+</script>

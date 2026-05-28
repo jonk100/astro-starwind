@@ -1,4 +1,10 @@
 ---
+/**
+ * @file src/components/apps/habit/EmptyTableState.astro
+ * @description Premium empty state display for the habit tracker, including
+ * a glassmorphic neuroscience quote generator.
+ */
+
 import HabitCreateForm from './HabitCreateForm.astro';
 
 interface Props {
@@ -6,12 +12,80 @@ interface Props {
 }
 
 const { user } = Astro.props;
+
+// Curated modern neuroscience & habit loop research quotes
+const HABIT_QUOTES = [
+  {
+    text: "Neurons that fire together, wire together. Consistency is the spark of neuroplasticity.",
+    author: "Donald Hebb",
+    field: "Neuroscience Pioneer"
+  },
+  {
+    text: "Habits are the compound interest of self-improvement. A tiny 1% improvement daily yields massive shifts over time.",
+    author: "James Clear",
+    field: "Behavioral Science Researcher"
+  },
+  {
+    text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+    author: "Will Durant",
+    field: "Philosopher & Historian"
+  },
+  {
+    text: "The seed of every habit is a single, tiny decision. As it is repeated, the roots grow and branches strengthen.",
+    author: "Atomic Habits",
+    field: "Behavioral Guide"
+  },
+  {
+    text: "If you focus on showing up consistently instead of the outcome, the habits will build themselves.",
+    author: "Dr. Wendy Wood",
+    field: "Psychology Researcher"
+  }
+];
+
+// Select a stable quote based on the current day of the year so it changes once daily
+const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+const dailyQuote = HABIT_QUOTES[dayOfYear % HABIT_QUOTES.length];
 ---
-<div class="flex flex-col items-center justify-center h-full text-center">
-  <div class="mb-4 text-5xl">🌱</div>
-  <h2 class="mb-2 text-xl font-semibold text-slate-700">No habits yet</h2>
-  <p class="text-sm text-slate-400">
-    Add your first habit using the + button below to start tracking your progress.
+
+<div class="flex flex-col items-center justify-center min-h-[50vh] text-center p-8 select-none relative overflow-hidden">
+  <!-- Subtle back ambient glow -->
+  <div class="absolute -top-12 -left-12 size-40 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+  <div class="absolute -bottom-12 -right-12 size-40 rounded-full bg-violet-500/10 blur-3xl pointer-events-none"></div>
+
+  <!-- Graphic and Prompt -->
+  <div class="mb-4 text-6xl animate-bounce-subtle">🌱</div>
+  <h2 class="mb-2 text-xl font-bold text-slate-700 tracking-tight">Begin Your Journey</h2>
+  <p class="max-w-md text-xs text-slate-400 font-medium leading-relaxed mb-8">
+    No habits created yet. Build long-term consistency by adding your first habit loop below.
   </p>
+
+  <!-- Premium Glassmorphic Quote Card -->
+  <div class="max-w-md w-full bg-white/70 backdrop-blur-md border border-slate-100 p-5 rounded-2xl shadow-sm text-left mb-8 transition-all duration-300 hover:shadow-md hover:border-slate-200">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-emerald-500 text-sm">🧠</span>
+      <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Daily Neuroplasticity Spark</span>
+    </div>
+    
+    <p class="text-xs italic text-slate-500 leading-relaxed font-medium">
+      "{dailyQuote.text}"
+    </p>
+    
+    <div class="flex items-center justify-between border-t border-slate-100/80 pt-3 mt-3">
+      <span class="text-[10px] font-bold text-slate-700">{dailyQuote.author}</span>
+      <span class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">{dailyQuote.field}</span>
+    </div>
+  </div>
+
   <HabitCreateForm user={user} />
 </div>
+
+<style>
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  
+  .animate-bounce-subtle {
+    animation: bounce-subtle 4s ease-in-out infinite;
+  }
+</style>

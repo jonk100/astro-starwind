@@ -32,8 +32,7 @@ export const homeFeatures = {
 			name: { title: "Growth", phrase: "Write your way to clarity" },
 			description:
 				"Journal your thoughts and experiences to gain deeper insights into your patterns and behaviors.",
-			// TODO: confirm final journal route; current tree suggests /app/write/pad
-			link: "/app/write/pad",
+			link: "/app/write",
 		},
 		{
 			word: { title: "Breathework", phrase: "Find stillness when you need it" },

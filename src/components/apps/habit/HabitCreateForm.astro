@@ -1,30 +1,23 @@
 ---
 /**
  * @file src/components/apps/habit/HabitCreateForm.astro
- * @description Slide-out sheet form for creating a new habit.
- *
- * Uses Starwind Sheet for the panel, Input for the name field,
- * RadioGroup for tracking type selection, and Spinner for loading state.
- *
- * On success, dispatches a custom 'habit:created' event so the page
- * can refresh the grid without a full reload.
+ * @description Slide-out sheet form for creating a new habit with dynamic visual options and minute presets cycler.
  */
 
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from '@/components/starwind/sheet';
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/starwind/dialog';
 import { Input } from '@/components/starwind/input';
 import { Label } from '@/components/starwind/label';
 import { RadioGroup, RadioGroupItem } from '@/components/starwind/radio-group';
 import { Spinner } from '@/components/starwind/spinner';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/starwind/tooltip';
 import Button from '@/components/starwind/button/Button.astro';
 import NewHabitButton from './Table/NewHabitButton.astro';
 
@@ -35,24 +28,24 @@ interface Props {
 const { user } = Astro.props;
 ---
 
-<Sheet>
-  <SheetTrigger asChild>
+<Dialog>
+  <DialogTrigger asChild>
     <NewHabitButton user={user} />
-  </SheetTrigger>
+  </DialogTrigger>
 
-  <SheetContent side="right">
-    <SheetHeader>
-      <SheetTitle>New Habit</SheetTitle>
-      <SheetDescription>
+  <DialogContent class="max-w-2xl w-full bg-slate-50 border border-slate-200 rounded-2xl shadow-2xl p-0 overflow-y-auto max-h-[90dvh]">
+    <DialogHeader class="bg-white px-6 py-5 border-b border-slate-200">
+      <DialogTitle class="font-bold text-slate-800 text-lg">New Habit</DialogTitle>
+      <DialogDescription class="text-xs text-slate-400">
         Add a habit to track. You can log it each day from the grid.
-      </SheetDescription>
-    </SheetHeader>
+      </DialogDescription>
+    </DialogHeader>
 
-    <form id="habit-create-form" class="flex flex-col gap-6 px-4 py-6">
+    <form id="habit-create-form" class="flex flex-col gap-6 px-6 py-6 bg-slate-50">
 
       <!-- Name -->
-      <div class="grid gap-2">
-        <Label for="habit-name">Habit name</Label>
+      <div class="grid gap-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <Label for="habit-name" class="font-semibold text-slate-700">Habit name</Label>
         <Input
           id="habit-name"
           name="name"
@@ -60,115 +53,400 @@ const { user } = Astro.props;
           required
           maxlength="100"
           placeholder="e.g. Morning meditation"
+          class="border-slate-200 rounded-lg text-sm"
         />
-        <p id="habit-name-error" class="hidden text-sm text-red-500"></p>
+        <p id="habit-name-error" class="hidden text-xs text-red-500 font-semibold"></p>
       </div>
 
-      <!-- Tracking type -->
-      <div class="grid gap-3">
-        <Label>Tracking type</Label>
+      <!-- Suggested Habits Premium Marquee Scroller -->
+      <div class="grid gap-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
+        <Label class="font-semibold text-[10px] uppercase tracking-wider text-slate-400">💡 Need an idea? Tap to auto-fill</Label>
+        
+        <div class="relative w-full overflow-hidden mt-1.5 py-1">
+          <div class="marquee-scroller flex gap-3.5 items-center select-none" id="habit-suggestions-marquee">
+            
+            <div class="suggestion-card shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 hover:scale-105 cursor-pointer transition-all duration-300 flex flex-col gap-1 w-[140px]" 
+                 data-name="Morning Meditation" data-type="duration" data-duration="10" data-theme="emerald">
+              <span class="text-lg">🧘</span>
+              <strong class="text-xs font-extrabold text-slate-700 leading-tight">Meditation</strong>
+              <span class="text-[9px] uppercase font-bold text-emerald-600">10 min • Focus</span>
+            </div>
+
+            <div class="suggestion-card shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-sky-50 hover:border-sky-200 hover:scale-105 cursor-pointer transition-all duration-300 flex flex-col gap-1 w-[140px]" 
+                 data-name="Hydration Target" data-type="count" data-count="8" data-unit="glasses" data-theme="sky">
+              <span class="text-lg">💧</span>
+              <strong class="text-xs font-extrabold text-slate-700 leading-tight">Hydrate 8x</strong>
+              <span class="text-[9px] uppercase font-bold text-sky-600">8 glasses • Flow</span>
+            </div>
+
+            <div class="suggestion-card shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 hover:scale-105 cursor-pointer transition-all duration-300 flex flex-col gap-1 w-[140px]" 
+                 data-name="Gym Workout" data-type="boolean" data-completions="1" data-theme="rose">
+              <span class="text-lg">🏋️</span>
+              <strong class="text-xs font-extrabold text-slate-700 leading-tight">Gym Session</strong>
+              <span class="text-[9px] uppercase font-bold text-rose-600">Workout • Energy</span>
+            </div>
+
+            <div class="suggestion-card shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-violet-50 hover:border-violet-200 hover:scale-105 cursor-pointer transition-all duration-300 flex flex-col gap-1 w-[140px]" 
+                 data-name="Read a Book" data-type="duration" data-duration="20" data-theme="violet">
+              <span class="text-lg">📖</span>
+              <strong class="text-xs font-extrabold text-slate-700 leading-tight">Deep Reading</strong>
+              <span class="text-[9px] uppercase font-bold text-violet-600">20 min • Wisdom</span>
+            </div>
+
+            <div class="suggestion-card shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-amber-50 hover:border-amber-200 hover:scale-105 cursor-pointer transition-all duration-300 flex flex-col gap-1 w-[140px]" 
+                 data-name="Gratitude Log" data-type="boolean" data-completions="1" data-theme="amber">
+              <span class="text-lg">✍️</span>
+              <strong class="text-xs font-extrabold text-slate-700 leading-tight">Gratitude</strong>
+              <span class="text-[9px] uppercase font-bold text-amber-600">Mindful • Vitality</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Color Theme selector -->
+      <div class="grid gap-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <Label class="font-semibold text-slate-700">Color Theme</Label>
+        <div class="flex items-center gap-3.5 mt-1" id="habit-color-selector">
+          <input type="hidden" name="themeId" id="habit-theme-input" value="emerald" />
+          <button type="button" class="color-bubble size-7 rounded-full border-2 border-slate-300 ring-offset-2 ring-emerald-500 transition-all bg-emerald-500 cursor-pointer is-active" data-theme-id="emerald" aria-label="Mindfulness (Emerald)" style="--tw-ring-color: #10b981;"></button>
+          <button type="button" class="color-bubble size-7 rounded-full border-2 border-slate-200 hover:border-slate-300 ring-offset-2 ring-rose-500 transition-all bg-rose-500 cursor-pointer" data-theme-id="rose" aria-label="Energy (Rose)" style="--tw-ring-color: #f43f5e;"></button>
+          <button type="button" class="color-bubble size-7 rounded-full border-2 border-slate-200 hover:border-slate-300 ring-offset-2 ring-violet-500 transition-all bg-violet-500 cursor-pointer" data-theme-id="violet" aria-label="Focus (Violet)" style="--tw-ring-color: #8b5cf6;"></button>
+          <button type="button" class="color-bubble size-7 rounded-full border-2 border-slate-200 hover:border-slate-300 ring-offset-2 ring-amber-500 transition-all bg-amber-500 cursor-pointer" data-theme-id="amber" aria-label="Vitality (Amber)" style="--tw-ring-color: #f59e0b;"></button>
+          <button type="button" class="color-bubble size-7 rounded-full border-2 border-slate-200 hover:border-slate-300 ring-offset-2 ring-sky-500 transition-all bg-sky-500 cursor-pointer" data-theme-id="sky" aria-label="Flow (Sky)" style="--tw-ring-color: #0ea5e9;"></button>
+          
+          <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+            <input type="color" id="habit-custom-color" class="size-7 rounded-full border border-slate-300 cursor-pointer p-0.5 overflow-hidden bg-transparent" title="Choose custom color" value="#10b981" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tracking type selection -->
+      <div class="grid gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <Label class="font-semibold text-slate-700">Tracking Mode</Label>
         <RadioGroup
           id="habit-tracking-type"
           name="tracking_type"
           defaultValue="boolean"
           legend="How do you want to track this habit?"
         >
-          <div class="flex items-start gap-3">
+          <div class="flex items-start gap-3 py-1 cursor-pointer">
             <RadioGroupItem
               id="type-boolean"
               value="boolean"
               name="tracking_type"
-              class="mt-0.5"
+              class="mt-1"
             />
             <div>
-              <Label for="type-boolean" class="font-medium">Boolean</Label>
-              <p class="text-sm text-muted-foreground">Did you do it? Simple yes or no.</p>
+              <Label for="type-boolean" class="font-semibold text-slate-700 cursor-pointer text-sm">Boolean (Done/Not Done)</Label>
+              <p class="text-xs text-slate-400 mt-0.5 leading-snug">Did you do it? Support multiple daily repetitions.</p>
             </div>
           </div>
 
-          <div class="flex items-start gap-3">
+          <div class="flex items-start gap-3 py-1 cursor-pointer border-t border-slate-50 pt-2.5">
             <RadioGroupItem
               id="type-count"
               value="count"
               name="tracking_type"
-              class="mt-0.5"
+              class="mt-1"
             />
             <div>
-              <Label for="type-count" class="font-medium">Count</Label>
-              <p class="text-sm text-muted-foreground">How many times? e.g. glasses of water.</p>
+              <Label for="type-count" class="font-semibold text-slate-700 cursor-pointer text-sm">Reps / Count</Label>
+              <p class="text-xs text-slate-400 mt-0.5 leading-snug">Track quantity like glasses of water or exercises.</p>
             </div>
           </div>
 
-          <div class="flex items-start gap-3">
+          <div class="flex items-start gap-3 py-1 cursor-pointer border-t border-slate-50 pt-2.5">
             <RadioGroupItem
               id="type-duration"
               value="duration"
               name="tracking_type"
-              class="mt-0.5"
+              class="mt-1"
             />
             <div>
-              <Label for="type-duration" class="font-medium">Duration</Label>
-              <p class="text-sm text-muted-foreground">How long? e.g. minutes of exercise.</p>
+              <Label for="type-duration" class="font-semibold text-slate-700 cursor-pointer text-sm">Duration (Timer)</Label>
+              <p class="text-xs text-slate-400 mt-0.5 leading-snug">Track minutes spent exercising or meditating.</p>
             </div>
           </div>
         </RadioGroup>
       </div>
 
+      <!-- Dynamic Custom Config: Boolean Multi Options -->
+      <div id="config-boolean-block" class="grid gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm transition-all duration-300">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Boolean Target Options</h4>
+        <div class="flex flex-col gap-2">
+          <Label for="max-completions" class="text-xs font-semibold text-slate-500">Target Repetitions per Day</Label>
+          <Input 
+            id="max-completions"
+            type="number" 
+            name="maxCompletions" 
+            value="1" 
+            min="1" 
+            max="20"
+            class="border-slate-200 rounded-lg text-xs w-24"
+          />
+          <span class="text-[10px] text-slate-400 font-medium">Tapping a grid cell will increment completed counts up to this maximum limit.</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Custom Config: Count Mode options -->
+      <div id="config-count-block" class="hidden grid gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm transition-all duration-300">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Count Options</h4>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name="countMode" value="target" checked class="cursor-pointer" /> Target Limit
+          </label>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name="countMode" value="open" class="cursor-pointer" /> Open Tally
+          </label>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3" id="count-target-inputs">
+          <div class="flex flex-col gap-1.5">
+            <Label for="count-target" class="text-[11px] font-semibold text-slate-500">Daily Target</Label>
+            <Input id="count-target" type="number" name="countTarget" value="8" min="1" class="border-slate-200 text-xs rounded-lg" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="count-unit" class="text-[11px] font-semibold text-slate-500">Unit (e.g. glasses)</Label>
+            <Input id="count-unit" type="text" name="countUnit" value="reps" placeholder="e.g. glasses" class="border-slate-200 text-xs rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Custom Config: Duration Mode options -->
+      <div id="config-duration-block" class="hidden grid gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm transition-all duration-300">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Duration Options</h4>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name="durationMode" value="countdown" checked class="cursor-pointer" /> Countdown Timer
+          </label>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name="durationMode" value="countup" class="cursor-pointer" /> Stopwatch (Count Up)
+          </label>
+        </div>
+        
+        <div class="flex flex-col gap-2" id="duration-target-inputs">
+          <Label for="duration-target" class="text-xs font-semibold text-slate-500">Target Duration (Minutes)</Label>
+          <div class="flex items-center gap-2">
+            <Input id="duration-target" type="number" name="durationTarget" value="1" min="1" class="border-slate-200 text-xs w-28 rounded-lg" />
+            <button
+              type="button"
+              id="duration-cycle-btn"
+              class="flex items-center justify-center size-8 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-100 transition-all cursor-pointer font-bold text-xs select-none"
+              aria-label="Cycle duration presets"
+            >
+              🔄
+            </button>
+            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cycle Preset</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Server error -->
-      <p id="habit-form-error" class="hidden rounded-md bg-red-50 px-3 py-2 text-sm text-red-600"></p>
+      <p id="habit-form-error" class="hidden rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 font-semibold"></p>
 
     </form>
 
-    <SheetFooter>
-      <SheetClose asChild>
+    <DialogFooter class="bg-white border-t border-slate-200 px-6 py-4 mt-auto rounded-b-2xl">
+      <DialogClose asChild>
         <Button variant="outline" id="habit-form-cancel">Cancel</Button>
-      </SheetClose>
-      <Button variant="default" id="habit-form-submit" type="button">
+      </DialogClose>
+      <Button variant="default" id="habit-form-submit" type="button" class="cursor-pointer">
         <span id="habit-submit-label">Create habit</span>
         <Spinner id="habit-submit-spinner" class="hidden size-4" />
       </Button>
-    </SheetFooter>
-  </SheetContent>
-</Sheet>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+<style>
+  .color-bubble.is-active {
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--tw-ring-color);
+    transform: scale(1.15);
+  }
+
+  /* Suggested marquee scrolling animations */
+  .marquee-scroller {
+    animation: marquee-scroll 12s linear infinite;
+  }
+  .marquee-scroller:hover {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-scroll {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-35%); }
+    100% { transform: translateX(0); }
+  }
+</style>
 
 <script>
   import { actions } from 'astro:actions';
+  import { toast } from '@/components/starwind/toast';
 
-  /**
-   * Returns the currently selected tracking_type value from the RadioGroup.
-   * Falls back to 'boolean' if nothing is selected.
-   *
-   * @returns {"boolean" | "count" | "duration"} The selected tracking type.
-   */
+  // Toggle reveal sections depending on selected tracking type
+  function toggleConfigBlocks() {
+    const checkedType = document.querySelector<HTMLInputElement>('input[name="tracking_type"]:checked')?.value;
+    const booleanBlock = document.getElementById('config-boolean-block');
+    const countBlock = document.getElementById('config-count-block');
+    const durationBlock = document.getElementById('config-duration-block');
+
+    booleanBlock?.classList.toggle('hidden', checkedType !== 'boolean');
+    countBlock?.classList.toggle('hidden', checkedType !== 'count');
+    durationBlock?.classList.toggle('hidden', checkedType !== 'duration');
+  }
+
+  // Toggle inputs internally for count targets
+  function toggleSubInputs() {
+    // Count Mode
+    const countMode = document.querySelector<HTMLInputElement>('input[name="countMode"]:checked')?.value;
+    const countTargetInputs = document.getElementById('count-target-inputs');
+    if (countTargetInputs) {
+      countTargetInputs.style.opacity = countMode === 'target' ? '1' : '0.5';
+    }
+
+    // Duration Mode
+    const durationMode = document.querySelector<HTMLInputElement>('input[name="durationMode"]:checked')?.value;
+    const durationTargetInputs = document.getElementById('duration-target-inputs');
+    if (durationTargetInputs) {
+      durationTargetInputs.style.opacity = durationMode === 'countdown' ? '1' : '0.5';
+    }
+  }
+
+  // Duration target preset cycler (1 -> 5 -> 10 -> 20 -> 1...)
+  const cycleBtn = document.getElementById('duration-cycle-btn');
+  const durationTargetInput = document.getElementById('duration-target') as HTMLInputElement;
+  const presets = [1, 5, 10, 20];
+  
+  cycleBtn?.addEventListener('click', () => {
+    const currentVal = parseInt(durationTargetInput.value || '1', 10);
+    let nextIndex = presets.indexOf(currentVal) + 1;
+    if (nextIndex >= presets.length || nextIndex === 0) {
+      nextIndex = 0;
+    }
+    durationTargetInput.value = String(presets[nextIndex]);
+  });
+
+  // Set listeners
+  document.querySelectorAll('input[name="tracking_type"]').forEach(input => {
+    input.addEventListener('change', toggleConfigBlocks);
+  });
+
+  document.querySelectorAll('input[name="countMode"], input[name="durationMode"]').forEach(input => {
+    input.addEventListener('change', toggleSubInputs);
+  });
+
+  // Color bubbles selector listener
+  document.querySelectorAll('#habit-color-selector .color-bubble').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#habit-color-selector .color-bubble').forEach(b => b.classList.remove('is-active', 'border-slate-300'));
+      btn.classList.add('is-active', 'border-slate-300');
+      const themeId = btn.getAttribute('data-theme-id')!;
+      const input = document.getElementById('habit-theme-input') as HTMLInputElement;
+      if (input) input.value = themeId;
+    });
+  });
+
+  // Custom Color Picker listener
+  const customColorInput = document.getElementById('habit-custom-color') as HTMLInputElement;
+  if (customColorInput) {
+    customColorInput.addEventListener('input', (e) => {
+      const hexColor = (e.target as HTMLInputElement).value;
+      const input = document.getElementById('habit-theme-input') as HTMLInputElement;
+      if (input) input.value = hexColor;
+      
+      // Remove active highlights from preset color bubbles
+      document.querySelectorAll('#habit-color-selector .color-bubble').forEach(b => {
+        b.classList.remove('is-active', 'border-slate-300');
+        b.classList.add('border-slate-200');
+      });
+    });
+  }
+
+  // Randomize preset color bubble on load
+  function randomizeColorOnLoad() {
+    const bubbles = document.querySelectorAll('#habit-color-selector .color-bubble');
+    if (bubbles.length > 0) {
+      const randomIndex = Math.floor(Math.random() * bubbles.length);
+      const selected = bubbles[randomIndex] as HTMLElement;
+      selected.click();
+    }
+  }
+
+  randomizeColorOnLoad();
+
+  // Suggested cards click auto-fill listener
+  document.querySelectorAll('.suggestion-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const name = card.getAttribute('data-name')!;
+      const trackingType = card.getAttribute('data-type')!;
+      const theme = card.getAttribute('data-theme')!;
+
+      // 1. Auto-fill name input
+      const nameInput = document.getElementById('habit-name') as HTMLInputElement;
+      if (nameInput) nameInput.value = name;
+
+      // 2. Select corresponding color bubble preset
+      const bubble = document.querySelector(`#habit-color-selector .color-bubble[data-theme-id="${theme}"]`) as HTMLElement;
+      if (bubble) {
+        bubble.click();
+      }
+
+      // 3. Select tracking type radio
+      const radio = document.querySelector(`input[name="tracking_type"][value="${trackingType}"]`) as HTMLInputElement;
+      if (radio) {
+        radio.click();
+      }
+
+      // 4. Populate type-specific configurations
+      if (trackingType === 'boolean') {
+        const comps = card.getAttribute('data-completions') || '1';
+        const maxInput = document.getElementById('max-completions') as HTMLInputElement;
+        if (maxInput) maxInput.value = comps;
+      } else if (trackingType === 'count') {
+        const count = card.getAttribute('data-count') || '8';
+        const unit = card.getAttribute('data-unit') || 'reps';
+        
+        const countTargetInput = document.getElementById('count-target') as HTMLInputElement;
+        if (countTargetInput) countTargetInput.value = count;
+        
+        const countUnitInput = document.getElementById('count-unit') as HTMLInputElement;
+        if (countUnitInput) countUnitInput.value = unit;
+      } else if (trackingType === 'duration') {
+        const dur = card.getAttribute('data-duration') || '10';
+        const durTargetInput = document.getElementById('duration-target') as HTMLInputElement;
+        if (durTargetInput) durTargetInput.value = dur;
+      }
+
+      // 5. Trigger UI updates
+      toggleConfigBlocks();
+      toggleSubInputs();
+      
+      toast.success(`Autofilled suggestion: "${name}"`, { description: "You can customize settings below!" });
+    });
+  });
+
   function getSelectedTrackingType(): "boolean" | "count" | "duration" {
-    const checked = document.querySelector<HTMLInputElement>(
-      'input[name="tracking_type"]:checked'
-    );
+    const checked = document.querySelector<HTMLInputElement>('input[name="tracking_type"]:checked');
     const value = checked?.value ?? 'boolean';
     if (value === 'count' || value === 'duration') return value;
     return 'boolean';
   }
 
-  /**
-   * Resets the form fields and clears any error messages.
-   */
   function resetForm() {
     const nameInput = document.getElementById('habit-name') as HTMLInputElement;
     const errorMsg = document.getElementById('habit-form-error') as HTMLElement;
     const nameError = document.getElementById('habit-name-error') as HTMLElement;
     const booleanRadio = document.getElementById('type-boolean') as HTMLInputElement;
+    const firstBubble = document.querySelector('#habit-color-selector .color-bubble') as HTMLElement;
 
     if (nameInput) nameInput.value = '';
     if (booleanRadio) booleanRadio.checked = true;
     if (errorMsg) { errorMsg.textContent = ''; errorMsg.classList.add('hidden'); }
     if (nameError) { nameError.textContent = ''; nameError.classList.add('hidden'); }
+    firstBubble?.click();
+    toggleConfigBlocks();
   }
 
-  /**
-   * Sets the submit button into loading or idle state.
-   *
-   * @param loading - Whether to show the loading state.
-   */
   function setLoading(loading: boolean) {
     const submitBtn = document.getElementById('habit-form-submit') as HTMLButtonElement;
     const label = document.getElementById('habit-submit-label') as HTMLElement;
@@ -187,13 +465,10 @@ const { user } = Astro.props;
     const errorMsg = document.getElementById('habit-form-error') as HTMLElement;
     const nameError = document.getElementById('habit-name-error') as HTMLElement;
 
-    // Clear previous errors
     errorMsg?.classList.add('hidden');
     nameError?.classList.add('hidden');
 
     const name = nameInput?.value.trim();
-
-    // Client-side validation
     if (!name) {
       if (nameError) {
         nameError.textContent = 'Habit name is required.';
@@ -205,9 +480,36 @@ const { user } = Astro.props;
 
     setLoading(true);
 
+    const themeInput = document.getElementById('habit-theme-input') as HTMLInputElement;
+    const themeId = themeInput?.value || 'emerald';
+
+    // Construct dynamic custom tracking metadata configuration payload!
+    const tracking_type = getSelectedTrackingType();
+    let config: Record<string, any> = { themeId };
+
+    if (tracking_type === 'boolean') {
+      const maxVal = parseInt((document.getElementById('max-completions') as HTMLInputElement)?.value || '1', 10);
+      config.maxCompletions = maxVal;
+      config.booleanMode = maxVal > 1 ? 'multi' : 'single';
+    } else if (tracking_type === 'count') {
+      const mode = document.querySelector<HTMLInputElement>('input[name="countMode"]:checked')?.value || 'target';
+      config.countMode = mode;
+      config.countUnit = (document.getElementById('count-unit') as HTMLInputElement)?.value || 'reps';
+      if (mode === 'target') {
+        config.countTarget = parseInt((document.getElementById('count-target') as HTMLInputElement)?.value || '8', 10);
+      }
+    } else if (tracking_type === 'duration') {
+      const mode = document.querySelector<HTMLInputElement>('input[name="durationMode"]:checked')?.value || 'countdown';
+      config.durationMode = mode;
+      if (mode === 'countdown') {
+        config.durationTarget = parseInt((document.getElementById('duration-target') as HTMLInputElement)?.value || '1', 10);
+      }
+    }
+
     const { data, error } = await actions.habit.create({
       name,
-      tracking_type: getSelectedTrackingType(),
+      tracking_type,
+      metadata: config
     });
 
     setLoading(false);
@@ -220,11 +522,12 @@ const { user } = Astro.props;
       return;
     }
 
-    // Success — close the sheet, reset the form, reload the grid
     document.getElementById('habit-form-cancel')?.click();
     resetForm();
-
-    // Reload the page to show the new habit in the grid
     window.location.reload();
   });
+
+  // Initial runs
+  toggleConfigBlocks();
+  toggleSubInputs();
 </script>

@@ -1,0 +1,103 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/EmojiTool.astro
+ * @description Emoji selection dropdown picker tool for the TipTap editor.
+ */
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownLabel,
+  DropdownSeparator,
+} from '@/components/starwind/dropdown';
+
+const EMOJIS = [
+  '😊', '😂', '🤣', '👍', '❤️', '🔥', 
+  '🎉', '💡', '🚀', '✨', '😢', '🤔', 
+  '👀', '👏', '🙌', '😎', '😭', '🍕'
+];
+---
+<Dropdown>
+  <DropdownTrigger
+    id="tb-emoji-trigger"
+    class="tb-btn"
+    aria-label="Insert emoji"
+    title="Insert emoji"
+  >
+    😊
+  </DropdownTrigger>
+  <DropdownContent side="bottom" align="center" class="tb-emoji-panel">
+    <DropdownLabel class="tb-emoji-title">Select Emoji</DropdownLabel>
+    <DropdownSeparator />
+    <div class="tb-emoji-grid">
+      {EMOJIS.map((emoji) => (
+        <button class="tb-emoji-item" data-emoji={emoji} type="button">
+          {emoji}
+        </button>
+      ))}
+    </div>
+  </DropdownContent>
+</Dropdown>
+
+<style>
+  .tb-emoji-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+    padding: 0.25rem 0.5rem;
+  }
+
+  .tb-emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.35rem;
+    padding: 0.5rem;
+    max-width: 240px;
+    background: var(--background);
+  }
+
+  .tb-emoji-item {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.1s;
+  }
+
+  .tb-emoji-item:hover {
+    background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.04));
+    transform: scale(1.15);
+  }
+</style>
+
+<script>
+  import { dispatch } from './toolbarUtils.ts';
+
+  function initEmojiTool(): void {
+    const trigger = document.getElementById('tb-emoji-trigger');
+    const panel = document.querySelector('.tb-emoji-panel') as HTMLElement | null;
+    if (!panel) return;
+
+    // Prevent trigger click from stealing editor focus
+    trigger?.addEventListener('mousedown', (e: MouseEvent) => {
+      e.preventDefault();
+    });
+
+    panel.addEventListener('click', (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest<HTMLElement>('[data-emoji]');
+      if (!target) return;
+      e.preventDefault();
+      const emoji = target.dataset.emoji ?? '😊';
+      dispatch('insertEmoji', { emoji });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initEmojiTool);
+</script>

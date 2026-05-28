@@ -1,0 +1,1157 @@
+---
+/**
+ * @file src/components/apps/tiptop/TipTop.astro
+ * @description TipTap-powered editor component for the Write app.
+ *
+ * Replaces EditorCanvas.astro. Wires TipTap directly into the existing
+ * XState machine and editorStore without changing either — the only new
+ * surface is the tiptap.ts translation layer.
+ *
+ * Data flow:
+ *   1. LOAD:  blocksToTipTap(activeBlocks) → editor.commands.setContent()
+ *   2. EDIT:  editor.onUpdate → tiptapToBlocks() → machine.send(BLOCKS_CHANGED)
+ *   3. TITLE: title input → machine.send(TITLE_CHANGED) + updateTitle()
+ *   4. SAVE:  XState machine → actions.write.saveBlocks (Block[] format, unchanged)
+ *
+ * The `documentId` and `title` props are used to seed the XState machine
+ * on first mount. If no documentId is provided (empty state), the editor
+ * renders a placeholder and disables saving.
+ *
+ * Toolbar integration:
+ *   Two separate bridges handle toolbar events:
+ *
+ *   - initNewToolbarBridge  — listens for `tiptop:command` dispatched by
+ *     TipTopToolbar.astro (the current Starwind-based toolbar).
+ *
+ *   - initLegacyToolbarBridge — listens for `editor:set-block-type`
+ *     dispatched by the old BlockToolbar (kept so legacy toolbar still works
+ *     during migration).
+ *
+ *   Selection state is broadcast back to the toolbar via
+ *   `tiptop:selection-changed` on every cursor move / transaction, so that
+ *   the toolbar can reflect the active block type and marks correctly.
+ *
+ *   Focus / selection:
+ *   Clicking a Starwind Dropdown item steals focus from the editor before
+ *   the command event fires. To work around this, `initTipTop` tracks the
+ *   last known selection in `savedSelection` via an `onBlur` hook. The
+ *   `getSavedSelection` getter is passed into `initNewToolbarBridge`, which
+ *   restores the cursor position before executing any command so that block-
+ *   type changes apply to the correct location even when focus has moved.
+ */
+import EmptyCanvas from "../write/editor/editorCanvas/EmptyCanvas.astro";
+import GutterWidgets from "./tools/GutterWidgets.astro";
+import TipTopToolbar from "./TipTopToolbar.astro";
+
+interface Props {
+  /** The UUID of the currently open document, or empty string if none. */
+  documentId: string;
+  /** The current document title. */
+  title: string;
+  isArchived?: boolean;
+  isPinned?: boolean;
+  user?: any;
+}
+
+import './TipTop.css';
+// import '../write/editor/editorCanvas.css';
+
+const { documentId, title, isArchived = false, isPinned = false, user } = Astro.props;
+---
+{!documentId ? (
+  <EmptyCanvas />
+) : (
+  <div class="tiptop-shell" data-document-id={documentId} data-title={title}>
+    <TipTopToolbar
+      activeDocumentId={documentId}
+      activeDocumentTitle={title}
+      isArchived={isArchived}
+      isPinned={isPinned}
+      user={user}
+    />
+    <!-- Title -->
+    <div
+      id="tiptop-title"
+      class="tiptop-title"
+      contenteditable={documentId ? "true" : "false"}
+      data-placeholder="Untitled"
+      aria-label="Document title"
+      role="textbox"
+      aria-multiline="false"
+      spellcheck="false"
+    >{title}</div>
+
+    <!-- Body: TipTap mounts here -->
+    <div id="tiptop-editor" class="tiptop-editor" aria-label="Document body"></div>
+
+    <!-- Left Gutter Hints -->
+    <div class="tiptop-gutter-panel tb-gutter--left" id="tiptop-left-hints" aria-hidden="true">
+      <div class="ms-title">⌨️ Left Gutter</div>
+      <div class="ms-item" id="ms-ctrl-num">
+        <kbd>Ctrl</kbd>+<kbd>1-0</kbd> <span class="ms-desc">Toolbar tools</span>
+      </div>
+      <div class="ms-item" id="ms-format">
+        <kbd>Ctrl</kbd>+<kbd>B/I/U</kbd> <span class="ms-desc">Format text</span>
+      </div>
+      <div class="ms-item" id="ms-heading">
+        <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1-5</kbd> <span class="ms-desc">Headings 1-5</span>
+      </div>
+      <div class="ms-item" id="ms-cycle-block">
+        <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Space</kbd> <span class="ms-desc">Cycle blocks</span>
+      </div>
+      <div class="ms-item" id="ms-soft-break">
+        <kbd>⇧Enter</kbd> <span class="ms-desc">Soft break</span>
+      </div>
+    </div>
+
+    <!-- Right Gutter Hints -->
+    <div class="tiptop-gutter-panel tb-gutter--right" id="tiptop-right-hints" aria-hidden="true">
+      <div class="ms-title">⌨️ Right Gutter</div>
+      <div class="ms-item" id="ms-tab">
+        <kbd>Tab</kbd>/<kbd>⇧Tab</kbd> <span class="ms-desc">Indent list</span>
+      </div>
+      <div class="ms-item" id="ms-ctrl-arrow">
+        <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>↑/↓</kbd> <span class="ms-desc">Reorder block</span>
+      </div>
+      <div class="ms-item" id="ms-backspace">
+        <kbd>⌫ Back</kbd> <span class="ms-desc">Delete block</span>
+      </div>
+    </div>
+
+    <!-- Word count footer -->
+    {documentId && (
+      <div class="tiptop-footer">
+        <span id="tiptop-word-count" class="tiptop-word-count">0 words</span>
+      </div>
+    )}
+
+    <!-- Gutter Widgets (Habits, Newsletter & Creative Lab Prompts) -->
+    <GutterWidgets />
+  </div>
+)}
+
+<script>
+  import { Editor } from '@tiptap/core';
+  import StarterKit from '@tiptap/starter-kit';
+  import { ListKit } from '@tiptap/extension-list';
+  import { Placeholder } from '@tiptap/extensions';
+  import FontFamily from '@tiptap/extension-font-family';
+  import Color     from '@tiptap/extension-color';
+  import FontSize  from '@tiptap/extension-font-size';
+  import TextAlign from '@tiptap/extension-text-align';
+  import Typography from '@tiptap/extension-typography';
+  import { TextStyle } from '@tiptap/extension-text-style';
+  import Heading from '@tiptap/extension-heading';
+  import Highlight from '@tiptap/extension-highlight';
+  import { TabExtension } from '@/lib/journal/tiptapExtensions';
+
+  import { createActor } from 'xstate';
+  import { TextSelection } from '@tiptap/pm/state';
+  import { editorMachine } from '@/components/apps/write/state/editorMachine';
+  import { setActiveDocument, updateTitle } from '@/stores/editor';
+  import { tiptapToBlocks, blocksToTipTap } from '@/lib/journal/tiptap';
+  import type { Block } from '@/lib/journal/types';
+
+  // ─── Types ────────────────────────────────────────────────────────────────
+
+  /**
+   * Payload carried by the `tiptop:command` CustomEvent dispatched by
+   * TipTopToolbar.astro.
+   */
+  interface TipTopCommandDetail {
+    command: string;
+    attrs?: Record<string, unknown>;
+  }
+
+  /**
+   * Payload carried by the `tiptop:selection-changed` CustomEvent broadcast
+   * by this component so the toolbar can reflect active state.
+   *
+   * @property marks    - Names of active inline marks at the cursor
+   *                      (e.g. ['bold', 'italic']).
+   * @property nodeType - ProseMirror node type name of the block containing
+   *                      the cursor (e.g. 'heading', 'paragraph', 'codeBlock').
+   * @property attrs    - Attributes of that node (e.g. { level: 2 } for
+   *                      a heading).
+   */
+  interface SelectionChangedDetail {
+    marks: string[];
+    nodeType: string;
+    attrs: Record<string, unknown>;
+  }
+
+  /**
+   * A saved cursor / selection range from ProseMirror.
+   * Captured on editor blur so it can be restored before toolbar commands run.
+   */
+  interface SavedSelection {
+    from: number;
+    to: number;
+  }
+
+  // ─── Initialization ───────────────────────────────────────────────────────
+
+  /**
+   * Bootstraps the TipTap editor and wires it to the XState machine.
+   *
+   * Reads `documentId` and initial blocks from the DOM (injected by the
+   * Astro page into a script tag to avoid SSR import issues). Starts the
+   * XState machine actor, then creates the TipTap editor instance.
+   */
+  function initTipTop(): void {
+    const shell = document.querySelector<HTMLElement>('.tiptop-shell');
+    if (!shell) return;
+
+    const documentId = shell.dataset.documentId ?? '';
+    const title      = shell.dataset.title ?? '';
+    const titleEl = document.getElementById('tiptop-title') as HTMLElement | null;
+
+    // Auto-focus title on new notes (when title is empty)
+    if (documentId && !title && titleEl) {
+      titleEl.focus();
+      // Select all to make it clear the field is ready for input
+      const range = document.createRange();
+      range.selectNodeContents(titleEl);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(range);
+    }
+
+    // Blocks are injected by index.astro as JSON in a <script id="tiptap-content"> tag.
+    const blocksEl    = document.getElementById('tiptap-content');
+    let initialBlocks: Block[] = [];
+
+    if (blocksEl?.textContent) {
+      try {
+        const parsed = JSON.parse(blocksEl.textContent);
+        if (Array.isArray(parsed)) {
+          initialBlocks = parsed as Block[];
+        }
+      } catch (e) {
+        console.error('[TipTop] Failed to parse initial blocks:', e);
+      }
+    }
+
+    // ── Seed editorStore ─────────────────────────────────────────────────────
+    // Keeps nanostores-based computed values (wordCount, preview) in sync
+    // from the very first render.
+    if (documentId) {
+      setActiveDocument(documentId, title, initialBlocks);
+    }
+
+    // ── Start XState machine ──────────────────────────────────────────────────
+    // The machine manages debounced autosave. It expects the same context
+    // shape as before — no changes needed to editorMachine.ts.
+    const machine = documentId
+      ? createActor(editorMachine, {
+          input: {
+            documentId,
+            title,
+            blocks: initialBlocks,
+          },
+        })
+      : null;
+
+    machine?.start();
+
+    // ── Create TipTap editor ──────────────────────────────────────────────────
+    const editorEl = document.getElementById('tiptop-editor');
+    if (!editorEl) return;
+
+    /**
+     * Tracks the last known ProseMirror selection before the editor loses
+     * focus. Populated by the `onBlur` hook below and consumed by
+     * `initNewToolbarBridge` so that toolbar commands (which fire after a
+     * Starwind Dropdown steals focus) still apply at the right position.
+     */
+    let savedSelection: SavedSelection | null = null;
+
+    /**
+     * Returns the saved selection so it can be read inside the bridge
+     * without the bridge holding a direct mutable reference.
+     *
+     * @returns The most recently saved { from, to } range, or null.
+     */
+    function getSavedSelection(): SavedSelection | null {
+      return savedSelection;
+    }
+
+    /**
+     * Convert the stored Block[] into TipTap's JSON format so existing
+     * content appears correctly on load.
+     */
+    const initialContent = blocksToTipTap(initialBlocks);
+
+    const editor = new Editor({
+      element: editorEl,
+
+      extensions: [
+        StarterKit.configure({
+          heading: false, // disable StarterKit's version
+        }),
+        ListKit,
+        TabExtension,
+        FontFamily,
+        Color,
+        Heading.configure({
+          levels: [1, 2, 3, 4, 5],
+        }),
+        Highlight.configure({
+          multicolor: true,
+        }),
+        FontSize,
+        TextAlign,
+        Typography,
+        TextStyle,
+        Placeholder.configure({
+          placeholder: 'Write something…',
+        }),
+      ],
+
+      content: initialContent,
+
+      editable: Boolean(documentId),
+
+      /**
+       * Called on every content change (keystroke, paste, format, etc.).
+       *
+       * Converts TipTap JSON → Block[], sends BLOCKS_CHANGED to the XState
+       * machine so the existing debounced autosave cycle runs, and keeps
+       * the editorStore nanostores in sync.
+       */
+      onUpdate({ editor }) {
+        if (!machine) return;
+
+        const doc    = editor.getJSON() as Parameters<typeof tiptapToBlocks>[0];
+        const blocks = tiptapToBlocks(doc);
+
+        machine.send({ type: 'BLOCKS_CHANGED', blocks });
+
+        // Dynamically import to avoid a circular-dep at startup.
+        import('@/stores/editor').then(({ updateBlocks }) => {
+          updateBlocks(blocks);
+        });
+
+        // Dispatch event for writing prompts game
+        window.dispatchEvent(new CustomEvent('tiptop:content-changed', {
+          detail: { text: editor.getText() }
+        }));
+
+        updateWordCount(editor.getText());
+      },
+
+      /**
+       * Called whenever the cursor moves or the selection changes.
+       *
+       * Broadcasts `tiptop:selection-changed` so TipTopToolbar.astro can
+       * update its active-state indicators (bold button, block-type label,
+       * etc.) without polling the editor.
+       */
+      onSelectionUpdate({ editor }) {
+        broadcastSelectionState(editor);
+      },
+
+      /**
+       * Called after every transaction (content *and* selection changes).
+       *
+       * We also broadcast here so that programmatic commands (e.g. clicking
+       * "Bold") immediately reflect in the toolbar, not just on cursor moves.
+       */
+      onTransaction({ editor }) {
+        broadcastSelectionState(editor);
+      },
+
+      /**
+       * Saves the current selection range whenever the editor loses focus.
+       *
+       * This is the key half of the focus-loss workaround: when a Starwind
+       * Dropdown item is clicked the editor blurs before the command event
+       * fires, so we capture the position here and restore it inside
+       * `initNewToolbarBridge` before running the command.
+       */
+      onBlur({ editor }) {
+        const { from, to } = editor.state.selection;
+        savedSelection = { from, to };
+      },
+    });
+
+    // ── Initial word count ────────────────────────────────────────────────────
+    // onUpdate only fires after the first keystroke, so we seed the display
+    // here in case the document already has content on load.
+    updateWordCount(editor.getText());
+
+    // ── Auto-focus title if it is a new note ──
+    if (!title || title.trim() === '' || title === 'Untitled') {
+      const titleEl = document.getElementById('tiptop-title');
+      if (titleEl) {
+        titleEl.focus();
+        // Select all placeholder text for quick overwriting
+        const range = document.createRange();
+        range.selectNodeContents(titleEl);
+        const sel = window.getSelection();
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+    }
+
+    // ── Title field ───────────────────────────────────────────────────────────
+    initTitleField(machine);
+
+    // ── Toolbar bridges ───────────────────────────────────────────────────────
+    if (documentId) {
+      // Current Starwind-based toolbar (TipTopToolbar.astro).
+      // getSavedSelection is passed so the bridge can restore cursor position
+      // after a dropdown click steals focus from the editor.
+      initNewToolbarBridge(editor, getSavedSelection);
+
+      // Legacy BlockToolbar — kept during migration so the old toolbar still works.
+      initLegacyToolbarBridge(editor);
+    }
+
+    // ── Typewriter Centering on Enter ─────────────────────────────────────────
+    editorEl?.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        // A. Convert ``` + Enter into a code block
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
+        const parentText = $from.parent.textContent;
+        if ($from.parent.type.name === 'paragraph' && parentText === '```') {
+          e.preventDefault();
+          e.stopPropagation();
+          editor.chain().focus().selectParentNode().deleteSelection().toggleCodeBlock().run();
+          return;
+        }
+
+        setTimeout(() => {
+          const selection = window.getSelection();
+          if (!selection || selection.rangeCount === 0) return;
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          const container = document.getElementById('write-canvas-wrapper');
+          if (container) {
+            const viewportCenter = window.innerHeight / 2;
+            const offset = rect.top - viewportCenter;
+            container.scrollTo({
+              top: container.scrollTop + offset,
+              behavior: 'smooth'
+            });
+          }
+        }, 30);
+      }
+    });
+
+    // ── Focus Restoration ─────────────────────────────────────────────────────
+    window.addEventListener('tiptop:restore-focus', () => {
+      const saved = getSavedSelection();
+      if (saved) {
+        editor.chain().focus().setTextSelection({ from: saved.from, to: saved.to }).run();
+      } else {
+        editor.commands.focus();
+      }
+    });
+
+    // ── Global Ctrl + Win keyboard shortcuts ──────────────────────────────────
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      // If a dropdown menu is open, let the dropdown keydown listener handle it exclusively!
+      const openDetails = document.querySelector('#tiptop-toolbar details[open]') as HTMLDetailsElement | null;
+      const emojiPanel = document.querySelector('.tb-emoji-panel') as HTMLElement | null;
+      const isEmojiOpen = emojiPanel && emojiPanel.getAttribute('data-state') === 'open';
+      if (openDetails || isEmojiOpen) return;
+
+      // Both Ctrl and Windows key (metaKey) must be active
+      const isCtrlWin = e.ctrlKey && e.metaKey;
+
+      if (isCtrlWin) {
+        const key = e.key.toLowerCase();
+
+        // 1. Move block: Ctrl + Win + ArrowUp/ArrowDown
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          e.stopPropagation();
+          const direction = e.key === 'ArrowUp' ? 'up' : 'down';
+          moveCurrentBlock(editor, direction);
+          return;
+        }
+
+        // 2. Cycle block types: Ctrl + Win + Space
+        if (e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          e.stopPropagation();
+          cycleBlockType(editor);
+          return;
+        }
+
+        // 3. New note: Ctrl + Win + N
+        if (key === 'n') {
+          e.preventDefault();
+          e.stopPropagation();
+          const btn = document.getElementById("new-document-btn");
+          if (btn) btn.click();
+          return;
+        }
+
+        // 4. Search notes: Ctrl + Win + F
+        if (key === 'f') {
+          e.preventDefault();
+          e.stopPropagation();
+          const input = document.getElementById("sidebar-search-input") as HTMLInputElement | null;
+          if (input) {
+            input.focus();
+            input.select();
+          }
+          return;
+        }
+
+        // 5. Move note to folder: Ctrl + Win + M
+        if (key === 'm') {
+          e.preventDefault();
+          e.stopPropagation();
+          const toolbarRight = document.querySelector('.toolbar-right');
+          if (toolbarRight) {
+            const buttons = Array.from(toolbarRight.querySelectorAll('button.action-item')) as HTMLButtonElement[];
+            const moveBtn = buttons.find(btn => btn.textContent?.trim() === 'Move');
+            if (moveBtn) moveBtn.click();
+          }
+          return;
+        }
+
+        // 6. Pin note: Ctrl + Win + P
+        if (key === 'p') {
+          e.preventDefault();
+          e.stopPropagation();
+          const pinBtn = document.getElementById("toolbar--pin-button");
+          if (pinBtn) pinBtn.click();
+          return;
+        }
+
+        // 7. Toggle writing prompts panel: Ctrl + Win + Q
+        if (key === 'q') {
+          e.preventDefault();
+          e.stopPropagation();
+          const btn = document.getElementById("tb-prompts");
+          if (btn) btn.click();
+          return;
+        }
+      }
+    });
+
+    // ── Cleanup ───────────────────────────────────────────────────────────────
+    window.addEventListener('beforeunload', () => {
+      editor.destroy();
+      machine?.stop();
+    });
+  }
+
+  /**
+   * Moves the direct child block containing the cursor up or down in ProseMirror.
+   *
+   * @param editor    - The active TipTap Editor instance.
+   * @param direction - 'up' or 'down'
+   */
+  function moveCurrentBlock(editor: Editor, direction: 'up' | 'down'): void {
+    const { state, view } = editor;
+    const { selection, doc } = state;
+    const { $from } = selection;
+
+    // Direct child index in doc node
+    const index = $from.index(0);
+
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === doc.childCount - 1) return;
+
+    // Calculate start and end positions of the current block
+    let startPos = 0;
+    for (let i = 0; i < index; i++) {
+      startPos += doc.child(i).nodeSize;
+    }
+    const node = doc.child(index);
+    const endPos = startPos + node.nodeSize;
+
+    const tr = state.tr;
+    const cursorOffset = selection.anchor - startPos;
+
+    if (direction === 'up') {
+      const prevNodeSize = doc.child(index - 1).nodeSize;
+      tr.delete(startPos, endPos);
+      tr.insert(startPos - prevNodeSize, node);
+      
+      const newStart = startPos - prevNodeSize;
+      const clampedCursor = Math.max(0, Math.min(tr.doc.content.size, newStart + cursorOffset));
+      tr.setSelection(TextSelection.create(tr.doc, clampedCursor));
+    } else {
+      const nextNodeSize = doc.child(index + 1).nodeSize;
+      tr.delete(startPos, endPos);
+      tr.insert(startPos + nextNodeSize, node);
+      
+      const newStart = startPos + nextNodeSize;
+      const clampedCursor = Math.max(0, Math.min(tr.doc.content.size, newStart + cursorOffset));
+      tr.setSelection(TextSelection.create(tr.doc, clampedCursor));
+    }
+
+    view.dispatch(tr);
+  }
+
+  /**
+   * Cycles the active block type sequentially.
+   *
+   * @param editor - The active TipTap Editor instance.
+   */
+  function cycleBlockType(editor: Editor): void {
+    const { state } = editor;
+    const { selection } = state;
+    const node = selection.$anchor.parent;
+    let currentType = node.type.name;
+    if (currentType === 'heading') {
+      currentType = `heading-${node.attrs.level ?? 1}`;
+    }
+
+    const list = [
+      'paragraph', 
+      'heading-1', 
+      'heading-2', 
+      'heading-3', 
+      'heading-4', 
+      'heading-5', 
+      'blockquote', 
+      'codeBlock', 
+      'bulletList', 
+      'orderedList', 
+      'taskList'
+    ];
+    const idx = list.indexOf(currentType);
+    const nextIdx = (idx + 1) % list.length;
+    const targetType = list[nextIdx];
+
+    if (editor.isActive('blockquote')) {
+      editor.chain().focus().lift('blockquote').run();
+    }
+
+    const chain = editor.chain().focus();
+    switch (targetType) {
+      case 'paragraph':
+        chain.setParagraph().run();
+        break;
+      case 'heading-1':
+        chain.setHeading({ level: 1 }).run();
+        break;
+      case 'heading-2':
+        chain.setHeading({ level: 2 }).run();
+        break;
+      case 'heading-3':
+        chain.setHeading({ level: 3 }).run();
+        break;
+      case 'heading-4':
+        chain.setHeading({ level: 4 }).run();
+        break;
+      case 'heading-5':
+        chain.setHeading({ level: 5 }).run();
+        break;
+      case 'blockquote':
+        chain.toggleBlockquote().run();
+        break;
+      case 'codeBlock':
+        chain.toggleCodeBlock().run();
+        break;
+      case 'bulletList':
+        chain.toggleBulletList().run();
+        break;
+      case 'orderedList':
+        chain.toggleOrderedList().run();
+        break;
+      case 'taskList':
+        chain.toggleTaskList().run();
+        break;
+    }
+  }
+
+  // ─── Selection broadcast ──────────────────────────────────────────────────
+
+  /**
+   * Reads the current cursor position from a TipTap editor and dispatches
+   * a `tiptop:selection-changed` event on `window` for the toolbar to consume.
+   *
+   * @param editor - The live TipTap Editor instance.
+   */
+  function broadcastSelectionState(editor: Editor): void {
+    const { state }    = editor;
+    const { selection } = state;
+
+    // The parent node of the anchor position tells us the current block type.
+    const node     = selection.$anchor.parent;
+    const nodeType = node.type.name;
+    const attrs    = { ...node.attrs } as Record<string, unknown>;
+
+    // Collect the names of every active inline mark at the cursor.
+    // editor.isActive() is the simplest way to interrogate each mark.
+    const INLINE_MARKS = ['bold', 'italic', 'underline', 'strike', 'code'] as const;
+    const marks = INLINE_MARKS.filter((mark) => editor.isActive(mark));
+
+    // Also surface text-style sub-attributes so the toolbar colour pickers
+    // can reflect the current values (they're stored as TextStyle attributes,
+    // not as standalone marks).
+    const textStyleAttrs = editor.getAttributes('textStyle') as Record<string, unknown>;
+    if (textStyleAttrs.color)           attrs.color           = textStyleAttrs.color;
+    if (textStyleAttrs.backgroundColor) attrs.backgroundColor = textStyleAttrs.backgroundColor;
+    if (textStyleAttrs.fontFamily)      attrs.fontFamily      = textStyleAttrs.fontFamily;
+    if (textStyleAttrs.fontSize)        attrs.fontSize        = textStyleAttrs.fontSize;
+
+    const detail: SelectionChangedDetail = { marks, nodeType, attrs };
+
+    window.dispatchEvent(
+      new CustomEvent<SelectionChangedDetail>('tiptop:selection-changed', { detail })
+    );
+  }
+
+  // ─── New toolbar bridge ───────────────────────────────────────────────────
+
+  /**
+   * Bridges `tiptop:command` events (dispatched by TipTopToolbar.astro) to
+   * TipTap chain commands.
+   *
+   * Before executing any command, the bridge checks whether the editor has
+   * lost focus (e.g. because a Starwind Dropdown stole it) and if so,
+   * restores the saved selection so the command applies at the correct position.
+   *
+   * Commands that require an extension that is currently commented out will
+   * log a warning so silent no-ops are easy to spot during development.
+   *
+   * @param editor           - The live TipTap Editor instance.
+   * @param getSavedSelection - Returns the last selection captured on blur,
+   *                           or null if the editor has not yet been blurred.
+   */
+  function initNewToolbarBridge(
+    editor: Editor,
+    getSavedSelection: () => SavedSelection | null
+  ): void {
+    window.addEventListener('tiptop:command', (e: Event) => {
+      const detail  = (e as CustomEvent<TipTopCommandDetail>).detail;
+      const command = detail.command;
+      const attrs   = detail.attrs;
+
+      console.log('[bridge] command received:', command, attrs);
+      console.log('[bridge] editor.isFocused:', editor.isFocused, '| savedSelection:', getSavedSelection());
+
+      // Defer by one frame so Starwind's closeDropdown() requestAnimationFrame
+      // (which re-focuses the trigger button) fires before we restore the
+      // editor selection and run the command.
+      console.log('[bridge] RAW event received');
+      requestAnimationFrame(() => {
+        try {
+          console.log('[TipTop] rAF fired, command:', command);
+
+          // Restore selection if the editor lost focus to the toolbar dropdown.
+          if (!editor.isFocused) {
+            const saved = getSavedSelection();
+            if (saved) {
+              editor.commands.setTextSelection({ from: saved.from, to: saved.to });
+            }
+          }
+
+          // Build the chain after restoring the selection.
+          const chain = editor.chain().focus();
+
+          switch (command) {
+
+            // ── Block types ────────────────────────────────────────────────
+
+            case 'setBlockType': {
+              const type = attrs?.blockType as string | undefined;
+
+              // If currently in a blockquote, lift it first so the wrapper is removed.
+              if (editor.isActive('blockquote')) {
+                editor.chain().focus().lift('blockquote').run();
+              }
+
+              switch (type) {
+                case 'paragraph':
+                  chain.setParagraph().run();
+                  break;
+                case 'heading-1':
+                  chain.setHeading({ level: 1 }).run();
+                  break;
+                case 'heading-2': {
+                  const result = chain.setHeading({ level: 2 }).run();
+                  console.log('[TipTop] setHeading result:', result);
+                  break;
+                }
+                case 'heading-3':
+                  chain.setHeading({ level: 3 }).run();
+                  break;
+                case 'heading-4':
+                  chain.setHeading({ level: 4 }).run();
+                  break;
+                case 'heading-5':
+                  chain.setHeading({ level: 5 }).run();
+                  break;
+                case 'blockquote':
+                  chain.toggleBlockquote().run();
+                  break;
+                case 'codeBlock':
+                  chain.toggleCodeBlock().run();
+                  break;
+                case 'bulletList':
+                  chain.toggleBulletList().run();
+                  break;
+                case 'orderedList':
+                  chain.toggleOrderedList().run();
+                  break;
+                case 'taskList':
+                  chain.toggleTaskList().run();
+                  break;
+                case 'prompt':
+                case 'callout':
+                case 'callout-info':
+                case 'callout-warning':
+                case 'callout-success':
+                case 'callout-danger':
+                  chain.setParagraph().run();
+                  break;
+                default:
+                  console.warn('[TipTop] Unknown block type:', type);
+              }
+
+              break;
+            }
+
+            // ── Inline marks ───────────────────────────────────────────────
+
+            case 'toggleMark': {
+              const mark = attrs?.mark as string | undefined;
+
+              switch (mark) {
+                case 'bold':
+                  chain.toggleBold().run();
+                  break;
+                case 'italic':
+                  chain.toggleItalic().run();
+                  break;
+                case 'underline':
+                  chain.toggleUnderline().run();
+                  break;
+                case 'strike':
+                  chain.toggleStrike().run();
+                  break;
+                case 'code':
+                  chain.toggleCode().run();
+                  break;
+                default:
+                  console.warn('[TipTop] Unknown mark:', mark);
+              }
+
+              break;
+            }
+
+            // ── Lists ──────────────────────────────────────────────────────
+
+            case 'toggleList': {
+              const listType = attrs?.listType as string | undefined;
+
+              switch (listType) {
+                case 'bulletList':
+                  chain.toggleBulletList().run();
+                  break;
+                case 'orderedList':
+                  chain.toggleOrderedList().run();
+                  break;
+                case 'taskList':
+                  chain.toggleTaskList().run();
+                  break;
+                default:
+                  console.warn('[TipTop] Unknown list type:', listType);
+              }
+
+              break;
+            }
+
+            // ── Text style ─────────────────────────────────────────────────
+
+            case 'setFontFamily': {
+              const fontFamily = attrs?.fontFamily as string | undefined;
+              if (!fontFamily) break;
+              chain.setFontFamily(fontFamily).run();
+              break;
+            }
+
+            case 'setFontSize': {
+              const fontSize = attrs?.fontSize as string | undefined;
+              if (!fontSize) break;
+              chain.setFontSize(fontSize).run();
+              break;
+            }
+
+            case 'setColor': {
+              const color = attrs?.color as string | undefined;
+              if (!color) break;
+              chain.setColor(color).run();
+              break;
+            }
+
+            case 'setHighlight': {
+              const backgroundColor = attrs?.backgroundColor as string | undefined;
+              if (!backgroundColor) break;
+              chain.toggleHighlight({ color: backgroundColor }).run();
+              break;
+            }
+
+            case 'setTextStyle': {
+              if (!attrs) break;
+              const styleAttrs: Record<string, unknown> = {};
+              if (attrs.fontFamily)      styleAttrs.fontFamily      = attrs.fontFamily;
+              if (attrs.fontSize)        styleAttrs.fontSize        = attrs.fontSize;
+              if (attrs.color)           styleAttrs.color           = attrs.color;
+              if (attrs.backgroundColor) styleAttrs.backgroundColor = attrs.backgroundColor;
+              chain.setMark('textStyle', styleAttrs).run();
+              break;
+            }
+
+            case 'updateTextStyle': {
+              if (!attrs) break;
+              const styleAttrs: Record<string, unknown> = {};
+              if (attrs.fontFamily)      styleAttrs.fontFamily      = attrs.fontFamily;
+              if (attrs.fontSize)        styleAttrs.fontSize        = attrs.fontSize;
+              if (attrs.color)           styleAttrs.color           = attrs.color;
+              if (attrs.backgroundColor) styleAttrs.backgroundColor = attrs.backgroundColor;
+              chain.updateAttributes('textStyle', styleAttrs).run();
+              break;
+            }
+
+            // ── History ────────────────────────────────────────────────────
+
+            case 'undo':
+              editor.commands.undo();
+              break;
+
+            case 'redo':
+              editor.commands.redo();
+              break;
+
+            // ── Content / misc ─────────────────────────────────────────────
+
+            case 'insertEmoji': {
+              const emoji = attrs?.emoji as string | undefined ?? '😊';
+              chain.insertContent(emoji).run();
+              break;
+            }
+
+            case 'insertContent':
+              if (typeof attrs?.content === 'string') {
+                chain.insertContent(attrs.content).run();
+              }
+              break;
+
+            case 'setContent':
+              if (attrs?.content) {
+                editor.commands.setContent(
+                  attrs.content as Parameters<Editor['commands']['setContent']>[0]
+                );
+              }
+              break;
+
+            case 'clearContent':
+              editor.commands.clearContent();
+              break;
+
+            default:
+              console.warn('[TipTop] Unknown command:', command, attrs);
+
+          } // end switch (command)
+
+        } catch (err) {
+          console.error('[TipTop] error inside rAF:', err);
+        }
+      }); // end requestAnimationFrame
+
+    }); // end addEventListener
+  } // end initNewToolbarBridge
+
+  // ─── Legacy toolbar bridge ────────────────────────────────────────────────
+
+  /**
+   * Bridges `editor:set-block-type` events from the old BlockToolbar to
+   * TipTap commands.
+   *
+   * This bridge can be removed once the old BlockToolbar is fully replaced
+   * by TipTopToolbar.astro.
+   *
+   * @param editor - The live TipTap Editor instance.
+   */
+  function initLegacyToolbarBridge(editor: Editor): void {
+    window.addEventListener('editor:set-block-type', (e: Event) => {
+      const { blockType } = (e as CustomEvent<{ blockType: string }>).detail;
+
+      switch (blockType) {
+        case 'paragraph':
+          editor.chain().focus().setParagraph().run();
+          break;
+
+        case 'heading':
+        case 'heading-1':
+          editor.chain().focus().setHeading({ level: 1 }).run();
+          break;
+        case 'heading-2':
+          editor.chain().focus().setHeading({ level: 2 }).run();
+          break;
+        case 'heading-3':
+          editor.chain().focus().setHeading({ level: 3 }).run();
+          break;
+        case 'heading-4':
+          editor.chain().focus().setHeading({ level: 4 }).run();
+          break;
+        case 'heading-5':
+          editor.chain().focus().setHeading({ level: 5 }).run();
+          break;
+
+        case 'quote':
+          editor.chain().focus().toggleBlockquote().run();
+          break;
+
+        case 'code':
+          editor.chain().focus().toggleCodeBlock().run();
+          break;
+
+        case 'separator':
+          editor.chain().focus().setHorizontalRule().run();
+          break;
+
+        case 'checklist':
+          editor.chain().focus().toggleTaskList().run();
+          break;
+
+        // No direct TipTap equivalent yet — fall back to paragraph.
+        case 'prompt':
+        case 'callout':
+        case 'callout-info':
+        case 'callout-warning':
+        case 'callout-success':
+        case 'callout-danger':
+          editor.chain().focus().setParagraph().run();
+          break;
+
+        default:
+          console.warn('[TipTop] Legacy toolbar — unknown block type:', blockType);
+      }
+    });
+  }
+
+  // ─── Title field ──────────────────────────────────────────────────────────
+
+  /**
+   * Wires the contenteditable title element to the XState machine.
+   *
+   * Uses the existing `TITLE_CHANGED` event — no changes to the machine
+   * are required. Also calls `updateTitle()` to keep the editorStore
+   * and sidebar link text in sync.
+   *
+   * @param machine - The running XState actor, or null if no doc is open.
+   */
+  function initTitleField(
+    machine: ReturnType<typeof createActor<typeof editorMachine>> | null
+  ): void {
+    const titleEl = document.getElementById('tiptop-title') as HTMLElement | null;
+    if (!titleEl || !machine) return;
+
+    titleEl.addEventListener('input', () => {
+      const newTitle = titleEl.textContent?.trim() ?? '';
+      machine.send({ type: 'TITLE_CHANGED', title: newTitle });
+      updateTitle(newTitle);
+    });
+
+    // Prevent Enter from inserting a newline in the title field.
+    titleEl.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // Move focus into the editor body.
+        document.getElementById('tiptop-editor')
+          ?.querySelector<HTMLElement>('.ProseMirror')
+          ?.focus();
+      }
+    });
+
+    // Announce title focus to the BlockTypeSelector (matches old EditorCanvas behaviour).
+    titleEl.addEventListener('focus', () => {
+      window.dispatchEvent(new CustomEvent('editor:title-focused'));
+    });
+  }
+
+  // ─── Word count ───────────────────────────────────────────────────────────
+
+  /**
+   * Updates the word count display in the editor footer.
+   *
+   * Splits on any run of whitespace and ignores empty tokens so that a
+   * blank document correctly shows "0 words".
+   *
+   * @param plainText - Plain text extracted via editor.getText().
+   */
+  function updateWordCount(plainText: string): void {
+    const countEl = document.getElementById('tiptop-word-count');
+    if (!countEl) return;
+
+    const count = plainText.trim().split(/\s+/).filter(Boolean).length;
+    countEl.textContent = `${count} ${count === 1 ? 'word' : 'words'}`;
+  }
+
+  // ─── Gutter Hints ─────────────────────────────────────────────────────────
+
+  /**
+   * Listens to Tiptap selection changed events and highlights the most
+   * active/relevant keyboard shortcut in the margin hints gutter.
+   */
+  function initGutterHints(): void {
+    const leftHints = document.getElementById('tiptop-left-hints');
+    const rightHints = document.getElementById('tiptop-right-hints');
+    let isCtrlPressed = false;
+
+    // Track Ctrl/Cmd key state
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        isCtrlPressed = true;
+        leftHints?.classList.add('is-visible');
+        rightHints?.classList.add('is-visible');
+      }
+    });
+
+    window.addEventListener('keyup', (e: KeyboardEvent) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        isCtrlPressed = false;
+        leftHints?.classList.remove('is-visible');
+        rightHints?.classList.remove('is-visible');
+      }
+    });
+
+    window.addEventListener('tiptop:selection-changed', (e: Event) => {
+      const state = (e as CustomEvent<SelectionChangedDetail>).detail;
+      const { nodeType } = state;
+
+      // De-active all active gutter hints first
+      document.querySelectorAll('.ms-item').forEach((item) => item.classList.remove('is-active'));
+
+      // Only highlight hints if Ctrl is pressed
+      if (isCtrlPressed) {
+        // Highlight the matching gutter shortcut tip
+        if (
+          nodeType === 'bulletList' ||
+          nodeType === 'orderedList' ||
+          nodeType === 'taskList' ||
+          nodeType === 'listItem' ||
+          nodeType === 'taskItem'
+        ) {
+          document.getElementById('ms-tab')?.classList.add('is-active');
+        } else if (nodeType === 'heading') {
+          document.getElementById('ms-heading')?.classList.add('is-active');
+        } else if (state.marks && state.marks.length > 0) {
+          document.getElementById('ms-format')?.classList.add('is-active');
+        }
+      }
+    });
+  }
+
+  // ─── Boot ─────────────────────────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initTipTop();
+    initGutterHints();
+  });
+</script>

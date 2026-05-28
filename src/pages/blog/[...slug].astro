@@ -1,8 +1,9 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPostLayout from '@/layouts/BlogPostLayout.astro';
-import { Image } from 'astro:assets';
+import { Image } from '@/components/starwind/image';
 import BlogBreadcrumbs from '@/components/blog/Navigation/BlogBreadcrumbs.astro';
+import FoldSection from '@/components/ui/FoldSection.astro';
 
 export const prerender = true;
 
@@ -103,6 +104,6 @@ const postData = {
   <BlogBreadcrumbs />
 
   <div class="prose prose-lg max-w-none">
-    <Content />
+    <Content components={{ FoldSection }} />
   </div>
 </BlogPostLayout>

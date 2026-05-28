@@ -1,62 +1,120 @@
 ---
-/**
- * @file src/components/apps/journal/sidebar/JournalSidebar.astro
- * @description Left sidebar for the Write app.
- *
- * Displays:
- * - A search input for filtering documents
- * - A "New Document" button
- * - A "New Folder" button (inline prompt, no modal)
- * - A folder tree with documents nested inside each folder
- * - An "All Documents" section for unfiled documents
- *
- * Receives the lightweight DocumentIndexRow array — never full content_blocks.
- * All document navigation is done by setting the `?doc=` query parameter.
- */
-
-import type { DocumentIndexRow, Folder } from "@/lib/journal/types";
-import SidebarSearch from './SidebarSearch.astro';
-import NewDocumentButton from './NewDocumentButton.astro';
-import NewFolderButton from './NewFolderButton.astro';
-import FolderTree from "./FolderTree.astro";
+import FolderTree from "@/components/apps/write/sidebar/FolderTree.astro";
+import DocumentItem from "@/components/apps/write/sidebar/FolderTree/DocumentItem.astro";
+import NewDocumentButton from "@/components/apps/write/sidebar/NewDocumentButton.astro";
+import SidebarSearch from "@/components/apps/write/sidebar/SidebarSearch.astro";
+import type { DocumentIndexRow as Document, Folder } from "@/lib/journal/types";
 import './sidebar.css';
 
+// interface Folder {
+//   id: string;
+//   name: string;
+//   icon: string | null;
+//   parent_id: string | null;
+//   is_archived: boolean;
+//   children?: Folder[];
+// }
+
+// interface Document {
+//   id: string;
+//   title: string;
+//   folder_id: string | null;
+//   is_archived: boolean;
+//   pinned: boolean;
+// }
+
 interface Props {
-  documents: DocumentIndexRow[];
   folders: Folder[];
+  documents: Document[];
   activeDocumentId: string | null;
+  activeFolderId: string | null;
   user: any;
 }
 
-const { documents, folders, activeDocumentId, user } = Astro.props;
+const { folders, documents, activeDocumentId, activeFolderId, user } = Astro.props;
+
+const rootDocs = documents.filter((d) => d.folder_id === null && !d.is_archived);
 ---
 
-<nav class="sidebar" aria-label="Document navigation">
-  <!-- Search -->
+<aside 
+  class="sidebar" 
+  id="sidebar-document-list" 
+  data-folders={JSON.stringify(folders.map(f => ({ id: f.id, name: f.name, icon: f.icon || "📁" })))}
+>
   <SidebarSearch activeDocumentId={activeDocumentId} user={user} />
 
-  <!-- Action buttons: New Document + New Folder -->
-  <div class="sidebar-actions">
+  <div class="sidebar-header">
     <NewDocumentButton activeDocumentId={activeDocumentId} user={user} />
-    <NewFolderButton />
   </div>
 
-  <!-- Folder tree and document list -->
-  <FolderTree
-    documents={documents}
-    folders={folders}
-    activeDocumentId={activeDocumentId}
-    user={user}
-  />
-</nav>
+  <div class="sidebar-section">
+    <h4 class="sidebar-label">Folders</h4>
+    <FolderTree
+      folders={folders}
+      documents={documents}
+      activeFolderId={activeFolderId}
+      activeDocumentId={activeDocumentId}
+    />
+  </div>
+
+  <div class="sidebar-section">
+    <h4 class="sidebar-label">All Documents</h4>
+    <div class="doc-list">
+      {rootDocs.map((doc) => (
+        <DocumentItem
+          id={doc.id}
+          title={doc.title}
+          folderId={doc.folder_id}
+          isArchived={doc.is_archived}
+          pinned={doc.pinned}
+          active={activeDocumentId === doc.id}
+          updatedAt={doc.updated_at}
+        />
+      ))}
+    </div>
+  </div>
+</aside>
+
+<script>
+  import { initFolderToggles, initRealtimeUpdates } from "./FolderTree/sidebar.client";
+  document.addEventListener("DOMContentLoaded", () => {
+    initFolderToggles();
+    initRealtimeUpdates();
+  });
+</script>
 
 <style>
-  /* Override sidebar-actions so the two buttons stack cleanly */
-  .sidebar-actions {
+  /* .sidebar {
+    width: 280px;
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
-    padding: 0.375rem 0.5rem 0.5rem;
-    border-bottom: 1px solid var(--color-border);
+    padding: 16px 12px;
+    background: var(--journal-sidebar-bg, rgba(255, 255, 255, 0.45));
+    backdrop-filter: blur(var(--journal-sidebar-blur, 16px));
+    -webkit-backdrop-filter: blur(var(--journal-sidebar-blur, 16px));
+    border-right: 1px solid var(--journal-sidebar-border, rgba(15, 18, 25, 0.07));
+    overflow-y: auto;
+    transition: all 0.3s ease;
   }
+
+  .sidebar-header {
+    margin-bottom: 16px;
+  }
+
+  .sidebar-section {
+    margin-bottom: 20px;
+  }
+
+  .sidebar-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    opacity: 0.7;
+  }
+
+  .doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  } */
 </style>

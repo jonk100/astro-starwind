@@ -1,0 +1,76 @@
+---
+// ToolDropdown.astro
+/**
+ * @Props:
+ *   - id:        The ID of the <details> element.
+ *   - labelId:   The ID of the <summary> element.
+ *   - defaultLabel: The default label text.
+ *   - narrow?:   Whether the dropdown should be narrow (no border).
+ *   - ariaLabel: The accessible label for the dropdown.
+ * The component renders a <details> element with a <summary> trigger. It usually
+ * receives a mapping of block-type names to labels from the client, and renders
+ * a <div> with a list of block-type options inside. It can be styled with CSS using
+ * the `.toolbar-menu--details`, `.toolbar-menu--trigger`, and `.toolbar-menu--content`
+ * classes. Here's how it looks like a dropdown:
+ * . toolbar-menu--details {
+ *   position: relative;
+ *   display: flex;
+ *   align-items: center;
+ *   gap: 0.25rem;
+ *   width: 100%;
+ *   padding: 0.35rem 1rem;
+ *   background-color: var(--color-surface);
+ *   border: 1px solid var(--color-border);
+ *   border-radius: 0.5rem;
+ *   box-shadow: var(--shadow);
+ *   z-index: 50;
+ *   overflow: hidden;
+ * }
+ * . toolbar-menu--trigger {
+ *   position: relative;
+ *   display: flex;
+ *   align-items: center;
+ *   gap: 0.25rem;
+ *   min-width: 0;
+ *   padding: 0.375rem 0.75rem;
+ *   border: none;
+ *   border-radius: 5px;
+ */
+interface Props {
+  id: string;
+  labelId: string;
+  defaultLabel: string;
+  narrow?: boolean;
+  ariaLabel?: string;
+}
+const { id, labelId, defaultLabel, narrow = false, ariaLabel } = Astro.props;
+---
+<details class="tb-details toolbar-menu--details" id={id}>
+  <summary
+    class:list={['tb-dropdown-trigger', narrow && 'tb-dropdown-trigger--narrow', 'toolbar-menu--trigger']}
+    aria-label={ariaLabel}
+  >
+    <span id={labelId}>{defaultLabel}</span>
+    <svg class="tb-chevron" width="10" height="10" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </summary>
+  <div class:list={['tb-dropdown-content', narrow && 'tb-dropdown-content--narrow', 'toolbar-menu--content']}>
+    <slot />
+  </div>
+</details>
+
+<style>
+  .toolbar-menu--details {
+    position: relative;
+  }
+
+  .toolbar-menu--content {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 1000;
+  }
+</style>

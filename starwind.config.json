@@ -187,6 +187,10 @@
     {
       "name": "alert-dialog",
       "version": "1.0.4"
+    },
+    {
+      "name": "color-picker",
+      "version": "1.0.0"
     }
   ]
 }

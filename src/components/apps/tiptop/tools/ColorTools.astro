@@ -1,0 +1,54 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/ColorTools.astro
+ * @description Text color and highlight background color pickers for the TipTap editor.
+ */
+import { ColorPicker } from '@/components/starwind/color-picker';
+import { ButtonGroup } from '@/components/starwind/button-group';
+---
+<ButtonGroup aria-label="Colour tools" class="tb-group--color">
+  <div class="tb-color-wrap" title="Text color">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+    <ColorPicker id="tb-text-color" size="lg" defaultValue="#e8c547" class="tb-color-picker" />
+  </div>
+  <div class="tb-color-wrap" title="Highlight color">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+    <ColorPicker id="tb-highlight-color" size="lg" defaultValue="#fef08a" class="tb-color-picker" />
+  </div>
+</ButtonGroup>
+
+<script>
+  import { dispatch } from './toolbarUtils.ts';
+  import type { ColorPickerChangeEvent } from '@/components/starwind/color-picker/ColorPickerTypes';
+
+  function initColorPickers(): void {
+    const textColorPicker = document.getElementById('tb-text-color');
+    const highlightPicker = document.getElementById('tb-highlight-color');
+
+    // Make the entire wrap container clickable to trigger the pickers
+    document.querySelectorAll('.tb-color-wrap').forEach((wrap) => {
+      const input = wrap.querySelector('input[data-part="color-input"]') as HTMLInputElement | null;
+      const picker = wrap.querySelector('.starwind-color-picker');
+      if (input && picker) {
+        wrap.addEventListener('click', (e) => {
+          // If the click is inside the color picker component (input or custom dialog), let it handle naturally
+          if (e.target === picker || picker.contains(e.target as Node)) return;
+          e.preventDefault();
+          input.click();
+        });
+      }
+    });
+
+    textColorPicker?.addEventListener('starwind-color-picker:change', (e: Event) => {
+      const { value } = (e as ColorPickerChangeEvent).detail;
+      dispatch('setColor', { color: value });
+    });
+
+    highlightPicker?.addEventListener('starwind-color-picker:change', (e: Event) => {
+      const { value } = (e as ColorPickerChangeEvent).detail;
+      dispatch('setHighlight', { backgroundColor: value });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initColorPickers);
+</script>

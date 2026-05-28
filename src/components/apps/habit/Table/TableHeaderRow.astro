@@ -37,14 +37,14 @@ const { data: logs, error: logsError } = await supabase
 
 <TableHeader>
   <TableRow class="bg-slate-50">
-    <TableHead class="px-4 py-2 text-left border-b border-slate-200 min-w-55">
-      <div class="flex items-center justify-between gap-2 font-bold">
+    <TableHead class="px-4 py-2 text-left border-b border-slate-200 min-w-[260px] w-[260px] max-w-[260px] sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+      <div class="flex items-center justify-between gap-2 font-bold text-left">
         Habit
         <HabitCreateForm user={user} />
       </div>
     </TableHead>
     {dates.map(date => (
-      <TableHead class="text-center border-b border-l border-slate-200 text-xs">
+      <TableHead class="text-center border-b border-l border-slate-200 text-xs w-12 min-w-[48px] max-w-[48px] p-0 h-10 align-middle">
         {date.split('-')[2]}
       </TableHead>
     ))}

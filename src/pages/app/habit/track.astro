@@ -1,10 +1,17 @@
 ---
+/**
+ * @file src/pages/app/habit/track.astro
+ * @description Main habit tracking matrix page with perfectly centered navigations,
+ * heat-map grids, and bottom wellness and streak analytics footer.
+ */
+
 import Layout from '@/layouts/AppLayout.astro';
 import HabitGrid from '@/components/apps/habit/Table/HabitGrid.astro';
 import { createClient } from '@/lib/supabase';
 import { currentMonth as currentMonthRange } from '@/lib/habit/utils';
 import HeaderRow from '@/components/apps/habit/HeaderRow.astro';
 import StreakBanner from '@/components/apps/habit/streaks/StreakBanner.astro';
+import { getHabitTheme } from '@/lib/habit/theme';
 
 export const prerender = false;
 
@@ -19,7 +26,26 @@ if (!user) {
   return Astro.redirect('/auth/login');
 }
 
-const { from, to } = currentMonthRange();
+const url = new URL(Astro.request.url);
+const monthParam = url.searchParams.get("month"); // e.g. "2026-05"
+
+let from: string;
+let to: string;
+let currentMonthDate: Date;
+
+if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+  const [year, month] = monthParam.split("-").map(Number);
+  currentMonthDate = new Date(year, month - 1, 1);
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+  from = firstDay.toISOString().split("T")[0];
+  to = lastDay.toISOString().split("T")[0];
+} else {
+  currentMonthDate = new Date();
+  const range = currentMonthRange();
+  from = range.from;
+  to = range.to;
+}
 
 // Fetch habits and logs separately — simpler and more reliable
 const { data: habits, error: habitsError } = await supabase
@@ -40,13 +66,28 @@ const habitsWithLogs = (habits ?? []).map(habit => ({
   ...habit,
   logs: (logs ?? []).filter(log => log.habit_id === habit.id),
 }));
+
+// Determine streaks for active habits
+const streakHighlights = (habits ?? []).filter(h => (h.current_streak || 0) > 0);
+
+// Curated daily quotes for bottom dashboard card
+const WELLNESS_QUOTES = [
+  { text: "Consistency beats intensity. Small daily loops build massive neurological highways.", author: "James Clear" },
+  { text: "Neurons that fire together, wire together. Make showing up your only daily goal.", author: "Donald Hebb" },
+  { text: "All habits stem from a tiny decision. The visual feedback of your grid reinforces the behavior loop.", author: "Dr. Wendy Wood" },
+  { text: "Your brain is incredibly plastic. Every single checkbox changes its physical structure over time.", author: "Atomic Habits" }
+];
+const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+const dailyQuote = WELLNESS_QUOTES[dayOfYear % WELLNESS_QUOTES.length];
 ---
 
 <Layout title="Habit Tracker" description="Track your habits">
-  <div class="flex flex-col h-screen">
-    <HeaderRow />
-    <!-- <StreakBanner /> -->
-    <div class="flex-1 overflow-auto">
+  <div class="flex flex-col h-screen bg-slate-50">
+    <!-- Month and Progress header -->
+    <HeaderRow habits={habitsWithLogs ?? []} currentMonthDate={currentMonthDate} />
+    
+    <div class="flex-1 overflow-y-auto">
+      <!-- Tracker grid table -->
       <HabitGrid
         habits={habitsWithLogs ?? []}
         from={from}
@@ -55,6 +96,141 @@ const habitsWithLogs = (habits ?? []).map(habit => ({
       />
       <StreakBanner />
 
+      <!-- Elegant Bottom Serene Wellness & Insights Footer -->
+      {habitsWithLogs.length > 0 && (
+        <div class="mt-4 border-t border-slate-200/60 bg-slate-50 pt-8 pb-16 px-6">
+          <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 select-none">
+            
+            <!-- Reflection Card (Distinctive styling, soft shadow, interactive shuffle) -->
+            <div class="bg-white border-2 border-slate-100 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-emerald-100/50 transition-all duration-300 flex flex-col justify-between gap-3 relative group">
+              <div class="flex items-center justify-between w-full">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs">🧠</span>
+                  <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Coaching Reflection</span>
+                </div>
+                <button 
+                  type="button" 
+                  id="btn-shuffle-reflection" 
+                  class="flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-extrabold uppercase tracking-widest bg-slate-50 hover:bg-slate-900 hover:text-slate-50 text-slate-500 border border-slate-200 transition-all cursor-pointer select-none active:scale-95 outline-none"
+                >
+                  🔄 Shuffle
+                </button>
+              </div>
+              
+              <div class="flex flex-col gap-2 transition-all duration-300" id="reflection-content-box">
+                <p id="reflection-text" class="text-xs italic text-slate-500 font-medium leading-relaxed">
+                  "{dailyQuote.text}"
+                </p>
+                <span id="reflection-author" class="text-[10px] font-bold text-slate-700 leading-none">— {dailyQuote.author}</span>
+              </div>
+            </div>
+
+            <!-- Active Streaks Highlights Card (Fire glowing borders, interactive sparks on click) -->
+            <div class="bg-white border-2 border-slate-100 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-orange-100/50 transition-all duration-300 flex flex-col gap-3 relative group">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs">🔥</span>
+                <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Active Streaks Highlight</span>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-1">
+                {streakHighlights.length > 0 ? (
+                  streakHighlights.map(h => {
+                    const theme = getHabitTheme(h.id, h.metadata);
+                    return (
+                      <span 
+                        class="streak-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200/60 text-xs font-semibold bg-white shadow-sm transition-all hover:scale-110 active:scale-95 cursor-pointer" 
+                        style={`border-left: 3px solid rgb(${theme.primaryColor});`}
+                        data-habit-name={h.name}
+                        data-streak-count={h.current_streak}
+                        data-theme-id={theme.id}
+                      >
+                        {h.name}: <strong class="text-orange-500 font-bold">{h.current_streak}d streak</strong>
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span class="text-xs text-slate-400 font-medium leading-relaxed">
+                    No active streaks yet. Check in today to start a fire!
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   </div>
+
+  <!-- Dynamic JS Shuffler & Badge Confetti Handler -->
+  <script>
+    // In-memory reflection list
+    const SUGGESTIONS_REFLECTIONS = [
+      { text: "Consistency beats intensity. Small daily loops build massive neurological highways.", author: "James Clear" },
+      { text: "Neurons that fire together, wire together. Make showing up your only daily goal.", author: "Donald Hebb" },
+      { text: "All habits stem from a tiny decision. The visual feedback of your grid reinforces the behavior loop.", author: "Dr. Wendy Wood" },
+      { text: "Your brain is incredibly plastic. Every single checkbox changes its physical structure over time.", author: "Atomic Habits" },
+      { text: "The secret to building lasting habits is focusing on your identity, not the final outcomes.", author: "James Clear" },
+      { text: "We are what we repeatedly do. Excellence, then, is not an act, but a routine daily choice.", author: "Aristotle" }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Shuffler listener
+      const shuffleBtn = document.getElementById('btn-shuffle-reflection');
+      const textBox = document.getElementById('reflection-text');
+      const authorBox = document.getElementById('reflection-author');
+      const contentBox = document.getElementById('reflection-content-box');
+
+      if (shuffleBtn && textBox && authorBox && contentBox) {
+        shuffleBtn.addEventListener('click', () => {
+          // Add quick fade out class
+          contentBox.style.opacity = '0';
+          contentBox.style.transform = 'translateY(2px)';
+
+          setTimeout(() => {
+            const currentText = textBox.textContent?.replace(/"/g, '');
+            const filtered = SUGGESTIONS_REFLECTIONS.filter(r => r.text !== currentText);
+            const randomQuote = filtered[Math.floor(Math.random() * filtered.length)];
+
+            textBox.textContent = `"${randomQuote.text}"`;
+            authorBox.textContent = `— ${randomQuote.author}`;
+
+            // Fade back in
+            contentBox.style.opacity = '1';
+            contentBox.style.transform = 'translateY(0)';
+          }, 200);
+        });
+      }
+
+      // 2. Streak Badge click celebration pop!
+      document.querySelectorAll('.streak-badge').forEach(badge => {
+        badge.addEventListener('click', () => {
+          const habitName = badge.getAttribute('data-habit-name')!;
+          const streakCount = parseInt(badge.getAttribute('data-streak-count')!, 10);
+          const themeId = badge.getAttribute('data-theme-id')!;
+
+          const celebrate = (window as any).showStreakBanner;
+          if (typeof celebrate === 'function') {
+            celebrate(habitName, streakCount, themeId);
+          }
+        });
+      });
+    });
+  </script>
+
+  <style is:global>
+    /* Dims the sticky left column when any drawer Sheet or Dialog modal is open (50% glassmorphic blend) */
+    body:has(dialog[open]), body:has([data-slot="sheet-content"]), body:has([data-slot="dialog-content"]) {
+      .sticky {
+        background-color: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(4px) !important;
+        box-shadow: none !important;
+        transition: background-color 0.35s ease, backdrop-filter 0.35s ease !important;
+      }
+    }
+
+    /* Promotes the sticky column container's stacking context so its dialog backdrop sits on top of other cells */
+    td:has(dialog[open]), th:has(dialog[open]),
+    td:has([data-state="open"]), th:has([data-state="open"]) {
+      z-index: 100 !important;
+    }
+  </style>
 </Layout>

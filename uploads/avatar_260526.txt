@@ -1,0 +1,127 @@
+--- File: Avatar.astro ---
+---
+// /src/components/starwind/avatar/Avatar.astro
+
+import type { HTMLAttributes } from "astro/types";
+import { tv, type VariantProps } from "tailwind-variants";
+
+interface Props extends HTMLAttributes<"div">, VariantProps<typeof avatar> {}
+
+export const avatar = tv({
+  base: "text-foreground bg-muted relative overflow-hidden rounded-full border-2",
+  variants: {
+    variant: {
+      default: "border-border",
+      primary: "border-primary",
+      secondary: "border-secondary",
+      info: "border-info",
+      success: "border-success",
+      warning: "border-warning",
+      error: "border-error",
+    },
+    size: { sm: "h-8 w-8 text-xs", md: "h-10 w-10 text-sm", lg: "h-12 w-12 text-base" },
+  },
+  defaultVariants: { variant: "default", size: "md" },
+});
+
+const { variant, size, class: className, ...rest } = Astro.props;
+---
+
+<figure class={avatar({ variant, size, class: className })} {...rest} data-slot="avatar">
+  <slot />
+</figure>
+
+
+--- File: AvatarFallback.astro ---
+---
+// /src/components/starwind/avatar/AvatarFallback.astro
+
+import type { HTMLAttributes } from "astro/types";
+import { tv } from "tailwind-variants";
+
+export const avatarFallback = tv({
+  base: "absolute inset-0.5 flex items-center justify-center rounded-full font-medium",
+});
+
+interface Props extends HTMLAttributes<"div"> {
+  class?: string;
+}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class={avatarFallback({ class: className })} {...rest} data-slot="avatar-fallback">
+  <slot />
+</div>
+
+
+--- File: index.ts ---
+import Avatar, { avatar } from "./Avatar.astro";
+import AvatarFallback, { avatarFallback } from "./AvatarFallback.astro";
+import AvatarImage, { avatarImage } from "./AvatarImage.astro";
+
+const AvatarVariants = { avatar, avatarFallback, avatarImage };
+
+export { Avatar, AvatarFallback, AvatarImage, AvatarVariants };
+
+export default {
+  Root: Avatar,
+  Image: AvatarImage,
+  Fallback: AvatarFallback,
+};
+
+
+--- File: AvatarImage.astro ---
+---
+// /src/components/starwind/avatar/AvatarImage.astro
+
+import type { HTMLAttributes } from "astro/types";
+import { Image } from "astro:assets";
+import { tv } from "tailwind-variants";
+import type { ImageMetadata } from "astro";
+
+export const avatarImage = tv({ base: "relative z-1 h-full w-full object-cover" });
+
+type BaseProps = { alt: string; class?: string };
+
+type WithSrc = BaseProps & { src: string; image?: never };
+
+type WithImage = BaseProps & { src?: never; image: ImageMetadata };
+
+type Props = HTMLAttributes<"img"> & (WithSrc | WithImage);
+
+const { src, image, alt, class: className, width, height, ...rest } = Astro.props;
+
+if (!src && !image) {
+  throw new Error("Either 'src' or 'image' is required for an avatar image.");
+}
+---
+
+{
+  src && (
+    <img
+      src={src}
+      alt={alt}
+      class={avatarImage({ class: className })}
+      width={64}
+      height={64}
+      onerror="this.style.display='none'"
+      {...rest}
+      data-slot="avatar-image"
+    />
+  )
+}
+{
+  image && (
+    <Image
+      src={image}
+      alt={alt}
+      class={avatarImage({ class: className })}
+      width={64}
+      {...rest}
+      data-slot="avatar-image"
+    />
+  )
+}
+
+

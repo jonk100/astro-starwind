@@ -1,0 +1,1509 @@
+--- File: TipTop.astro ---
+---
+/**
+ * @file src/components/apps/tiptop/TipTop.astro
+ * @description TipTap-powered editor component for the Write app.
+ *
+ * Replaces EditorCanvas.astro. Wires TipTap directly into the existing
+ * XState machine and editorStore without changing either — the only new
+ * surface is the tiptap.ts translation layer.
+ *
+ * Data flow:
+ *   1. LOAD:  blocksToTipTap(activeBlocks) → editor.commands.setContent()
+ *   2. EDIT:  editor.onUpdate → tiptapToBlocks() → machine.send(BLOCKS_CHANGED)
+ *   3. TITLE: title input → machine.send(TITLE_CHANGED) + updateTitle()
+ *   4. SAVE:  XState machine → actions.write.saveBlocks (Block[] format, unchanged)
+ *
+ * The `documentId` and `title` props are used to seed the XState machine
+ * on first mount. If no documentId is provided (empty state), the editor
+ * renders a placeholder and disables saving.
+ */
+
+interface Props {
+  /** The UUID of the currently open document, or empty string if none. */
+  documentId: string;
+  /** The current document title. */
+  title: string;
+}
+import './TipTop.css';
+import '../write/editor/editorCanvas.css';
+
+const { documentId, title } = Astro.props;
+---
+
+<div class="tiptop-shell" data-document-id={documentId} data-title={title}>
+  <!-- Title -->
+  <div
+    id="tiptop-title"
+    class="tiptop-title"
+    contenteditable={documentId ? "true" : "false"}
+    data-placeholder="Untitled"
+    aria-label="Document title"
+    role="textbox"
+    aria-multiline="false"
+    spellcheck="false"
+  >{title}</div>
+
+  <!-- Body: TipTap mounts here -->
+  <div id="tiptop-editor" class="tiptop-editor" aria-label="Document body"></div>
+
+  <!-- Word count footer -->
+  {documentId && (
+    <div class="tiptop-footer">
+      <span id="tiptop-word-count" class="tiptop-word-count">0 words</span>
+    </div>
+  )}
+</div>
+  
+
+<script>
+  import { Editor } from '@tiptap/core';
+  import StarterKit from '@tiptap/starter-kit';
+  import { TaskList } from '@tiptap/extension-task-list';
+  import { TaskItem } from '@tiptap/extension-task-item';
+  import { Placeholder } from '@tiptap/extension-placeholder';
+
+  import { createActor } from 'xstate';
+  import { editorMachine } from '@/components/apps/write/state/editorMachine';
+  import { setActiveDocument, updateTitle } from '@/stores/editor';
+  import { tiptapToBlocks, blocksToTipTap } from '@/lib/journal/tiptap';
+  import type { Block } from '@/lib/journal/types';
+
+  // ─── Initialization ──────────────────────────────────────────────────────
+
+  /**
+   * Bootstraps the TipTap editor and wires it to the XState machine.
+   *
+   * Reads `documentId` and initial blocks from the DOM (injected by the
+   * Astro page into script tags to avoid SSR import issues). Starts the
+   * XState machine actor, then creates the TipTap editor instance.
+   */
+  function initTipTop(): void {
+    const shell = document.querySelector<HTMLElement>('.tiptop-shell');
+    if (!shell) return;
+
+    const documentId = shell.dataset.documentId ?? '';
+    const title      = shell.dataset.title ?? '';
+
+    // Blocks are injected by index.astro as JSON in a script tag
+    const blocksEl  = document.getElementById('tiptap-content');
+    let initialBlocks: Block[] = [];
+
+    if (blocksEl?.textContent) {
+      try {
+        const parsed = JSON.parse(blocksEl.textContent);
+        if (Array.isArray(parsed)) {
+          initialBlocks = parsed as Block[];
+        }
+      } catch (e) {
+        console.error('[TipTop] Failed to parse initial blocks:', e);
+      }
+    }
+
+    // ── Seed editorStore ────────────────────────────────────────────────────
+    // This keeps the nanostores-based computed values (wordCount, preview)
+    // in sync from the first render.
+    if (documentId) {
+      setActiveDocument(documentId, title, initialBlocks);
+    }
+
+    // ── Start XState machine ────────────────────────────────────────────────
+    // The machine manages debounced autosave. It expects the same context
+    // shape as before — no changes needed to editorMachine.ts.
+    const machine = documentId
+      ? createActor(editorMachine, {
+          input: {
+            documentId,
+            title,
+            blocks: initialBlocks,
+          },
+        })
+      : null;
+
+    machine?.start();
+
+    // ── Create TipTap editor ────────────────────────────────────────────────
+    const editorEl = document.getElementById('tiptop-editor');
+    if (!editorEl) return;
+
+    /**
+     * Convert the stored Block[] into TipTap's JSON format so the
+     * existing content appears correctly on load.
+     */
+    const initialContent = blocksToTipTap(initialBlocks);
+
+    const editor = new Editor({
+      element: editorEl,
+
+      extensions: [
+        StarterKit,
+        TaskList,
+        TaskItem.configure({ nested: false }),
+        Placeholder.configure({
+          placeholder: 'Write something…',
+        }),
+      ],
+
+      content: initialContent,
+
+      editable: Boolean(documentId),
+
+      /**
+       * Called on every content change (keystroke, paste, format, etc.).
+       *
+       * Converts the TipTap JSON to Block[] using the translation layer,
+       * then sends a BLOCKS_CHANGED event to the XState machine so the
+       * existing debounced autosave cycle kicks in.
+       */
+      onUpdate({ editor }) {
+        if (!machine) return;
+
+        const doc    = editor.getJSON() as Parameters<typeof tiptapToBlocks>[0];
+        const blocks = tiptapToBlocks(doc);
+
+        machine.send({ type: 'BLOCKS_CHANGED', blocks });
+
+        // Also update editorStore so nanostores computed values stay current
+        // (wordCount, documentPreview) without re-reading the DOM.
+        import('@/stores/editor').then(({ updateBlocks }) => {
+          updateBlocks(blocks);
+        });
+
+        updateWordCount(editor.getText());
+      },
+    });
+
+    // ── Title field ─────────────────────────────────────────────────────────
+    initTitleField(machine);
+
+    // ── Toolbar integration ─────────────────────────────────────────────────
+    // The existing BlockToolbar dispatches 'editor:set-block-type' events.
+    // Map those to TipTap commands so the toolbar still works.
+    if (documentId) {
+      initToolbarBridge(editor);
+    }
+
+    // ── Cleanup ─────────────────────────────────────────────────────────────
+    window.addEventListener('beforeunload', () => {
+      editor.destroy();
+      machine?.stop();
+    });
+  }
+
+  // ─── Title field ──────────────────────────────────────────────────────────
+
+  /**
+   * Wires the contenteditable title element to the XState machine.
+   *
+   * Uses the existing `TITLE_CHANGED` event — no changes to the machine
+   * are required. Also calls `updateTitle()` to keep the editorStore
+   * and sidebar link text in sync.
+   *
+   * @param machine - The running XState actor, or null if no doc is open.
+   */
+  function initTitleField(
+    machine: ReturnType<typeof createActor<typeof editorMachine>> | null
+  ): void {
+    const titleEl = document.getElementById('tiptop-title') as HTMLElement | null;
+    if (!titleEl || !machine) return;
+
+    titleEl.addEventListener('input', () => {
+      const newTitle = titleEl.textContent?.trim() ?? '';
+      machine.send({ type: 'TITLE_CHANGED', title: newTitle });
+      updateTitle(newTitle);
+    });
+
+    // Prevent Enter from inserting a newline in the title field
+    titleEl.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // Move focus to the editor body
+        document.getElementById('tiptop-editor')?.querySelector<HTMLElement>('.ProseMirror')?.focus();
+      }
+    });
+
+    // Announce title focus to the BlockTypeSelector (matches old EditorCanvas behaviour)
+    titleEl.addEventListener('focus', () => {
+      window.dispatchEvent(new CustomEvent('editor:title-focused'));
+    });
+  }
+
+  // ─── Toolbar bridge ───────────────────────────────────────────────────────
+
+  /**
+   * Maps 'editor:set-block-type' custom events from the existing BlockToolbar
+   * to the equivalent TipTap commands.
+   *
+   * The toolbar was built for the old contenteditable block editor and
+   * dispatches string block types. This bridge translates them to the
+   * TipTap command API so the toolbar keeps working without modification.
+   *
+   * @param editor - The live TipTap Editor instance.
+   */
+  function initToolbarBridge(editor: Editor): void {
+    window.addEventListener('editor:set-block-type', (e: Event) => {
+      const detail = (e as CustomEvent<{ blockType: string }>).detail;
+
+      // Focus the editor first so commands apply to the cursor position
+      editor.commands.focus();
+
+      switch (detail.blockType) {
+        case 'paragraph':
+          editor.chain().focus().setParagraph().run();
+          break;
+
+        case 'heading':
+        case 'heading-1':
+          editor.chain().focus().setHeading({ level: 1 }).run();
+          break;
+        case 'heading-2':
+          editor.chain().focus().setHeading({ level: 2 }).run();
+          break;
+        case 'heading-3':
+          editor.chain().focus().setHeading({ level: 3 }).run();
+          break;
+        case 'heading-4':
+          editor.chain().focus().setHeading({ level: 4 }).run();
+          break;
+        case 'heading-5':
+          editor.chain().focus().setHeading({ level: 5 }).run();
+          break;
+
+        case 'quote':
+          editor.chain().focus().toggleBlockquote().run();
+          break;
+
+        case 'code':
+          editor.chain().focus().toggleCodeBlock().run();
+          break;
+
+        case 'separator':
+          editor.chain().focus().setHorizontalRule().run();
+          break;
+
+        case 'checklist':
+          editor.chain().focus().toggleTaskList().run();
+          break;
+
+        // prompt and callouts have no direct TipTap equivalent yet —
+        // fall back to a plain paragraph for now.
+        case 'prompt':
+        case 'callout':
+        case 'callout-info':
+        case 'callout-warning':
+        case 'callout-success':
+        case 'callout-danger':
+          editor.chain().focus().setParagraph().run();
+          break;
+      }
+    });
+  }
+
+  // ─── Word count ───────────────────────────────────────────────────────────
+
+  /**
+   * Updates the word count display in the footer.
+   *
+   * @param plainText - The plain text extracted by editor.getText().
+   */
+  function updateWordCount(plainText: string): void {
+    const countEl = document.getElementById('tiptop-word-count');
+    if (!countEl) return;
+
+    const count = plainText.trim().split(/\s+/).filter(Boolean).length;
+    countEl.textContent = `${count} ${count === 1 ? 'word' : 'words'}`;
+  }
+
+  // ─── Boot ─────────────────────────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', initTipTop);
+</script>
+
+--- File: TipTop.css ---
+/* ── Shell ── */
+  .tiptop-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+  }
+
+  /* ── Title input ── */
+  .tiptop-title-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .tiptop-title {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 0;
+    font-family: inherit;
+  }
+
+  .tiptop-title::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  /* ── Editor surface ──
+   * Tiptap renders a <div contenteditable> inside #tiptop-editor.
+   * We target it via the .ProseMirror class Tiptap adds automatically.
+   */
+  .tiptop-editor {
+    flex: 1;
+    min-height: 60vh;
+  }
+
+  .tiptop-editor :global(.ProseMirror) {
+    outline: none;
+    color: var(--color-text);
+    font-size: 1rem;
+    line-height: 1.7;
+    caret-color: var(--color-accent);
+  }
+
+  /* ── Placeholder when editor is empty ── */
+  .tiptop-editor :global(.ProseMirror p.is-editor-empty:first-child::before) {
+    content: attr(data-placeholder);
+    color: var(--color-text-muted);
+    pointer-events: none;
+    float: left;
+    height: 0;
+  }
+
+  /* ── Block styles ── */
+  .tiptop-editor :global(.ProseMirror h1) {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .tiptop-editor :global(.ProseMirror h2) {
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 1.25rem 0 0.4rem;
+  }
+
+  .tiptop-editor :global(.ProseMirror h3) {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 1rem 0 0.35rem;
+  }
+
+  .tiptop-editor :global(.ProseMirror h4),
+  .tiptop-editor :global(.ProseMirror h5) {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.875rem 0 0.25rem;
+  }
+
+  .tiptop-editor :global(.ProseMirror p) {
+    margin: 0 0 0.5rem;
+  }
+
+  .tiptop-editor :global(.ProseMirror blockquote) {
+    border-left: 3px solid var(--color-accent);
+    margin: 1rem 0;
+    padding: 0.25rem 0 0.25rem 1rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  .tiptop-editor :global(.ProseMirror ul),
+  .tiptop-editor :global(.ProseMirror ol) {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  .tiptop-editor :global(.ProseMirror li) {
+    margin: 0.2rem 0;
+  }
+
+  .tiptop-editor :global(.ProseMirror pre) {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .tiptop-editor :global(.ProseMirror code) {
+    background: var(--color-surface);
+    border-radius: 3px;
+    padding: 0.15em 0.35em;
+    font-size: 0.875em;
+    font-family: var(--font-mono, monospace);
+  }
+
+  .tiptop-editor :global(.ProseMirror pre code) {
+    background: none;
+    padding: 0;
+    font-size: 0.875rem;
+    font-family: var(--font-mono, monospace);
+  }
+
+  .tiptop-editor :global(.ProseMirror hr) {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 1.5rem 0;
+  }
+
+  .tiptop-editor :global(.ProseMirror strong) { font-weight: 700; }
+  .tiptop-editor :global(.ProseMirror em)     { font-style: italic; }
+  .tiptop-editor :global(.ProseMirror s)      {
+    text-decoration: line-through;
+    color: var(--color-text-muted);
+  }
+
+  /* ── Save status ── */
+  .tiptop-status {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--pri);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .tiptop-status.visible { opacity: 1; }
+  .tiptop-status.error   { color: #e05252; }
+
+  .tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.tiptop-toolbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.125rem;
+    padding: 0.375rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    flex-shrink: 0;
+  }
+
+  /* ── Groups ── */
+  .tb-group {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .tb-group--color {
+    gap: 0.375rem;
+  }
+
+  /* ── Buttons ── */
+  .tb-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 0.375rem;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    user-select: none;
+  }
+
+  .tb-btn:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .tb-btn[aria-pressed="true"],
+  .tb-btn.is-active {
+    background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    color: var(--color-accent);
+  }
+
+  .tb-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* ── Selects ── */
+  .tb-select {
+    height: 28px;
+    padding: 0 0.375rem;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .tb-select:hover,
+  .tb-select:focus {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+    outline: none;
+  }
+
+  .tb-select--narrow {
+    width: 52px;
+    text-align: center;
+  }
+
+  /* ── Divider ── */
+  .tb-divider {
+    width: 1px;
+    height: 18px;
+    background-color: var(--color-border);
+    margin: 0 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .tb-spacer {
+    flex: 1;
+  }
+
+  /* ── Color pickers ── */
+  .tb-color-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--color-text-muted);
+  }
+
+  .tb-color-picker {
+    width: 28px !important;
+    height: 10px !important;
+  }
+
+  /* ── Shortcuts panel ── */
+  .tb-help-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0.75rem;
+    z-index: 300;
+    width: 320px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    padding: 0.75rem;
+  }
+
+  .tb-help-panel[hidden] {
+    display: none;
+  }
+
+  .tb-help-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.625rem;
+  }
+
+  .tb-help-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .tb-help-close {
+    border: none;
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+
+  .tb-help-close:hover {
+    color: var(--color-text);
+  }
+
+  .tb-help-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .tb-help-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.8125rem;
+  }
+
+  .tb-help-row:last-child {
+    border-bottom: none;
+  }
+
+  .tb-help-label {
+    color: var(--color-text-muted);
+  }
+
+  .tb-help-keys {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  .tb-help-plus {
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    margin: 0 0.1rem;
+  }
+
+--- File: tiptapUtils.ts ---
+import type { Block, TiptapNode, TiptapDoc } from "./tiptap.types";
+
+// ── Block[] → Tiptap HTML (load) ─────────────────────────────────────────
+
+/**
+ * Converts your Block[] from the database into an HTML string that
+ * Tiptap can render on initialisation.
+ *
+ * We generate HTML rather than Tiptap JSON because it's simpler to
+ * produce and Tiptap's `content` option accepts either.
+ *
+ * Each block type maps to the HTML element StarterKit understands:
+ * - paragraph   → <p>
+ * - heading     → <h1> (meta.level drives h1-h5)
+ * - heading-1   → <h1>
+ * - heading-2   → <h2>
+ * - heading-3   → <h3>
+ * - heading-4   → <h4>
+ * - heading-5   → <h5>
+ * - quote       → <blockquote><p>
+ * - checklist   → <ul><li>  (StarterKit bulletList)
+ * - code        → <pre><code>
+ * - separator   → <hr>
+ * - callout     → <p>  (no native Tiptap callout; degrades gracefully)
+ * - prompt      → <p>
+ *
+ * Content is escaped so stray < > & characters don't break the HTML.
+ *
+ * @param blocks - The Block[] array from the database.
+ * @returns An HTML string suitable for Tiptap's `content` option.
+ */
+export function blocksToHtml(blocks: Block[]): string {
+  /**
+   * Escapes the five XML/HTML special characters in a plain-text string.
+   * Required because block content is user-supplied and may contain < > & " '
+   */
+  function esc(str: string): string {
+    return str
+      .replace(/&/g,  "&amp;")
+      .replace(/</g,  "&lt;")
+      .replace(/>/g,  "&gt;")
+      .replace(/"/g,  "&quot;")
+      .replace(/'/g,  "&#39;");
+  }
+
+  return blocks.map((block) => {
+    const text = esc(block.content ?? "");
+
+    switch (block.type) {
+      case "heading": {
+        // The old editor stored level in meta, defaulting to 1
+        const level = (block.meta?.level as number) ?? 1;
+        return `<h${level}>${text}</h${level}>`;
+      }
+      case "heading-1": return `<h1>${text}</h1>`;
+      case "heading-2": return `<h2>${text}</h2>`;
+      case "heading-3": return `<h3>${text}</h3>`;
+      case "heading-4": return `<h4>${text}</h4>`;
+      case "heading-5": return `<h5>${text}</h5>`;
+      case "quote":     return `<blockquote><p>${text}</p></blockquote>`;
+      case "checklist": return `<ul><li>${text}</li></ul>`;
+      case "code":      return `<pre><code>${text}</code></pre>`;
+      case "separator": return `<hr>`;
+      // callout, prompt, and any unknown types degrade to paragraph
+      default:          return `<p>${text}</p>`;
+    }
+  }).join("\n");
+}
+
+// ── Tiptap JSON → Block[] (save) ──────────────────────────────────────────
+
+/**
+ * Extracts the plain-text content from a Tiptap inline node array.
+ * Walks the child nodes and concatenates any text nodes, ignoring marks
+ * (bold, italic etc.) since Block.content is plain text only.
+ *
+ * @param children - The `content` array of a Tiptap block node.
+ * @returns A plain-text string.
+ */
+export function inlineText(children: TiptapNode[] = []): string {
+  return children
+    .filter((n) => n.type === "text")
+    .map((n)    => n.text ?? "")
+    .join("");
+}
+
+/**
+ * Converts a Tiptap JSON document back to Block[] so the existing
+ * saveBlocks action and blockSchema validation need no changes.
+ *
+ * Tiptap node types → Block types:
+ * - paragraph      → "paragraph"
+ * - heading (l1)   → "heading"   (meta.level = 1, for legacy compat)
+ * - heading (l2-5) → "heading-2" … "heading-5"
+ * - blockquote     → "quote"
+ * - bulletList     → "checklist" (first listItem's text only)
+ * - orderedList    → "checklist" (treated same — no ordered list Block type)
+ * - codeBlock      → "code"
+ * - horizontalRule → "separator"
+ * - unknown        → "paragraph"
+ *
+ * Each block gets a fresh crypto.randomUUID() because Tiptap has no concept
+ * of stable block IDs — the IDs are only needed for the DB row.
+ *
+ * @param doc - The Tiptap JSON document from editor.getJSON().
+ * @returns A Block[] array matching the blockSchema in write_actions.ts.
+ */
+export function tiptapDocToBlocks(doc: TiptapDoc): Block[] {
+  return (doc.content ?? []).map((node): Block => {
+    const id = crypto.randomUUID();
+ 
+    switch (node.type) {
+      case "heading": {
+        const level = (node.attrs?.level as number) ?? 1;
+        // H1 maps to "heading" (legacy type) so old documents stay compatible
+        const type  = level === 1 ? "heading" : `heading-${level}`;
+        return { id, type, content: inlineText(node.content), meta: { level } };
+      }
+ 
+      case "blockquote": {
+        // blockquote wraps one or more paragraph nodes — flatten to one string
+        const text = (node.content ?? [])
+          .map((child) => inlineText(child.content))
+          .join("\n");
+        return { id, type: "quote", content: text };
+      }
+ 
+      case "bulletList":
+      case "orderedList": {
+        // Flatten all list items into one block separated by newlines.
+        // There is no multi-item Block type, so this is the closest mapping.
+        const text = (node.content ?? [])
+          .map((li) =>
+            (li.content ?? [])
+              .map((child) => inlineText(child.content))
+              .join(" ")
+          )
+          .join("\n");
+        return { id, type: "checklist", content: text };
+      }
+ 
+      case "codeBlock":
+        return { id, type: "code",      content: inlineText(node.content) };
+ 
+      case "horizontalRule":
+        return { id, type: "separator", content: "" };
+ 
+      default:
+        return { id, type: "paragraph", content: inlineText(node.content) };
+    }
+  });
+}
+
+// ── Preview extraction ───────────────────────────────────────────────────
+
+/**
+ * Extracts a sidebar preview string from a Block[].
+ * Mirrors extractPreview() in write_actions.ts — returns the text of the
+ * first non-empty paragraph or heading block, trimmed to 200 characters.
+ *
+ * We run this client-side so we don't have to send the full block array
+ * just to compute a preview on the server.
+ *
+ * @param blocks - The converted Block[] about to be saved.
+ * @returns A plain-text preview string, or null if the document is empty.
+ */
+export function extractPreview(blocks: Block[]): string | null {
+  for (const block of blocks) {
+    if (
+      (block.type === "paragraph" || block.type === "heading") &&
+      block.content.trim().length > 0
+    ) {
+      return block.content.trim().slice(0, 200);
+    }
+  }
+  return null;
+}
+
+--- File: tiptap.types.ts ---
+  // ── Types ────────────────────────────────────────────────────────────────
+
+  /**
+   * A single content block as stored in content_blocks in the database.
+   * Must match the Block interface in src/lib/journal/types.ts exactly
+   * so the saveBlocks action's blockSchema validation passes.
+   */
+  export interface Block {
+    id:       string;
+    type:     string;
+    content:  string;
+    meta?:    Record<string, unknown>;
+  }
+
+  /**
+   * Minimal Tiptap JSON node shape.
+   * The full ProseMirror schema is more complex — this is enough for
+   * our converter and type-narrowing.
+   */
+  export interface TiptapNode {
+    type:     string;
+    attrs?:   Record<string, unknown>;
+    content?: TiptapNode[];
+    text?:    string;
+  }
+
+  export interface TiptapDoc {
+    type:    "doc";
+    content: TiptapNode[];
+  }
+
+
+--- File: TipTopToolbar.astro ---
+---
+/**
+ * @file src/components/apps/tiptop/TipTopToolbar.astro
+ * @description Rich formatting toolbar for the TipTap editor.
+ *
+ * Features:
+ *   - Block type selector (H1-H5, paragraph, quote, code, separator) — Starwind Dropdown
+ *   - Inline marks (bold, italic, underline, strikethrough, inline code) — Starwind ButtonGroup
+ *   - Lists (bullet, ordered, task/checklist) — Starwind ButtonGroup
+ *   - Text color via Starwind ColorPicker (requires @tiptap/extension-color + TextStyle)
+ *   - Background highlight via Starwind ColorPicker (requires @tiptap/extension-highlight)
+ *   - Font family (sans, serif, mono) — Starwind Dropdown
+ *   - Font size (sm, base, lg, xl, 2xl) — Starwind Dropdown
+ *   - Emoji picker trigger (requires @tiptap/extension-emoji)
+ *   - Undo / redo — Starwind ButtonGroup
+ *   - Theme toggle (dispatches 'theme:toggle' for your existing theme system)
+ *   - Keyboard shortcuts help panel using Starwind Dropdown + Kbd
+ *
+ * Starwind components used:
+ *   - ButtonGroup  — collapses border-radius between adjacent toolbar buttons
+ *   - Dropdown     — block-type, font-family, font-size selectors; shortcuts panel
+ *   - DropdownItem — each option inside the above dropdowns
+ *   - Kbd          — key chips inside the shortcuts panel
+ *
+ * Communication with TipTop.astro:
+ *   Dispatches CustomEvents on `window`; TipTop.astro listens and calls editor commands.
+ *
+ *   Events dispatched:
+ *     'tiptop:command'  — { command: string, attrs?: Record<string,unknown> }
+ *
+ *   Events received (from TipTop.astro to update active state):
+ *     'tiptop:selection-changed' — { marks: string[], node: string, attrs: Record<string,unknown> }
+ *
+ * Usage:
+ *   <TipTopToolbar activeDocumentId={documentId} />
+ */
+
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownItem,
+  DropdownLabel,
+  DropdownSeparator,
+} from '@/components/starwind/dropdown';
+import { ButtonGroup } from '@/components/starwind/button-group';
+import { ColorPicker } from '@/components/starwind/color-picker';
+import { Kbd } from '@/components/starwind/kbd';
+import {
+  FONT_FAMILIES,
+  FONT_SIZES,
+  SHORTCUTS,
+  type FontFamily,
+  type FontSize,
+  type Shortcut,
+} from './tiptap.consts';
+
+interface Props {
+  /** Hide the toolbar entirely when no document is open. */
+  activeDocumentId: string;
+}
+
+const { activeDocumentId } = Astro.props;
+---
+
+{activeDocumentId && (
+  <div class="tiptop-toolbar" id="tiptop-toolbar" role="toolbar" aria-label="Text formatting">
+
+    {/* ── Block type ── Dropdown replaces a bare <select> so it inherits
+         the design system's popover styling and keyboard navigation. */}
+    <Dropdown>
+      <DropdownTrigger
+        id="tb-block-type-trigger"
+        class="tb-dropdown-trigger"
+        aria-label="Block type"
+        title="Block type"
+      >
+        <span id="tb-block-type-label">¶ Para</span>
+        <svg class="tb-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </DropdownTrigger>
+      <DropdownContent side="bottom" align="start" class="tb-dropdown-content">
+        <DropdownItem data-block-value="paragraph"  class="tb-block-item">¶ Paragraph</DropdownItem>
+        <DropdownSeparator />
+        <DropdownItem data-block-value="heading-1"  class="tb-block-item">H1 — Heading 1</DropdownItem>
+        <DropdownItem data-block-value="heading-2"  class="tb-block-item">H2 — Heading 2</DropdownItem>
+        <DropdownItem data-block-value="heading-3"  class="tb-block-item">H3 — Heading 3</DropdownItem>
+        <DropdownItem data-block-value="heading-4"  class="tb-block-item">H4 — Heading 4</DropdownItem>
+        <DropdownItem data-block-value="heading-5"  class="tb-block-item">H5 — Heading 5</DropdownItem>
+        <DropdownSeparator />
+        <DropdownItem data-block-value="blockquote" class="tb-block-item">" Blockquote</DropdownItem>
+        <DropdownItem data-block-value="codeBlock"  class="tb-block-item">{'</>'} Code block</DropdownItem>
+        <DropdownSeparator />
+        <DropdownItem data-block-value="bulletList"  class="tb-block-item">• Bullet list</DropdownItem>
+        <DropdownItem data-block-value="orderedList" class="tb-block-item">1. Ordered list</DropdownItem>
+        <DropdownItem data-block-value="taskList"    class="tb-block-item">☐ Task list</DropdownItem>
+      </DropdownContent>
+    </Dropdown>
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* ── Font family ── */}
+    <Dropdown>
+      <DropdownTrigger
+        id="tb-font-family-trigger"
+        class="tb-dropdown-trigger"
+        aria-label="Font family"
+        title="Font family"
+      >
+        <span id="tb-font-family-label">Sans</span>
+        <svg class="tb-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </DropdownTrigger>
+      <DropdownContent side="bottom" align="start" class="tb-dropdown-content">
+        {FONT_FAMILIES.map((f: FontFamily) => (
+          <DropdownItem
+            data-font-family={f.value}
+            class="tb-font-item"
+            style={`font-family: ${f.value}`}
+          >
+            {f.label}
+          </DropdownItem>
+        ))}
+      </DropdownContent>
+    </Dropdown>
+
+    {/* ── Font size ── */}
+    <Dropdown>
+      <DropdownTrigger
+        id="tb-font-size-trigger"
+        class="tb-dropdown-trigger tb-dropdown-trigger--narrow"
+        aria-label="Font size"
+        title="Font size"
+      >
+        <span id="tb-font-size-label">16</span>
+        <svg class="tb-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </DropdownTrigger>
+      <DropdownContent side="bottom" align="start" class="tb-dropdown-content tb-dropdown-content--narrow">
+        {FONT_SIZES.map((s: FontSize) => (
+          <DropdownItem data-font-size={s.value} class="tb-size-item">
+            {s.label}
+          </DropdownItem>
+        ))}
+      </DropdownContent>
+    </Dropdown>
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* ── Inline marks ── ButtonGroup collapses borders between siblings. */}
+    <ButtonGroup aria-label="Text formatting">
+      <button class="tb-btn" id="tb-bold"      data-command="bold"      type="button" aria-label="Bold"          title="Bold (Ctrl+B)">          <strong>B</strong></button>
+      <button class="tb-btn" id="tb-italic"    data-command="italic"    type="button" aria-label="Italic"        title="Italic (Ctrl+I)">        <em>I</em></button>
+      <button class="tb-btn" id="tb-underline" data-command="underline" type="button" aria-label="Underline"     title="Underline (Ctrl+U)">     <span style="text-decoration:underline">U</span></button>
+      <button class="tb-btn" id="tb-strike"    data-command="strike"    type="button" aria-label="Strikethrough" title="Strikethrough">           <span style="text-decoration:line-through">S</span></button>
+      <button class="tb-btn" id="tb-code"      data-command="code"      type="button" aria-label="Inline code"   title="Inline code (Ctrl+`)">    <code>`</code></button>
+    </ButtonGroup>
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* ── Lists ── */}
+    <ButtonGroup aria-label="List type">
+      <button class="tb-btn" id="tb-bullet"   data-command="bulletList"  type="button" aria-label="Bullet list"  title="Bullet list">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>
+      </button>
+      <button class="tb-btn" id="tb-ordered" data-command="orderedList" type="button" aria-label="Ordered list" title="Ordered list">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10H6"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+      </button>
+      <button class="tb-btn" id="tb-task"    data-command="taskList"    type="button" aria-label="Task list"    title="Task list">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6" rx="1"/><polyline points="7 8 8 9 10 7"/><line x1="13" y1="8" x2="21" y2="8"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="13" y1="16" x2="21" y2="16"/></svg>
+      </button>
+    </ButtonGroup>
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* ── Colors ── ColorPicker is already a Starwind component; the wrapper
+         row uses ButtonGroup so the two pickers share a collapsed border. */}
+    <ButtonGroup aria-label="Colour tools" class="tb-group--color">
+      <div class="tb-color-wrap" title="Text color">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <ColorPicker id="tb-text-color" size="sm" defaultValue="#e8c547" class="tb-color-picker" />
+      </div>
+      <div class="tb-color-wrap" title="Highlight color">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+        <ColorPicker id="tb-highlight-color" size="sm" defaultValue="#fef08a" class="tb-color-picker" />
+      </div>
+    </ButtonGroup>
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* ── Emoji ── */}
+    <button class="tb-btn" id="tb-emoji" data-command="emoji" type="button" aria-label="Insert emoji" title="Insert emoji">
+      😊
+    </button>
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* ── History ── ButtonGroup collapses the border between undo and redo. */}
+    <ButtonGroup aria-label="History">
+      <button class="tb-btn" id="tb-undo" data-command="undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>
+      </button>
+      <button class="tb-btn" id="tb-redo" data-command="redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"></path></svg>
+      </button>
+    </ButtonGroup>
+
+    {/* ── Spacer ── pushes theme + help to the right end */}
+    <div class="tb-spacer" aria-hidden="true"></div>
+
+    {/* ── Theme + Help ── */}
+    <ButtonGroup aria-label="View options">
+      <button class="tb-btn" id="tb-theme" type="button" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg id="tb-theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg id="tb-theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+
+      {/* ── Keyboard shortcuts ── Dropdown replaces the custom help panel.
+           The panel content uses Kbd for the key chips. */}
+      <Dropdown>
+        <DropdownTrigger
+          id="tb-help-trigger"
+          class="tb-btn"
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+        </DropdownTrigger>
+        <DropdownContent side="bottom" align="end" class="tb-shortcuts-panel">
+          <DropdownLabel class="tb-shortcuts-title">Keyboard shortcuts</DropdownLabel>
+          <DropdownSeparator />
+          {SHORTCUTS.map((s: Shortcut) => (
+            <div class="tb-shortcut-row">
+              <span class="tb-shortcut-label">{s.label}</span>
+              <span class="tb-shortcut-keys">
+                {s.keys.map((k: string, i: number) => (
+                  <>
+                    {i > 0 && <span class="tb-shortcut-plus">+</span>}
+                    <Kbd>{k}</Kbd>
+                  </>
+                ))}
+              </span>
+            </div>
+          ))}
+        </DropdownContent>
+      </Dropdown>
+    </ButtonGroup>
+
+  </div>
+)}
+
+<script>
+  import type { ColorPickerChangeEvent } from '@/components/starwind/color-picker/ColorPickerTypes';
+
+  // ─── Types ─────────────────────────────────────────────────────────────────
+
+  /** The payload sent to TipTop.astro via 'tiptop:command'. */
+  interface TipTopCommand {
+    command: string;
+    attrs?: Record<string, unknown>;
+  }
+
+  /** The selection state broadcast by TipTop.astro. */
+  interface SelectionState {
+    marks: string[];
+    nodeType: string;
+    attrs: Record<string, unknown>;
+  }
+
+  // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  /**
+   * Dispatches a command event to TipTop.astro's editor bridge.
+   *
+   * @param command - The command name matching a case in initToolbarBridge().
+   * @param attrs   - Optional attributes for the command (e.g. { level: 2 }).
+   */
+  function dispatch(command: string, attrs?: Record<string, unknown>): void {
+    window.dispatchEvent(
+      new CustomEvent<TipTopCommand>('tiptop:command', { detail: { command, attrs } })
+    );
+  }
+
+  // ─── Block type dropdown ───────────────────────────────────────────────────
+
+  /**
+   * Wires the block-type Dropdown to dispatch block-type commands.
+   * Each DropdownItem carries a `data-block-value` attribute that maps to
+   * the TipTap command. The trigger label is updated on click and when the
+   * editor selection changes.
+   */
+  function initBlockTypeDropdown(): void {
+    const trigger = document.getElementById('tb-block-type-trigger');
+    const label   = document.getElementById('tb-block-type-label');
+    if (!trigger || !label) return;
+
+    /** Human-readable labels keyed by the block-type value. */
+    const LABELS: Record<string, string> = {
+      'paragraph':   '¶ Para',
+      'heading-1':   'H1',
+      'heading-2':   'H2',
+      'heading-3':   'H3',
+      'heading-4':   'H4',
+      'heading-5':   'H5',
+      'blockquote':  '" Quote',
+      'codeBlock':   '</> Code',
+      'bulletList':  '• List',
+      'orderedList': '1. List',
+      'taskList':    '☐ Tasks',
+    };
+
+    // Wire every DropdownItem inside this Dropdown
+    trigger
+      .closest('[data-slot="dropdown"]')
+      ?.querySelectorAll<HTMLElement>('[data-block-value]')
+      .forEach((item) => {
+        item.addEventListener('click', () => {
+          const value = item.dataset.blockValue ?? 'paragraph';
+          dispatch('setBlockType', { blockType: value });
+          label.textContent = LABELS[value] ?? value;
+        });
+      });
+
+    // Update label when editor moves the cursor to a different block
+    window.addEventListener('tiptop:selection-changed', (e: Event) => {
+      const state = (e as CustomEvent<SelectionState>).detail;
+
+      let value = 'paragraph';
+      if (state.nodeType === 'heading') {
+        value = `heading-${state.attrs.level ?? 1}`;
+      } else if (state.nodeType === 'codeBlock') {
+        value = 'codeBlock';
+      } else if (state.nodeType === 'blockquote') {
+        value = 'blockquote';
+      } else if (state.marks.includes('bulletList')) {
+        value = 'bulletList';
+      } else if (state.marks.includes('orderedList')) {
+        value = 'orderedList';
+      } else if (state.marks.includes('taskList')) {
+        value = 'taskList';
+      } else {
+        value = state.nodeType ?? 'paragraph';
+      }
+
+      label.textContent = LABELS[value] ?? value;
+
+      // Mark the active item visually
+      trigger
+        .closest('[data-slot="dropdown"]')
+        ?.querySelectorAll<HTMLElement>('[data-block-value]')
+        .forEach((item) => {
+          item.classList.toggle('is-active', item.dataset.blockValue === value);
+        });
+    });
+  }
+
+  // ─── Font family dropdown ──────────────────────────────────────────────────
+
+  /**
+   * Wires the font-family Dropdown to dispatch setFontFamily commands.
+   * The trigger label reflects the currently selected family.
+   */
+  function initFontFamilyDropdown(): void {
+    const trigger = document.getElementById('tb-font-family-trigger');
+    const label   = document.getElementById('tb-font-family-label');
+    if (!trigger || !label) return;
+
+    trigger
+      .closest('[data-slot="dropdown"]')
+      ?.querySelectorAll<HTMLElement>('[data-font-family]')
+      .forEach((item) => {
+        item.addEventListener('click', () => {
+          const value = item.dataset.fontFamily ?? '';
+          dispatch('setFontFamily', { fontFamily: value });
+          label.textContent = item.textContent?.trim() ?? value;
+        });
+      });
+  }
+
+  // ─── Font size dropdown ────────────────────────────────────────────────────
+
+  /**
+   * Wires the font-size Dropdown to dispatch setFontSize commands.
+   * The trigger label reflects the currently selected size.
+   */
+  function initFontSizeDropdown(): void {
+    const trigger = document.getElementById('tb-font-size-trigger');
+    const label   = document.getElementById('tb-font-size-label');
+    if (!trigger || !label) return;
+
+    trigger
+      .closest('[data-slot="dropdown"]')
+      ?.querySelectorAll<HTMLElement>('[data-font-size]')
+      .forEach((item) => {
+        item.addEventListener('click', () => {
+          const value = item.dataset.fontSize ?? '';
+          dispatch('setFontSize', { fontSize: value });
+          label.textContent = item.textContent?.trim() ?? value;
+        });
+      });
+  }
+
+  // ─── Mark buttons ──────────────────────────────────────────────────────────
+
+  /**
+   * Wires inline mark toggle buttons (bold, italic, etc.) to dispatch
+   * toggle commands and reflect active state from selection events.
+   */
+  function initMarkButtons(): void {
+    const markButtons: Record<string, string> = {
+      'tb-bold':      'bold',
+      'tb-italic':    'italic',
+      'tb-underline': 'underline',
+      'tb-strike':    'strike',
+      'tb-code':      'code',
+    };
+
+    for (const [id, mark] of Object.entries(markButtons)) {
+      const btn = document.getElementById(id) as HTMLButtonElement | null;
+      if (!btn) continue;
+
+      btn.addEventListener('click', () => dispatch('toggleMark', { mark }));
+    }
+
+    // Reflect active marks in button state
+    window.addEventListener('tiptop:selection-changed', (e: Event) => {
+      const { marks } = (e as CustomEvent<SelectionState>).detail;
+
+      for (const [id, mark] of Object.entries(markButtons)) {
+        const btn = document.getElementById(id) as HTMLButtonElement | null;
+        if (!btn) continue;
+
+        const isActive = marks.includes(mark);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        btn.classList.toggle('is-active', isActive);
+      }
+    });
+  }
+
+  // ─── List buttons ──────────────────────────────────────────────────────────
+
+  /**
+   * Wires bullet, ordered, and task list toggle buttons.
+   */
+  function initListButtons(): void {
+    const listButtons: Record<string, string> = {
+      'tb-bullet':  'bulletList',
+      'tb-ordered': 'orderedList',
+      'tb-task':    'taskList',
+    };
+
+    for (const [id, listType] of Object.entries(listButtons)) {
+      const btn = document.getElementById(id) as HTMLButtonElement | null;
+      if (!btn) continue;
+
+      btn.addEventListener('click', () => dispatch('toggleList', { listType }));
+    }
+  }
+
+  // ─── Color pickers ─────────────────────────────────────────────────────────
+
+  /**
+   * Wires the Starwind ColorPicker components to dispatch color commands.
+   * Listens for the 'starwind-color-picker:change' custom event emitted
+   * by each picker and maps it to the appropriate TipTap command.
+   */
+  function initColorPickers(): void {
+    const textColorPicker = document.getElementById('tb-text-color');
+    const highlightPicker = document.getElementById('tb-highlight-color');
+
+    textColorPicker?.addEventListener('starwind-color-picker:change', (e: Event) => {
+      const { value } = (e as ColorPickerChangeEvent).detail;
+      dispatch('setColor', { color: value });
+    });
+
+    highlightPicker?.addEventListener('starwind-color-picker:change', (e: Event) => {
+      const { value } = (e as ColorPickerChangeEvent).detail;
+      dispatch('setHighlight', { color: value });
+    });
+  }
+
+  // ─── Emoji ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Triggers TipTap's emoji extension suggestion by dispatching an
+   * 'insertEmoji' command, which the editor bridge handles.
+   */
+  function initEmojiButton(): void {
+    const btn = document.getElementById('tb-emoji') as HTMLButtonElement | null;
+    if (!btn) return;
+
+    btn.addEventListener('click', () => dispatch('insertEmoji'));
+  }
+
+  // ─── Undo / redo ───────────────────────────────────────────────────────────
+
+  /**
+   * Wires undo and redo buttons.
+   */
+  function initHistory(): void {
+    document.getElementById('tb-undo')?.addEventListener('click', () => dispatch('undo'));
+    document.getElementById('tb-redo')?.addEventListener('click', () => dispatch('redo'));
+  }
+
+  // ─── Theme toggle ──────────────────────────────────────────────────────────
+
+  /**
+   * Toggles dark/light mode by flipping `data-theme` on <html> and
+   * persisting the choice to localStorage.
+   *
+   * Assumes your global CSS uses `[data-theme="dark"]` / `[data-theme="light"]`
+   * or the `.dark` class — swap the selector below to match your setup.
+   */
+  function initThemeToggle(): void {
+    const btn       = document.getElementById('tb-theme') as HTMLButtonElement | null;
+    const iconDark  = document.getElementById('tb-theme-icon-dark')  as SVGSVGElement | null;
+    const iconLight = document.getElementById('tb-theme-icon-light') as SVGSVGElement | null;
+    if (!btn) return;
+
+    /** Returns true if dark mode is currently active. */
+    function isDark(): boolean {
+      return document.documentElement.getAttribute('data-theme') === 'dark'
+        || document.documentElement.classList.contains('dark');
+    }
+
+    /** Syncs the button icon to the current theme. */
+    function syncIcon(): void {
+      const dark = isDark();
+      if (iconDark)  iconDark.style.display  = dark ? 'block' : 'none';
+      if (iconLight) iconLight.style.display = dark ? 'none'  : 'block';
+    }
+
+    syncIcon();
+
+    btn.addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+
+      document.documentElement.setAttribute('data-theme', next);
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      localStorage.setItem('theme', next);
+      syncIcon();
+
+      window.dispatchEvent(new CustomEvent('theme:toggle', { detail: { theme: next } }));
+    });
+  }
+
+  // ─── Boot ──────────────────────────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initBlockTypeDropdown();
+    initFontFamilyDropdown();
+    initFontSizeDropdown();
+    initMarkButtons();
+    initListButtons();
+    initColorPickers();
+    initEmojiButton();
+    initHistory();
+    initThemeToggle();
+    // The shortcuts panel is now a Starwind Dropdown — no custom JS needed.
+  });
+</script>
+</span>
+
+--- File: tiptap.consts.ts ---
+/** Font family options presented in the selector. */
+export const FONT_FAMILIES = [
+  { label: 'Sans',  value: 'sans-serif' },
+  { label: 'Serif', value: 'Georgia, serif' },
+  { label: 'Mono',  value: 'var(--font-mono, monospace)' },
+];
+
+/** Font size presets mapped to pixel values TipTap's FontSize extension accepts. */
+export const FONT_SIZES = [
+  { label: 'XS',   value: '12px' },
+  { label: 'SM',   value: '14px' },
+  { label: 'Base', value: '16px' },
+  { label: 'LG',   value: '20px' },
+  { label: 'XL',   value: '24px' },
+  { label: '2XL',  value: '32px' },
+];
+
+/** Keyboard shortcuts shown in the help panel. */
+export const SHORTCUTS = [
+  { label: 'Bold',         keys: ['Ctrl', 'B'] },
+  { label: 'Italic',       keys: ['Ctrl', 'I'] },
+  { label: 'Underline',    keys: ['Ctrl', 'U'] },
+  { label: 'Strikethrough',keys: ['Ctrl', 'Shift', 'S'] },
+  { label: 'Inline code',  keys: ['Ctrl', '`'] },
+  { label: 'Heading 1',    keys: ['Ctrl', 'Alt', '1'] },
+  { label: 'Heading 2',    keys: ['Ctrl', 'Alt', '2'] },
+  { label: 'Heading 3',    keys: ['Ctrl', 'Alt', '3'] },
+  { label: 'Bullet list',  keys: ['Ctrl', 'Shift', '8'] },
+  { label: 'Ordered list', keys: ['Ctrl', 'Shift', '7'] },
+  { label: 'Task list',    keys: ['Ctrl', 'Shift', '9'] },
+  { label: 'Blockquote',   keys: ['Ctrl', 'Shift', 'B'] },
+  { label: 'Code block',   keys: ['Ctrl', 'Alt', 'C'] },
+  { label: 'Undo',         keys: ['Ctrl', 'Z'] },
+  { label: 'Redo',         keys: ['Ctrl', 'Shift', 'Z'] },
+];
+
+export type Shortcut = (typeof SHORTCUTS)[number];
+export type FontFamily = (typeof FONT_FAMILIES)[number];
+export type FontSize = (typeof FONT_SIZES)[number];
+
+

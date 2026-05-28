@@ -1,0 +1,842 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/WritingPrompts.astro
+ * @description Implements premium, creative writing prompts and mini-games to spark creativity.
+ */
+---
+<!-- Minimized Teaser Tab -->
+<button type="button" class="sparks-teaser-tab" id="sparks-teaser-tab" style="display: none;" aria-label="Open Creative Lab prompts">
+  <span>💡 Sparks</span>
+</button>
+
+<div class="tb-prompts-panel" id="tb-prompts-panel" aria-label="Writing prompts">
+  <div class="prompts-header">
+    <div class="prompts-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5 5 3Z"/>
+      </svg>
+      <span>Creative Lab</span>
+    </div>
+    <button type="button" class="prompts-close" id="tb-prompts-close" aria-label="Close panel">✕</button>
+  </div>
+
+  {/* Tabs navigation */}
+  <div class="prompts-tabs" role="tablist">
+    <button type="button" class="prompts-tab is-active" data-tab="prompts" role="tab" aria-selected="true">💡 Prompts</button>
+    <button type="button" class="prompts-tab" data-tab="words" role="tab" aria-selected="false">🎮 Word Game</button>
+    <button type="button" class="prompts-tab" data-tab="danger" role="tab" aria-selected="false">🔥 Danger Mode</button>
+  </div>
+
+  {/* TAB CONTENT: PROMPTS */}
+  <div class="prompts-content-pane is-active" id="pane-prompts">
+    <p class="prompt-text" id="prompt-display">Generating creative prompt...</p>
+    <div class="prompt-actions">
+      <button type="button" class="prompt-btn btn-secondary" id="prompt-btn-next">Next Prompt</button>
+      <button type="button" class="prompt-btn btn-primary" id="prompt-btn-insert">Insert as Header</button>
+    </div>
+  </div>
+
+  {/* TAB CONTENT: WORD CHALLENGE */}
+  <div class="prompts-content-pane" id="pane-words">
+    <div class="game-setup" id="words-setup">
+      <p class="game-desc">Incorporate the secret word in your text before the timer runs out!</p>
+      <button type="button" class="prompt-btn btn-primary btn-full" id="word-btn-start">Start Challenge</button>
+    </div>
+    <div class="game-active" id="words-active" style="display:none;">
+      <div class="game-stats">
+        <span class="game-label">SECRET WORD</span>
+        <span class="game-timer" id="word-timer">60s</span>
+      </div>
+      <div class="secret-word-pill" id="secret-word-display">ENIGMA</div>
+      <p class="game-status" id="word-game-status">Type a paragraph containing this word!</p>
+    </div>
+  </div>
+
+  {/* TAB CONTENT: DANGER MODE */}
+  <div class="prompts-content-pane" id="pane-danger">
+    <div class="game-setup" id="danger-setup">
+      <p class="game-desc">Keep writing! If you pause typing for more than 4 seconds, the screen will wiggle and glow red. Make it to 60 seconds to win!</p>
+      <button type="button" class="prompt-btn btn-primary btn-full" id="danger-btn-start">Enter Danger Mode</button>
+    </div>
+    <div class="game-active" id="danger-active" style="display:none;">
+      <div class="game-stats">
+        <span class="game-label">DANGER ACTIVE</span>
+        <span class="game-timer danger" id="danger-timer">60s</span>
+      </div>
+      <div class="danger-bar-container">
+        <div class="danger-bar" id="danger-bar" style="width: 100%;"></div>
+      </div>
+      <p class="game-status" id="danger-game-status">Keep writing to stay safe!</p>
+    </div>
+  </div>
+</div>
+
+{/* Danger Overlay vignette */}
+<div class="danger-overlay" id="danger-overlay" aria-hidden="true" style="display:none;"></div>
+
+<style>
+  .tb-prompts-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 320px;
+    background-color: var(--color-surface, #ffffff) !important; /* solid non-transparent background */
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: var(--font-sans, sans-serif);
+    
+    /* Elegant slide-in transitions from the right */
+    opacity: 0;
+    transform: translateX(40px);
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  }
+
+  .tb-prompts-panel.is-teasing,
+  .tb-prompts-panel.is-active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .dark .tb-prompts-panel {
+    background-color: #1e1e20 !important; /* solid opaque dark background */
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Minimized Sparks tab in the gutter */
+  .sparks-teaser-tab {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--color-surface, #ffffff) !important;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    z-index: 100;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary, #00d2be);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: var(--font-sans, sans-serif);
+    animation: sparks-pulse 2s infinite ease-in-out;
+    white-space: nowrap;
+    border-color: var(--color-primary, #00d2be);
+  }
+
+  .sparks-teaser-tab:hover {
+    background-color: var(--color-muted, #f3f4f6);
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(0, 210, 190, 0.3);
+  }
+
+  .dark .sparks-teaser-tab {
+    background-color: #1e1e20 !important;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  @keyframes sparks-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 210, 190, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(0, 210, 190, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 210, 190, 0);
+    }
+  }
+
+  .prompts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .prompts-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-primary, var(--pri, #00d2be));
+  }
+
+  .prompts-close {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    padding: 0.2rem;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+
+  .prompts-close:hover {
+    color: var(--color-text);
+  }
+
+  .prompts-tabs {
+    display: flex;
+    background-color: var(--color-muted, #f3f4f6);
+    padding: 2px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .dark .prompts-tabs {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .prompts-tab {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 0.375rem 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+  }
+
+  .prompts-tab:hover {
+    color: var(--color-text);
+  }
+
+  .prompts-tab.is-active {
+    background-color: var(--color-surface, #ffffff);
+    color: var(--color-primary, var(--pri, #00d2be));
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .prompts-tab.is-active {
+    background-color: #2b2b2e;
+  }
+
+  .prompts-content-pane {
+    display: none;
+    padding: 1.25rem 1rem;
+    flex-direction: column;
+    gap: 1rem;
+    background-color: var(--color-surface, #ffffff) !important;
+  }
+
+  .dark .prompts-content-pane {
+    background-color: #1e1e20 !important;
+  }
+
+  .prompts-content-pane.is-active {
+    display: flex;
+  }
+
+  .prompt-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-text, #222);
+    min-height: 70px;
+    margin: 0;
+  }
+
+  .prompt-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .prompt-btn {
+    flex: 1;
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary, var(--pri, #00d2be));
+    color: white;
+    border-color: var(--color-primary, var(--pri, #00d2be));
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--color-text);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--color-muted, #f3f4f6);
+  }
+
+  .dark .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .btn-full {
+    flex: none;
+    width: 100%;
+  }
+
+  .game-desc {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+    margin: 0 0 1rem;
+  }
+
+  .game-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .game-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  .game-timer {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-primary, var(--pri, #00d2be));
+    background-color: color-mix(in srgb, var(--color-primary, var(--pri, #00d2be)) 10%, transparent);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .game-timer.danger {
+    color: var(--accent, #dc3a68);
+    background-color: color-mix(in srgb, var(--accent, #dc3a68) 10%, transparent);
+  }
+
+  .game-timer.complete {
+    color: gold;
+    background-color: rgba(255, 215, 0, 0.15);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    animation: pulse 1s infinite alternate;
+  }
+
+  @keyframes pulse {
+    from { box-shadow: 0 0 4px rgba(255, 215, 0, 0.2); }
+    to { box-shadow: 0 0 12px rgba(255, 215, 0, 0.5); }
+  }
+
+  .secret-word-pill {
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 0.1em;
+    color: var(--accent, #dc3a68);
+    background-color: color-mix(in srgb, var(--accent, #dc3a68) 8%, transparent);
+    border: 1px dashed var(--accent, #dc3a68);
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+  }
+
+  .game-status {
+    font-size: 0.75rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    margin: 0.5rem 0 0;
+    font-style: italic;
+  }
+
+  .danger-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: var(--color-muted, #f3f4f6);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0.75rem 0;
+  }
+
+  .dark .danger-bar-container {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .danger-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary, #00d2be), var(--accent, #dc3a68));
+    transition: width 0.1s linear;
+  }
+
+  /* Danger Screen vignette */
+  .danger-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: inset 0 0 100px rgba(220, 58, 104, 0);
+    transition: box-shadow 0.2s ease-in-out;
+  }
+
+  .danger-overlay.show-warning {
+    box-shadow: inset 0 0 120px rgba(220, 58, 104, 0.45);
+    animation: heart-beat 1s infinite alternate;
+  }
+
+  @keyframes heart-beat {
+    from { box-shadow: inset 0 0 90px rgba(220, 58, 104, 0.35); }
+    to { box-shadow: inset 0 0 130px rgba(220, 58, 104, 0.55); }
+  }
+
+  .editor-shake {
+    animation: shake 0.15s infinite alternate;
+  }
+
+  @keyframes shake {
+    from { transform: translate(1px, 1px) rotate(0deg); }
+    to { transform: translate(-1px, -1px) rotate(0.1deg); }
+  }
+</style>
+
+<script>
+  const prompts = [
+    "Write about a city where it only rains when someone is telling a lie.",
+    "Two strangers are stuck in an elevator, but one of them is from the year 2145.",
+    "You discover a diary that writes back to you in real time.",
+    "Describe your current room, but from the perspective of a suspicious houseplant.",
+    "Begin your story with: 'The package arrived on a Tuesday, unmarked and ice-cold.'",
+    "Write a scene that takes place entirely in the dark, relying on sounds and touch.",
+    "Write about a character who can hear the thoughts of the objects they touch.",
+    "A wizard's apprentice accidentally casts a spell that makes all metaphors literal.",
+    "Write a conversation between a lockpicker and a door that doesn't want to open."
+  ];
+
+  const words = [
+    "enigma", "whisper", "echo", "labyrinth", "quantum", "crimson", "nebula", "vintage",
+    "solitude", "silhouette", "emerald", "velocity", "melancholy", "serendipity", "nostalgia",
+    "mirage", "oasis", "gravity", "friction", "spectrum", "phantom", "cascade", "paradox"
+  ];
+
+  function initPromptsPanel(): void {
+    const panel = document.getElementById('tb-prompts-panel');
+    const teaser = document.getElementById('sparks-teaser-tab');
+    const trigger = document.getElementById('tb-prompts');
+    const closeBtn = document.getElementById('tb-prompts-close');
+    const overlay = document.getElementById('danger-overlay');
+
+    if (!panel) return;
+
+    let wordGameActive = false;
+    let dangerGameActive = false;
+
+    let teaserTimeout: number | null = null;
+    let autoCloseTimeout: number | null = null;
+
+    // ── Automated Teaser Slide-In on Load ──
+    setTimeout(() => {
+      if (panel && !panel.classList.contains('is-active') && (!teaser || teaser.style.display === 'none')) {
+        panel.classList.add('is-teasing');
+        loadNewPrompt();
+        
+        // Start 6-second auto-recede timer if not hovered
+        autoCloseTimeout = window.setTimeout(() => {
+          if (panel.classList.contains('is-teasing') && !panel.classList.contains('is-active')) {
+            panel.classList.remove('is-teasing');
+            if (teaser) teaser.style.display = 'flex';
+          }
+        }, 6000);
+      }
+    }, 2000);
+
+    // ── Panel Hover and Mouseout timers ──
+    panel.addEventListener('mouseenter', () => {
+      if (autoCloseTimeout) {
+        clearTimeout(autoCloseTimeout);
+        autoCloseTimeout = null;
+      }
+      if (teaserTimeout) {
+        clearTimeout(teaserTimeout);
+        teaserTimeout = null;
+      }
+      panel.classList.remove('is-teasing');
+      panel.classList.add('is-active');
+      if (teaser) teaser.style.display = 'none';
+    });
+
+    panel.addEventListener('mouseleave', () => {
+      // If a game is active, don't auto-slide out! Keep open.
+      if (wordGameActive || dangerGameActive) return;
+
+      // Start 3-second auto-slide-out timer
+      teaserTimeout = window.setTimeout(() => {
+        panel.classList.remove('is-active');
+        panel.classList.remove('is-teasing');
+        if (teaser) teaser.style.display = 'flex';
+      }, 3000);
+    });
+
+    // ── Teaser tab triggers ──
+    function showPanelFromTeaser(): void {
+      window.dispatchEvent(new CustomEvent('tiptop:prompts-opened'));
+      if (teaser) teaser.style.display = 'none';
+      if (panel) {
+        panel.classList.add('is-active');
+        loadNewPrompt();
+      }
+      if (teaserTimeout) {
+        clearTimeout(teaserTimeout);
+        teaserTimeout = null;
+      }
+    }
+
+    teaser?.addEventListener('click', showPanelFromTeaser);
+    teaser?.addEventListener('mouseenter', showPanelFromTeaser);
+
+    // ── Toggle panel visibility from trigger button ──
+    trigger?.addEventListener('click', () => {
+      const isVisible = panel.classList.contains('is-active') || panel.classList.contains('is-teasing');
+      if (!isVisible) {
+        window.dispatchEvent(new CustomEvent('tiptop:prompts-opened'));
+        if (teaser) teaser.style.display = 'none';
+        panel.classList.add('is-active');
+        trigger.classList.add('is-active');
+        trigger.setAttribute('aria-pressed', 'true');
+        loadNewPrompt();
+      } else {
+        closePromptsPanel();
+      }
+    });
+
+    closeBtn?.addEventListener('click', closePromptsPanel);
+
+    function closePromptsPanel(): void {
+      panel?.classList.remove('is-active');
+      panel?.classList.remove('is-teasing');
+      if (teaser) teaser.style.display = 'flex';
+      trigger?.classList.remove('is-active');
+      trigger?.setAttribute('aria-pressed', 'false');
+      stopWordGame();
+      stopDangerMode();
+    }
+
+    // ── Tabs Navigation ──
+    const tabs = panel.querySelectorAll('.prompts-tab');
+    const panes = panel.querySelectorAll('.prompts-content-pane');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => {
+          t.classList.remove('is-active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        panes.forEach((p) => p.classList.remove('is-active'));
+
+        tab.classList.add('is-active');
+        tab.setAttribute('aria-selected', 'true');
+        const paneId = `pane-${(tab as HTMLElement).dataset.tab}`;
+        document.getElementById(paneId)?.classList.add('is-active');
+
+        // Stop games if switching tabs
+        stopWordGame();
+        stopDangerMode();
+      });
+    });
+
+    // ── Tab 1: Prompts ──
+    const promptDisplay = document.getElementById('prompt-display');
+    const promptNext = document.getElementById('prompt-btn-next');
+    const promptInsert = document.getElementById('prompt-btn-insert');
+
+    function loadNewPrompt(): void {
+      if (!promptDisplay) return;
+      const idx = Math.floor(Math.random() * prompts.length);
+      promptDisplay.textContent = prompts[idx];
+    }
+
+    promptNext?.addEventListener('click', loadNewPrompt);
+    promptInsert?.addEventListener('click', () => {
+      const text = promptDisplay?.textContent ?? '';
+      if (!text) return;
+      // Insert as H2 heading programmatically via custom tiptop event
+      window.dispatchEvent(new CustomEvent('tiptop:command', {
+        detail: {
+          command: 'setBlockType',
+          attrs: { blockType: 'heading-2' }
+        }
+      }));
+      // Chain inserting the text
+      setTimeout(() => {
+        const editorEl = document.querySelector('.ProseMirror') as HTMLElement | null;
+        if (editorEl) {
+          // Trigger standard keydown/input or command
+          window.dispatchEvent(new CustomEvent('tiptop:command', {
+            detail: {
+              command: 'insertContent',
+              attrs: { content: text + '\n' }
+            }
+          }));
+        }
+      }, 50);
+    });
+
+    // ── Tab 2: Word Game ──
+    const wordsSetup = document.getElementById('words-setup');
+    const wordsActive = document.getElementById('words-active');
+    const wordStartBtn = document.getElementById('word-btn-start');
+    const wordTimerEl = document.getElementById('word-timer');
+    const secretWordEl = document.getElementById('secret-word-display');
+    const wordStatusEl = document.getElementById('word-game-status');
+
+    wordGameActive = false;
+    let wordTimer: number | null = null;
+    let wordTimeLeft = 60;
+    let targetWord = '';
+
+    wordStartBtn?.addEventListener('click', () => {
+      startWordGame();
+    });
+
+    function startWordGame(): void {
+      stopWordGame();
+      if (!wordsSetup || !wordsActive || !secretWordEl || !wordTimerEl || !wordStatusEl) return;
+
+      wordsSetup.style.display = 'none';
+      wordsActive.style.display = 'block';
+
+      // Pick random word
+      const idx = Math.floor(Math.random() * words.length);
+      targetWord = words[idx];
+      secretWordEl.textContent = targetWord.toUpperCase();
+      
+      wordTimeLeft = 60;
+      wordTimerEl.textContent = `${wordTimeLeft}s`;
+      wordTimerEl.className = 'game-timer';
+      wordStatusEl.textContent = 'Type a paragraph containing this word!';
+      wordGameActive = true;
+
+      wordTimer = window.setInterval(() => {
+        wordTimeLeft--;
+        if (wordTimerEl) wordTimerEl.textContent = `${wordTimeLeft}s`;
+
+        if (wordTimeLeft <= 10) {
+          wordTimerEl?.classList.add('danger');
+        }
+
+        if (wordTimeLeft <= 0) {
+          failWordGame();
+        }
+      }, 1000);
+    }
+
+    function stopWordGame(): void {
+      if (wordTimer) {
+        clearInterval(wordTimer);
+        wordTimer = null;
+      }
+      wordGameActive = false;
+      if (wordsSetup && wordsActive) {
+        wordsSetup.style.display = 'block';
+        wordsActive.style.display = 'none';
+      }
+    }
+
+    function failWordGame(): void {
+      if (wordTimer) clearInterval(wordTimer);
+      wordGameActive = false;
+      if (wordStatusEl) {
+        wordStatusEl.textContent = '❌ Time ran out! Try again.';
+        wordStatusEl.style.color = 'var(--accent, #dc3a68)';
+      }
+      setTimeout(stopWordGame, 2500);
+    }
+
+    function winWordGame(): void {
+      if (wordTimer) clearInterval(wordTimer);
+      wordGameActive = false;
+      if (wordTimerEl) {
+        wordTimerEl.textContent = '🎉 WIN';
+        wordTimerEl.classList.add('complete');
+      }
+      if (wordStatusEl) {
+        wordStatusEl.textContent = '✨ Success! Word incorporated!';
+        wordStatusEl.style.color = 'var(--color-primary, #00d2be)';
+      }
+      setTimeout(stopWordGame, 2500);
+    }
+
+    // ── Tab 3: Danger Mode ──
+    const dangerSetup = document.getElementById('danger-setup');
+    const dangerActive = document.getElementById('danger-active');
+    const dangerStartBtn = document.getElementById('danger-btn-start');
+    const dangerTimerEl = document.getElementById('danger-timer');
+    const dangerBar = document.getElementById('danger-bar');
+    const dangerStatusEl = document.getElementById('danger-game-status');
+
+    dangerGameActive = false;
+    let dangerTimeLeft = 60;
+    let lastTypingTime = Date.now();
+    let dangerTimer: number | null = null;
+    let overlayTimer: number | null = null;
+
+    dangerStartBtn?.addEventListener('click', () => {
+      startDangerMode();
+    });
+
+    function startDangerMode(): void {
+      stopDangerMode();
+      if (!dangerSetup || !dangerActive || !dangerTimerEl || !dangerBar || !dangerStatusEl) return;
+
+      dangerSetup.style.display = 'none';
+      dangerActive.style.display = 'block';
+
+      dangerTimeLeft = 60;
+      dangerTimerEl.textContent = `${dangerTimeLeft}s`;
+      dangerStatusEl.textContent = 'Keep writing to stay safe!';
+      dangerGameActive = true;
+      lastTypingTime = Date.now();
+
+      // Main survival timer
+      dangerTimer = window.setInterval(() => {
+        dangerTimeLeft--;
+        if (dangerTimerEl) dangerTimerEl.textContent = `${dangerTimeLeft}s`;
+
+        if (dangerTimeLeft <= 0) {
+          winDangerMode();
+        }
+      }, 1000);
+
+      // Sub-second watcher for typing gaps
+      overlayTimer = window.setInterval(() => {
+        const inactiveMs = Date.now() - lastTypingTime;
+        const barWidth = Math.max(0, 100 - (inactiveMs / 4000) * 100);
+        
+        if (dangerBar) {
+          dangerBar.style.width = `${barWidth}%`;
+        }
+
+        const editorShell = document.querySelector('.tiptop-shell');
+
+        if (inactiveMs > 2500) {
+          // Turn screen red
+          overlay?.style.setProperty('display', 'block');
+          overlay?.classList.add('show-warning');
+          editorShell?.classList.add('editor-shake');
+          if (dangerStatusEl) {
+            dangerStatusEl.textContent = '⚠️ WRITE! Screen starting to wiggle!';
+            dangerStatusEl.style.color = 'var(--accent, #dc3a68)';
+          }
+        } else {
+          overlay?.style.setProperty('display', 'none');
+          overlay?.classList.remove('show-warning');
+          editorShell?.classList.remove('editor-shake');
+          if (dangerStatusEl) {
+            dangerStatusEl.textContent = '🔥 danger mode active. Keep writing!';
+            dangerStatusEl.style.color = '';
+          }
+        }
+
+        if (inactiveMs > 5000) {
+          failDangerMode();
+        }
+      }, 100);
+    }
+
+    function stopDangerMode(): void {
+      if (dangerTimer) {
+        clearInterval(dangerTimer);
+        dangerTimer = null;
+      }
+      if (overlayTimer) {
+        clearInterval(overlayTimer);
+        overlayTimer = null;
+      }
+      dangerGameActive = false;
+      
+      // Clear wiggles and red glow
+      overlay?.style.setProperty('display', 'none');
+      overlay?.classList.remove('show-warning');
+      document.querySelector('.tiptop-shell')?.classList.remove('editor-shake');
+
+      if (dangerSetup && dangerActive) {
+        dangerSetup.style.display = 'block';
+        dangerActive.style.display = 'none';
+      }
+    }
+
+    function winDangerMode(): void {
+      if (dangerTimer) clearInterval(dangerTimer);
+      if (overlayTimer) clearInterval(overlayTimer);
+      dangerGameActive = false;
+      if (dangerTimerEl) {
+        dangerTimerEl.textContent = '🏆 WIN';
+        dangerTimerEl.classList.add('complete');
+      }
+      if (dangerStatusEl) {
+        dangerStatusEl.textContent = '🔥 Incredible! 60s freewrite complete!';
+        dangerStatusEl.style.color = 'var(--color-primary, #00d2be)';
+      }
+      setTimeout(stopDangerMode, 2500);
+    }
+
+    function failDangerMode(): void {
+      if (dangerTimer) clearInterval(dangerTimer);
+      if (overlayTimer) clearInterval(overlayTimer);
+      dangerGameActive = false;
+      if (dangerStatusEl) {
+        dangerStatusEl.textContent = '💥 Danger! You paused for too long!';
+        dangerStatusEl.style.color = 'var(--accent, #dc3a68)';
+      }
+      
+      // Clear visual shake
+      document.querySelector('.tiptop-shell')?.classList.remove('editor-shake');
+
+      setTimeout(stopDangerMode, 2500);
+    }
+
+    // ── Listen to editor typing changes ──
+    window.addEventListener('tiptop:content-changed', (e: Event) => {
+      const detail = (e as CustomEvent<{ text: string }>).detail;
+      const text = detail.text.toLowerCase();
+
+      // Update Danger Mode typing stopwatch
+      if (dangerGameActive) {
+        lastTypingTime = Date.now();
+      }
+
+      // Check Word Game incorporated target word
+      if (wordGameActive && targetWord) {
+        // Look for exact word boundary match
+        const regex = new RegExp(`\\b${targetWord}\\b`, 'i');
+        if (regex.test(text)) {
+          winWordGame();
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initPromptsPanel);
+</script>

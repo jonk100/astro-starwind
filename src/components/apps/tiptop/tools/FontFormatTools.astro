@@ -1,0 +1,51 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/FontFormatTools.astro
+ * @description Text inline formatting tools (bold, italic, underline, etc.) for the TipTap editor.
+ */
+import ToolButton from "./ToolButton.astro";
+import { ButtonGroup } from "@/components/starwind/button-group";
+---
+<ButtonGroup aria-label="Text formatting">
+  <ToolButton id="tb-bold" ariaLabel="Bold" title="Bold (Ctrl+B)">
+    <strong>B</strong>
+  </ToolButton>
+  <ToolButton id="tb-italic" ariaLabel="Italic" title="Italic (Ctrl+I)">
+    <em>I</em>
+  </ToolButton>
+  <ToolButton id="tb-underline" ariaLabel="Underline" title="Underline (Ctrl+U)">
+    <span style="text-decoration:underline">U</span>
+  </ToolButton>
+  <ToolButton id="tb-strike" ariaLabel="Strikethrough" title="Strikethrough">
+    <span style="text-decoration:line-through">S</span>
+  </ToolButton>
+  <ToolButton id="tb-code" ariaLabel="Inline code" title="Inline code (Ctrl+`)">
+    <code>`</code>
+  </ToolButton>
+</ButtonGroup>
+
+<script>
+  import { dispatch, reflectActiveMarks } from './toolbarUtils.ts';
+
+  function initFontFormatTool(): void {
+    const markButtons = {
+      'tb-bold':      'bold',
+      'tb-italic':    'italic',
+      'tb-underline': 'underline',
+      'tb-strike':    'strike',
+      'tb-code':      'code',
+    };
+
+    // Auto-update visual toggle classes based on selection
+    reflectActiveMarks(markButtons);
+
+    // Bind click events to toggle marks
+    for (const [id, mark] of Object.entries(markButtons)) {
+      document.getElementById(id)?.addEventListener('click', () => {
+        dispatch('toggleMark', { mark });
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initFontFormatTool);
+</script>

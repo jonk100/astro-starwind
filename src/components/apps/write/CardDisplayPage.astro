@@ -1,0 +1,336 @@
+---
+/**
+ * @file src/components/apps/write/CardDisplayPage.astro
+ * @description Modular display page handling layout toggles (1-column list vs 2-column grid)
+ * and note card listings for pinned vs other entries.
+ */
+import DocumentCard from "./DocumentCard.astro";
+
+interface Folder {
+  id: string;
+  name: string;
+  icon: string | null;
+  parent_id: string | null;
+  is_archived: boolean;
+}
+
+interface Document {
+  id: string;
+  title: string;
+  preview: string | null;
+  updated_at: string | Date;
+  pinned: boolean;
+  folder_id: string | null;
+  is_archived: boolean;
+}
+
+interface Props {
+  folders: Folder[];
+  documents: Document[];
+  activeFolderId: string | null;
+}
+
+const { folders, documents, activeFolderId } = Astro.props;
+
+const activeFolder = folders.find(f => f.id === activeFolderId);
+
+// Filter documents to display in the dashboard
+const displayedDocs = activeFolderId
+  ? documents.filter(d => d.folder_id === activeFolderId && !d.is_archived)
+  : documents.filter(d => !d.is_archived);
+
+const pinnedDocs = displayedDocs.filter(d => d.pinned);
+const otherDocs = displayedDocs.filter(d => !d.pinned);
+---
+
+<div class="dashboard-canvas">
+  <div class="dashboard-header">
+    <div class="header-text">
+      <h2 class="dashboard-title">
+        {activeFolder ? `📁 ${activeFolder.name}` : "📓 My Journal Dashboard"}
+      </h2>
+      <p class="dashboard-subtitle">
+        {activeFolder 
+          ? `Viewing all entries inside ${activeFolder.name}.` 
+          : "Welcome to your calm writing space. View or manage your thoughts below."}
+      </p>
+    </div>
+
+    <!-- Premium layout toggler controls (Google Keep style) -->
+    <div class="layout-toolbar">
+      <button 
+        type="button" 
+        id="btn-layout-list" 
+        class="btn-layout-toggle active"
+        title="Toggle List View (1 column)"
+      >
+        📋 List
+      </button>
+      <button 
+        type="button" 
+        id="btn-layout-grid" 
+        class="btn-layout-toggle"
+        title="Toggle Grid View (2 columns)"
+      >
+        🔲 Grid
+      </button>
+    </div>
+  </div>
+
+  <!-- Note Card lists container -->
+  <div id="dashboard-cards-container" class="dashboard-layout-wrapper layout-list">
+    
+    {pinnedDocs.length > 0 && (
+      <div class="dashboard-section">
+        <h4 class="section-label">📌 Pinned Entries</h4>
+        <div class="cards-grid">
+          {pinnedDocs.map(doc => {
+            const docFolder = folders.find(f => f.id === doc.folder_id);
+            return (
+              <DocumentCard
+                id={doc.id}
+                title={doc.title}
+                preview={doc.preview}
+                updatedAt={doc.updated_at}
+                pinned={doc.pinned}
+                folderName={docFolder?.name}
+              />
+            );
+          })}
+        </div>
+      </div>
+    )}
+
+    <div class="dashboard-section">
+      <h4 class="section-label">
+        {pinnedDocs.length > 0 ? "Others" : "📝 All Entries"}
+      </h4>
+      
+      {otherDocs.length > 0 ? (
+        <div class="cards-grid">
+          {otherDocs.map(doc => {
+            const docFolder = folders.find(f => f.id === doc.folder_id);
+            return (
+              <DocumentCard
+                id={doc.id}
+                title={doc.title}
+                preview={doc.preview}
+                updatedAt={doc.updated_at}
+                pinned={doc.pinned}
+                folderName={docFolder?.name}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <div class="dashboard-empty-state">
+          <span class="empty-emoji">✍️</span>
+          <p class="empty-text">No notes found here. Create a new document in the sidebar to start writing!</p>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+<script>
+  /**
+   * Layout toggling engine:
+   * - Restores layout preference from localStorage immediately.
+   * - Clicking List/Grid buttons instantly toggles active style states
+   *   and swaps wrapper classes (.layout-list vs .layout-grid).
+   */
+  function initLayoutToggle() {
+    const btnList = document.getElementById("btn-layout-list") as HTMLButtonElement;
+    const btnGrid = document.getElementById("btn-layout-grid") as HTMLButtonElement;
+    const container = document.getElementById("dashboard-cards-container") as HTMLElement;
+    
+    if (!btnList || !btnGrid || !container) return;
+    
+    const STORAGE_KEY = "write:dashboard-layout";
+    const savedLayout = localStorage.getItem(STORAGE_KEY) || "list"; // default to list (1 column)
+
+    function setLayout(layout: "list" | "grid") {
+      if (layout === "list") {
+        container.classList.remove("layout-grid");
+        container.classList.add("layout-list");
+        btnList.classList.add("active");
+        btnGrid.classList.remove("active");
+      } else {
+        container.classList.remove("layout-list");
+        container.classList.add("layout-grid");
+        btnGrid.classList.add("active");
+        btnList.classList.remove("active");
+      }
+      localStorage.setItem(STORAGE_KEY, layout);
+    }
+
+    // Apply saved layout
+    setLayout(savedLayout as "list" | "grid");
+
+    btnList.addEventListener("click", () => setLayout("list"));
+    btnGrid.addEventListener("click", () => setLayout("grid"));
+  }
+
+  // Wires up immediately on DOM load
+  document.addEventListener("DOMContentLoaded", initLayoutToggle);
+</script>
+
+<style>
+  /* ── Dashboard Canvas ── */
+  .dashboard-canvas {
+    padding: 2rem 2.5rem 4rem 2.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--journal-sidebar-border, rgba(15, 18, 25, 0.07));
+    padding-bottom: 1.25rem;
+  }
+
+  .header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .dashboard-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--txt-3, #0f172a);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .dashboard-subtitle {
+    font-size: 0.85rem;
+    color: var(--txt-3, #64748b);
+    opacity: 0.85;
+    margin: 0;
+  }
+
+  /* Layout controls */
+  .layout-toolbar {
+    display: flex;
+    align-items: center;
+    background: rgba(15, 18, 25, 0.04);
+    border: 1px solid rgba(15, 18, 25, 0.08);
+    padding: 2px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-layout-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.725rem;
+    font-weight: 700;
+    color: var(--txt-3, #64748b);
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-layout-toggle:hover {
+    color: var(--txt-3, #0f172a);
+  }
+
+  .btn-layout-toggle.active {
+    background: #fff;
+    color: var(--journal-accent, var(--accent, #dc3a68));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .dashboard-layout-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2.25rem;
+  }
+
+  .dashboard-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--txt-3, #94a3b8);
+    margin: 0;
+  }
+
+  /* Grid styles (Google Keep style) */
+  .cards-grid {
+    display: grid;
+    gap: 1rem;
+    transition: all 0.35s ease;
+  }
+
+  /* 1-column list mode (Default) */
+  .layout-list .cards-grid {
+    grid-template-columns: 1fr;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* 2-column grid mode */
+  .layout-grid .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .layout-grid .cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .dashboard-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3.5rem 2rem;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+    border: 1px dashed var(--journal-sidebar-border, rgba(15, 18, 25, 0.07));
+    border-radius: 12px;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .empty-emoji {
+    font-size: 2.25rem;
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  .empty-text {
+    font-size: 0.85rem;
+    color: var(--txt-3, #64748b);
+    margin: 0;
+    font-weight: 500;
+  }
+</style>

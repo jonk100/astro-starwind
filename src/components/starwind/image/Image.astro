@@ -5,15 +5,29 @@ import { tv } from "tailwind-variants";
 export const image = tv({ base: "starwind-image h-auto w-full" });
 
 const { class: className, src, alt = "", ...rest } = Astro.props;
+
+const isSvg = typeof src === 'string' 
+  ? (src.toLowerCase().endsWith('.svg') || src.toLowerCase().includes('.svg?'))
+  : (src && typeof src === 'object' && 'src' in src && typeof src.src === 'string' && (src.src.toLowerCase().endsWith('.svg') || src.src.toLowerCase().includes('.svg?')));
 ---
 
 {src && (
-  <AstroImage
-    class={image({ class: className })}
-    src={src}
-    alt={alt}
-    inferSize
-    {...rest}
-    data-slot="image"
-  />
+  isSvg ? (
+    <img
+      class={image({ class: className })}
+      src={typeof src === 'string' ? src : (src as any).src}
+      alt={alt}
+      {...rest}
+      data-slot="image"
+    />
+  ) : (
+    <AstroImage
+      class={image({ class: className })}
+      src={src}
+      alt={alt}
+      inferSize
+      {...rest}
+      data-slot="image"
+    />
+  )
 )}

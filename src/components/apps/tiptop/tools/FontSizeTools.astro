@@ -1,0 +1,51 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/FontSizeTools.astro
+ * @description Font size dropdown tool for the TipTap editor.
+ */
+import ToolMenu from "./ToolMenu.astro";
+import { FONT_SIZES } from "../tiptap.consts";
+---
+<ToolMenu
+  id="tb-font-size-details"
+  labelId="tb-font-size-label"
+  defaultLabel="16"
+  narrow={true}
+  ariaLabel="Font size"
+>
+  {FONT_SIZES.map((s) => (
+    <div data-font-size={s.value} class="tb-size-item">
+      {s.label}
+    </div>
+  ))}
+</ToolMenu>
+
+<script>
+  import { dispatch, initDropdown, setLabel } from './toolbarUtils.ts';
+  import type { SelectionState } from './toolbarUtils.ts';
+
+  function initFontSizeTool(): void {
+    initDropdown('tb-font-size-details', '[data-font-size]', (item: HTMLElement) => {
+      const value = item.dataset.fontSize ?? '16px';
+      dispatch('setFontSize', { fontSize: value });
+      setLabel('tb-font-size-label', item.textContent?.trim() ?? value);
+    });
+
+    window.addEventListener('tiptop:selection-changed', (e: Event) => {
+      const state = (e as CustomEvent<SelectionState>).detail;
+      const fontSize = state.attrs.fontSize as string | undefined;
+
+      // Update label based on currently selected font size in TipTap state
+      if (fontSize) {
+        const item = document.querySelector<HTMLElement>(
+          `#tb-font-size-details [data-font-size="${fontSize}"]`
+        );
+        setLabel('tb-font-size-label', item?.textContent?.trim() ?? fontSize.replace('px', ''));
+      } else {
+        setLabel('tb-font-size-label', '16');
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initFontSizeTool);
+</script>

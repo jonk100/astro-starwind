@@ -249,3 +249,11 @@ export function generateDateRange(from: string, to: string): string[] {
 
   return dates;
 }
+
+export function getMonthNames(): string[] {
+  const months: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    months.push(new Date(2025, i, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" }));
+  }
+  return months;
+}

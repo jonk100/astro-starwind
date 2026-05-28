@@ -1,7 +1,106 @@
 ---
-const currentMonth = new Date();
-const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+/**
+ * @file src/components/apps/habit/HeaderRow.astro
+ * @description Header for the habit tracker, displaying perfectly centered month navigation and
+ * overall completion progress bar.
+ */
+import MonthNav from "./MonthNav.astro";
+
+import { Progress } from "@/components/starwind/progress";
+import type { HabitWithLogs } from "@/lib/habit/types";
+import { generateDateRange } from "@/lib/habit/utils";
+
+interface Props {
+  habits?: HabitWithLogs[];
+  currentMonthDate?: Date;
+}
+
+const { habits = [], currentMonthDate = new Date() } = Astro.props;
+const monthName = currentMonthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+// Calculate dynamic completion statistics over the specific selected month
+const firstDay = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth(), 1);
+const lastDay = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 0);
+const from = firstDay.toISOString().split("T")[0];
+const to = lastDay.toISOString().split("T")[0];
+const dates = generateDateRange(from, to);
+const totalDays = dates.length;
+
+let totalPossible = 0;
+let totalCompleted = 0;
+
+if (habits.length > 0) {
+  totalPossible = habits.length * totalDays;
+  totalCompleted = habits.reduce((acc, habit) => acc + (habit.logs?.length ?? 0), 0);
+}
+
+const month = currentMonthDate.getMonth();
+
+const progressPercent = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+
 ---
-<div class="p-4 border-b border-slate-200 flex flex-row gap-4">
-  <h1 class="text-2xl font-semibold text-slate-800">{monthName}</h1>
+
+<div class="px-6 py-4 border-b border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 select-none">
+  <div class="flex items-center gap-3.5">
+    <MonthNav currentMonth={currentMonthDate} />
+    <!-- <a
+      href={`?month=${prevMonthParam}`}
+      class="flex items-center justify-center size-8 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer outline-none shadow-sm"
+      aria-label="Previous month"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+      </svg>
+    </a>
+
+    Month Title (Vertical centered with arrows)
+    <h1 class="text-xl font-bold tracking-tight text-slate-800 leading-none self-center pt-0.5">
+      {monthName}
+    </h1>
+
+    Next month button
+    <a
+      href={`?month=${nextMonthParam}`}
+      class="flex items-center justify-center size-8 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer outline-none shadow-sm"
+      aria-label="Next month"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+      </svg>
+    </a> -->
+    
+    <!-- Flat Matrix Badge -->
+    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200/80 bg-slate-50 px-2 py-1 rounded select-none">
+      Matrix
+    </span>
+
+    <!-- Breathing Daily Flow Badge -->
+    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900 text-slate-50 border border-slate-800 shadow-md relative group cursor-help transition-all hover:scale-105 hover:border-emerald-500 duration-300">
+      <span class="size-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+      <span class="size-1.5 rounded-full bg-emerald-400 absolute left-[10px] top-[11px]"></span>
+      <span class="text-[9px] font-extrabold uppercase tracking-widest leading-none select-none">Daily Flow Active</span>
+      <!-- Tooltip -->
+      <div class="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-slate-950 text-white text-[9px] p-2 rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 w-36 text-center leading-normal shadow-xl border border-slate-800 z-50">
+        Neuroplastic highway building is currently active. Keep clicking cells to build streaks!
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Monthly Progress -->
+  {habits.length > 0 && (
+    <div class="flex flex-col gap-1.5 min-w-[240px] sm:text-right">
+      <div class="flex items-center justify-between sm:justify-end gap-3 text-sm font-semibold text-slate-700">
+        <span>Monthly Progress</span>
+        <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs font-bold border border-emerald-100">{progressPercent}%</span>
+      </div>
+      <Progress
+        value={progressPercent}
+        max={100}
+        variant="success"
+        class="h-2.5 w-full sm:w-60 bg-slate-100 transition-all rounded-full shadow-inner"
+      />
+      <span class="text-[11px] text-slate-400 font-medium mt-0.5">
+        {totalCompleted} of {totalPossible} target logs achieved
+      </span>
+    </div>
+  )}
 </div>

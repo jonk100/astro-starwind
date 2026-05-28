@@ -13,7 +13,13 @@ type Props = HTMLAttributes<"div"> & {
   } | null;
 }
 
-const { class: className, user } = Astro.props;
+const { class: className } = Astro.props;
+let user = Astro.props.user;
+
+// Fallback to request-time locals if the prop was not provided (e.g. Server Island execution)
+if (user === undefined && typeof Astro !== 'undefined' && Astro.locals) {
+  user = Astro.locals.user;
+}
 ---
 
 {user ? (
@@ -56,96 +62,58 @@ const { class: className, user } = Astro.props;
   </nav>
 )}
 
-<!-- <script>
-  class UserNavHandler {
-    private trigger: HTMLElement | null;
-    private dropdown: HTMLElement | null;
-    private isOpen: boolean = false;
-
-    constructor(trigger: HTMLElement, dropdown: HTMLElement) {
-      this.trigger = trigger;
-      this.dropdown = dropdown;
-      this.setupEventListeners();
-    }
-
-    private setupEventListeners(): void {
-      this.trigger?.addEventListener('click', () => this.toggle());
-      this.trigger?.addEventListener('keydown', (e) => this.handleKeydown(e));
-      
-      // Close dropdown when clicking outside
-      document.addEventListener('click', (e) => this.handleClickOutside(e));
-      
-      // Close dropdown on escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && this.isOpen) {
-          this.close();
+<script>
+  // Event delegation to support dynamic server islands seamlessly
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const trigger = target.closest('.user-nav-trigger') || target.closest('.user-nav-button');
+    
+    if (trigger) {
+      const nav = trigger.closest('.user-nav');
+      const dropdown = nav?.querySelector('.user-nav-dropdown') as HTMLElement;
+      if (dropdown) {
+        const isHidden = dropdown.hidden;
+        dropdown.hidden = !isHidden;
+        trigger.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+      }
+    } else {
+      // Clicked outside - close any open user nav dropdowns
+      document.querySelectorAll('.user-nav-dropdown').forEach((dropdown) => {
+        const parentNav = dropdown.closest('.user-nav');
+        if (parentNav && !parentNav.contains(target)) {
+          (dropdown as HTMLElement).hidden = true;
+          parentNav.querySelector('.user-nav-trigger')?.setAttribute('aria-expanded', 'false');
+          parentNav.querySelector('.user-nav-button')?.setAttribute('aria-expanded', 'false');
         }
       });
     }
-
-    private handleKeydown(e: KeyboardEvent): void {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.toggle();
-      }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        this.toggle();
-      }
-    }
-
-    private handleClickOutside(e: Event): void {
-      const target = e.target as HTMLElement;
-      if (!this.trigger?.contains(target) && !this.dropdown?.contains(target)) {
-        this.close();
-      }
-    }
-
-    public toggle(): void {
-      if (this.isOpen) {
-        this.close();
-      } else {
-        this.open();
-      }
-    }
-
-    public open(): void {
-      if (this.dropdown && this.trigger) {
-        this.dropdown.hidden = false;
-        this.trigger.setAttribute('aria-expanded', 'true');
-        this.isOpen = true;
-      }
-    }
-
-    public close(): void {
-      if (this.dropdown && this.trigger) {
-        this.dropdown.hidden = true;
-        this.trigger.setAttribute('aria-expanded', 'false');
-        this.isOpen = false;
-      }
-    }
-  }
-
-  // Initialize dropdown functionality
-  document.addEventListener('astro:after-swap', () => {
-    const trigger = document.querySelector('.user-nav-trigger');
-    const dropdown = document.querySelector('.user-nav-dropdown');
-    
-    if (trigger && dropdown) {
-      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
-    }
   });
 
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', () => {
-    const trigger = document.querySelector('.user-nav-trigger');
-    const dropdown = document.querySelector('.user-nav-dropdown');
+  document.addEventListener('keydown', (e) => {
+    const target = e.target as HTMLElement;
+    const trigger = target.closest('.user-nav-trigger') || target.closest('.user-nav-button');
     
-    if (trigger && dropdown) {
-      new UserNavHandler(trigger as HTMLElement, dropdown as HTMLElement);
+    if (trigger && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      const nav = trigger.closest('.user-nav');
+      const dropdown = nav?.querySelector('.user-nav-dropdown') as HTMLElement;
+      if (dropdown) {
+        const isHidden = dropdown.hidden;
+        dropdown.hidden = !isHidden;
+        trigger.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+      }
+    }
+    
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.user-nav-dropdown').forEach((dropdown) => {
+        (dropdown as HTMLElement).hidden = true;
+        const parentNav = dropdown.closest('.user-nav');
+        parentNav?.querySelector('.user-nav-trigger')?.setAttribute('aria-expanded', 'false');
+        parentNav?.querySelector('.user-nav-button')?.setAttribute('aria-expanded', 'false');
+      });
     }
   });
-</script> -->
+</script>
 
 <style>
   .user-nav {

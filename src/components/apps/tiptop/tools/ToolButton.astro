@@ -1,0 +1,20 @@
+---
+// ToolButton.astro
+interface Props {
+  id: string;
+  command?: string;
+  ariaLabel: string;
+  title?: string;
+}
+const { id, command, ariaLabel, title } = Astro.props;
+---
+<button
+  class="tb-btn tool-button--btn"
+  id={id}
+  data-command={command}
+  type="button"
+  aria-label={ariaLabel}
+  title={title}
+>
+  <slot />
+</button>

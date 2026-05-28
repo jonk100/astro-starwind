@@ -1,5 +1,8 @@
-/* Scroll-Reveal Animations */
 
+@import './design/tokens/motion.css';
+
+
+/* Scroll-Reveal Animations */
 .scroll-reveal {
     opacity: 0;
     transform:
@@ -29,4 +32,3 @@
       transition: none;
     }
   }
-

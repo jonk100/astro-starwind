@@ -1,0 +1,460 @@
+---
+/**
+ * @file src/components/apps/habit/HabitEditForm.astro
+ * @description Slide-out sheet form for editing an existing habit, supporting editable tracking types and duration preset cyclers.
+ */
+
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/starwind/sheet';
+import { Input } from '@/components/starwind/input';
+import { Label } from '@/components/starwind/label';
+import { RadioGroup, RadioGroupItem } from '@/components/starwind/radio-group';
+import { Spinner } from '@/components/starwind/spinner';
+import Button from '@/components/starwind/button/Button.astro';
+import type { HabitWithLogs } from '@/lib/habit/types';
+
+interface Props {
+  habit: HabitWithLogs;
+}
+
+const { habit } = Astro.props;
+
+// Read existing metadata preferences
+const metadata = (habit.metadata && typeof habit.metadata === 'object' ? habit.metadata : {}) as Record<string, any>;
+const currentThemeId = metadata.themeId || metadata.color || 'emerald';
+
+// Configuration helpers
+const maxCompletions = metadata.maxCompletions || 1;
+const countMode = metadata.countMode || 'target';
+const countTarget = metadata.countTarget || 8;
+const countUnit = metadata.countUnit || 'reps';
+const durationMode = metadata.durationMode || 'countdown';
+const durationTarget = metadata.durationTarget || 1;
+---
+
+<Sheet id={`edit-sheet-${habit.id}`}>
+  <SheetTrigger asChild>
+    <slot />
+  </SheetTrigger>
+
+  <SheetContent side="right" class="max-w-md w-full bg-slate-50 overflow-y-auto">
+    <SheetHeader class="bg-white px-6 py-5 border-b border-slate-200">
+      <SheetTitle class="font-bold text-slate-800">Edit Habit</SheetTitle>
+      <SheetDescription class="text-xs text-slate-400">
+        Update your habit's name, color theme, tracking mode, or options.
+      </SheetDescription>
+    </SheetHeader>
+
+    <form id={`habit-edit-form-${habit.id}`} class="flex flex-col gap-6 px-6 py-6 bg-slate-50" data-habit-id={habit.id}>
+
+      <!-- Name -->
+      <div class="grid gap-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <Label for={`edit-name-${habit.id}`} class="font-semibold text-slate-700">Habit name</Label>
+        <Input
+          id={`edit-name-${habit.id}`}
+          name="name"
+          type="text"
+          value={habit.name}
+          required
+          maxlength="100"
+          placeholder="e.g. Morning meditation"
+          class="border-slate-200 rounded-lg text-sm"
+        />
+        <p id={`edit-name-error-${habit.id}`} class="hidden text-xs text-red-500 font-semibold"></p>
+      </div>
+
+      <!-- Color Selector Grid -->
+      <div class="grid gap-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <Label class="font-semibold text-slate-700">Color Theme</Label>
+        <div class="flex items-center gap-3.5 mt-1 habit-edit-color-selector" id={`edit-color-${habit.id}`}>
+          <input type="hidden" name="themeId" class="habit-edit-theme-input" value={currentThemeId} />
+          
+          <button 
+            type="button" 
+            class={`color-bubble size-7 rounded-full border-2 ring-offset-2 ring-emerald-500 transition-all bg-emerald-500 cursor-pointer ${currentThemeId === 'emerald' ? 'is-active border-slate-300' : 'border-slate-200 hover:border-slate-300'}`} 
+            data-theme-id="emerald" 
+            aria-label="Mindfulness (Emerald)" 
+            style="--tw-ring-color: #10b981;"
+          ></button>
+          
+          <button 
+            type="button" 
+            class={`color-bubble size-7 rounded-full border-2 ring-offset-2 ring-rose-500 transition-all bg-rose-500 cursor-pointer ${currentThemeId === 'rose' ? 'is-active border-slate-300' : 'border-slate-200 hover:border-slate-300'}`} 
+            data-theme-id="rose" 
+            aria-label="Energy (Rose)" 
+            style="--tw-ring-color: #f43f5e;"
+          ></button>
+          
+          <button 
+            type="button" 
+            class={`color-bubble size-7 rounded-full border-2 ring-offset-2 ring-violet-500 transition-all bg-violet-500 cursor-pointer ${currentThemeId === 'violet' ? 'is-active border-slate-300' : 'border-slate-200 hover:border-slate-300'}`} 
+            data-theme-id="violet" 
+            aria-label="Focus (Focus)" 
+            style="--tw-ring-color: #8b5cf6;"
+          ></button>
+          
+          <button 
+            type="button" 
+            class={`color-bubble size-7 rounded-full border-2 ring-offset-2 ring-amber-500 transition-all bg-amber-500 cursor-pointer ${currentThemeId === 'amber' ? 'is-active border-slate-300' : 'border-slate-200 hover:border-slate-300'}`} 
+            data-theme-id="amber" 
+            aria-label="Vitality (Amber)" 
+            style="--tw-ring-color: #f59e0b;"
+          ></button>
+          
+          <button 
+            type="button" 
+            class={`color-bubble size-7 rounded-full border-2 ring-offset-2 ring-sky-500 transition-all bg-sky-500 cursor-pointer ${currentThemeId === 'sky' ? 'is-active border-slate-300' : 'border-slate-200 hover:border-slate-300'}`} 
+            data-theme-id="sky" 
+            aria-label="Flow (Sky)" 
+            style="--tw-ring-color: #0ea5e9;"
+          ></button>
+
+          <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+            <input 
+              type="color" 
+              id={`edit-custom-color-${habit.id}`} 
+              class="size-7 rounded-full border border-slate-300 cursor-pointer p-0.5 overflow-hidden bg-transparent edit-custom-color-input" 
+              title="Choose custom color" 
+              value={currentThemeId.startsWith('#') ? currentThemeId : '#10b981'} 
+              data-habit-id={habit.id}
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tracking Mode selector (Editable in Phase 4!) -->
+      <div class="grid gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <Label class="font-semibold text-slate-700">Tracking Mode</Label>
+        <RadioGroup
+          id={`edit-tracking-type-${habit.id}`}
+          name={`edit_tracking_type_${habit.id}`}
+          defaultValue={habit.tracking_type || 'boolean'}
+          legend="How do you want to track this habit?"
+          class="edit-tracking-type-group"
+          data-habit-id={habit.id}
+        >
+          <div class="flex items-start gap-3 py-1 cursor-pointer">
+            <RadioGroupItem
+              id={`edit-type-boolean-${habit.id}`}
+              value="boolean"
+              name={`edit_tracking_type_${habit.id}`}
+              class="mt-1"
+              checked={habit.tracking_type === 'boolean'}
+            />
+            <div>
+              <Label for={`edit-type-boolean-${habit.id}`} class="font-semibold text-slate-700 cursor-pointer text-sm">Boolean (Done/Not Done)</Label>
+              <p class="text-xs text-slate-400 mt-0.5 leading-snug">Did you do it? Support multiple daily repetitions.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 py-1 cursor-pointer border-t border-slate-50 pt-2.5">
+            <RadioGroupItem
+              id={`edit-type-count-${habit.id}`}
+              value="count"
+              name={`edit_tracking_type_${habit.id}`}
+              class="mt-1"
+              checked={habit.tracking_type === 'count'}
+            />
+            <div>
+              <Label for={`edit-type-count-${habit.id}`} class="font-semibold text-slate-700 cursor-pointer text-sm">Reps / Count</Label>
+              <p class="text-xs text-slate-400 mt-0.5 leading-snug">Track quantity like glasses of water or exercises.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 py-1 cursor-pointer border-t border-slate-50 pt-2.5">
+            <RadioGroupItem
+              id={`edit-type-duration-${habit.id}`}
+              value="duration"
+              name={`edit_tracking_type_${habit.id}`}
+              class="mt-1"
+              checked={habit.tracking_type === 'duration'}
+            />
+            <div>
+              <Label for={`edit-type-duration-${habit.id}`} class="font-semibold text-slate-700 cursor-pointer text-sm">Duration (Timer)</Label>
+              <p class="text-xs text-slate-400 mt-0.5 leading-snug">Track minutes spent exercising or meditating.</p>
+            </div>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <!-- Config for Boolean habits -->
+      <div id={`edit-boolean-block-${habit.id}`} class="grid gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Boolean Target Options</h4>
+        <div class="flex flex-col gap-2">
+          <Label for={`edit-max-completions-${habit.id}`} class="text-xs font-semibold text-slate-500">Target Repetitions per Day</Label>
+          <Input 
+            id={`edit-max-completions-${habit.id}`}
+            type="number" 
+            name="maxCompletions" 
+            value={maxCompletions} 
+            min="1" 
+            max="20"
+            class="border-slate-200 rounded-lg text-xs w-24"
+          />
+          <span class="text-[10px] text-slate-400 font-medium">Tapping a grid cell will increment completed counts up to this maximum limit.</span>
+        </div>
+      </div>
+
+      <!-- Config for Reps/Count habits -->
+      <div class="grid gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm" id={`edit-count-block-${habit.id}`}>
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Count Options</h4>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name={`edit-countMode-${habit.id}`} value="target" checked={countMode === 'target'} class="cursor-pointer edit-count-mode-radio" data-habit-id={habit.id} /> Target Limit
+          </label>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name={`edit-countMode-${habit.id}`} value="open" checked={countMode === 'open'} class="cursor-pointer edit-count-mode-radio" data-habit-id={habit.id} /> Open Tally
+          </label>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3" id={`edit-count-target-inputs-${habit.id}`}>
+          <div class="flex flex-col gap-1.5">
+            <Label for={`edit-count-target-${habit.id}`} class="text-[11px] font-semibold text-slate-500">Daily Target</Label>
+            <Input id={`edit-count-target-${habit.id}`} type="number" name="countTarget" value={countTarget} min="1" class="border-slate-200 text-xs rounded-lg" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for={`edit-count-unit-${habit.id}`} class="text-[11px] font-semibold text-slate-500">Unit (e.g. glasses)</Label>
+            <Input id={`edit-count-unit-${habit.id}`} type="text" name="countUnit" value={countUnit} placeholder="e.g. glasses" class="border-slate-200 text-xs rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Config for Duration habits -->
+      <div class="grid gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm" id={`edit-duration-block-${habit.id}`}>
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Duration Options</h4>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name={`edit-durationMode-${habit.id}`} value="countdown" checked={durationMode === 'countdown'} class="cursor-pointer edit-duration-mode-radio" data-habit-id={habit.id} /> Countdown Timer
+          </label>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="radio" name={`edit-durationMode-${habit.id}`} value="countup" checked={durationMode === 'countup'} class="cursor-pointer edit-duration-mode-radio" data-habit-id={habit.id} /> Stopwatch (Count Up)
+          </label>
+        </div>
+        
+        <div class="flex flex-col gap-2" id={`edit-duration-target-inputs-${habit.id}`}>
+          <Label for={`edit-duration-target-${habit.id}`} class="text-xs font-semibold text-slate-500">Target Duration (Minutes)</Label>
+          <div class="flex items-center gap-2">
+            <Input id={`edit-duration-target-${habit.id}`} type="number" name="durationTarget" value={durationTarget} min="1" class="border-slate-200 text-xs w-28 rounded-lg" />
+            <button
+              type="button"
+              id={`edit-duration-cycle-${habit.id}`}
+              class="edit-duration-cycle-btn flex items-center justify-center size-8 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-100 transition-all cursor-pointer font-bold text-xs select-none"
+              data-habit-id={habit.id}
+              aria-label="Cycle duration presets"
+            >
+              🔄
+            </button>
+            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cycle Preset</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Server error -->
+      <p id={`edit-form-error-${habit.id}`} class="hidden rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 font-semibold"></p>
+
+    </form>
+
+    <SheetFooter class="bg-white border-t border-slate-200 px-6 py-4 mt-auto">
+      <SheetClose asChild>
+        <Button variant="outline" id={`edit-cancel-${habit.id}`}>Cancel</Button>
+      </SheetClose>
+      <Button variant="default" id={`edit-submit-${habit.id}`} type="button" class="habit-edit-submit-btn cursor-pointer" data-habit-id={habit.id}>
+        <span id={`edit-submit-label-${habit.id}`}>Save changes</span>
+        <Spinner id={`edit-submit-spinner-${habit.id}`} class="hidden size-4" />
+      </Button>
+    </SheetFooter>
+  </SheetContent>
+</Sheet>
+
+<style>
+  .color-bubble.is-active {
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--tw-ring-color);
+    transform: scale(1.15);
+  }
+</style>
+
+<script>
+  import { actions } from 'astro:actions';
+  import { toast } from '@/components/starwind/toast';
+
+  // Toggle config blocks inside the edit sheet depending on selected tracking type
+  function toggleEditConfigBlocks(habitId: string) {
+    const selector = document.getElementById(`habit-edit-form-${habitId}`);
+    if (!selector) return;
+
+    // Get checked mode
+    const checked = selector.querySelector<HTMLInputElement>(`input[name="edit_tracking_type_${habitId}"]:checked`)?.value;
+    const booleanBlock = document.getElementById(`edit-boolean-block-${habitId}`);
+    const countBlock = document.getElementById(`edit-count-block-${habitId}`);
+    const durationBlock = document.getElementById(`edit-duration-block-${habitId}`);
+
+    booleanBlock?.classList.toggle('hidden', checked !== 'boolean');
+    countBlock?.classList.toggle('hidden', checked !== 'count');
+    durationBlock?.classList.toggle('hidden', checked !== 'duration');
+
+    // Soft toggle inside count mode
+    const countMode = selector.querySelector<HTMLInputElement>(`input[name="edit-countMode-${habitId}"]:checked`)?.value || 'target';
+    const countTargetInputs = document.getElementById(`edit-count-target-inputs-${habitId}`);
+    if (countTargetInputs) {
+      countTargetInputs.style.opacity = countMode === 'target' ? '1' : '0.5';
+    }
+
+    // Soft toggle inside duration mode
+    const durationMode = selector.querySelector<HTMLInputElement>(`input[name="edit-durationMode-${habitId}"]:checked`)?.value || 'countdown';
+    const durationTargetInputs = document.getElementById(`edit-duration-target-inputs-${habitId}`);
+    if (durationTargetInputs) {
+      durationTargetInputs.style.opacity = durationMode === 'countdown' ? '1' : '0.5';
+    }
+  }
+
+  // Setup minute cycle button presets for edit sheet
+  document.querySelectorAll('.edit-duration-cycle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.getAttribute('data-habit-id')!;
+      const input = document.getElementById(`edit-duration-target-${habitId}`) as HTMLInputElement;
+      const presets = [1, 5, 10, 20];
+      if (input) {
+        const currentVal = parseInt(input.value || '1', 10);
+        let nextIndex = presets.indexOf(currentVal) + 1;
+        if (nextIndex >= presets.length || nextIndex === 0) {
+          nextIndex = 0;
+        }
+        input.value = String(presets[nextIndex]);
+      }
+    });
+  });
+
+  // Color bubbles click listener
+  document.querySelectorAll('.habit-edit-color-selector').forEach(selector => {
+    selector.querySelectorAll('.color-bubble').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selector.querySelectorAll('.color-bubble').forEach(b => b.classList.remove('is-active', 'border-slate-300'));
+        btn.classList.add('is-active', 'border-slate-300');
+        const themeId = btn.getAttribute('data-theme-id')!;
+        const input = selector.querySelector('.habit-edit-theme-input') as HTMLInputElement;
+        if (input) input.value = themeId;
+      });
+    });
+  });
+
+  // Custom Color Picker listener
+  document.querySelectorAll('.edit-custom-color-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const hexColor = (e.target as HTMLInputElement).value;
+      const habitId = input.getAttribute('data-habit-id')!;
+      
+      const themeInput = document.querySelector(`#edit-color-${habitId} .habit-edit-theme-input`) as HTMLInputElement;
+      if (themeInput) themeInput.value = hexColor;
+      
+      // Remove active highlights from preset color bubbles
+      const selector = document.getElementById(`edit-color-${habitId}`);
+      if (selector) {
+        selector.querySelectorAll('.color-bubble').forEach(b => {
+          b.classList.remove('is-active', 'border-slate-300');
+          b.classList.add('border-slate-200');
+        });
+      }
+    });
+  });
+
+  // Track tracking type changes
+  document.querySelectorAll('.edit-tracking-type-group input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const habitId = radio.getAttribute('name')?.split('_').pop()!;
+      toggleEditConfigBlocks(habitId);
+    });
+  });
+
+  // Setup form logic on sheets on load
+  document.querySelectorAll<HTMLButtonElement>('.habit-edit-submit-btn').forEach(btn => {
+    const habitId = btn.getAttribute('data-habit-id')!;
+    toggleEditConfigBlocks(habitId); // initial run
+
+    btn.addEventListener('click', async () => {
+      const selector = document.getElementById(`habit-edit-form-${habitId}`) as HTMLFormElement;
+      
+      const nameInput = document.getElementById(`edit-name-${habitId}`) as HTMLInputElement;
+      const errorMsg = document.getElementById(`edit-form-error-${habitId}`) as HTMLElement;
+      const nameError = document.getElementById(`edit-name-error-${habitId}`) as HTMLElement;
+      const label = document.getElementById(`edit-submit-label-${habitId}`) as HTMLElement;
+      const spinner = document.getElementById(`edit-submit-spinner-${habitId}`) as HTMLElement;
+      const themeInput = document.querySelector(`#edit-color-${habitId} .habit-edit-theme-input`) as HTMLInputElement;
+
+      errorMsg?.classList.add('hidden');
+      nameError?.classList.add('hidden');
+
+      const name = nameInput?.value.trim();
+      if (!name) {
+        if (nameError) {
+          nameError.textContent = 'Habit name is required.';
+          nameError.classList.remove('hidden');
+        }
+        nameInput?.focus();
+        return;
+      }
+
+      // Show loading
+      btn.disabled = true;
+      label?.classList.add('hidden');
+      spinner?.classList.remove('hidden');
+
+      const themeId = themeInput?.value || 'emerald';
+      
+      // Get tracking type from radio selectors
+      const tracking_type = (selector.querySelector(`input[name="edit_tracking_type_${habitId}"]:checked`) as HTMLInputElement)?.value || 'boolean';
+      
+      // Construct metadata config updates dynamically!
+      let config: Record<string, any> = { themeId };
+
+      if (tracking_type === 'boolean') {
+        const maxVal = parseInt((document.getElementById(`edit-max-completions-${habitId}`) as HTMLInputElement)?.value || '1', 10);
+        config.maxCompletions = maxVal;
+        config.booleanMode = maxVal > 1 ? 'multi' : 'single';
+      } else if (tracking_type === 'count') {
+        const mode = (selector.querySelector(`input[name="edit-countMode-${habitId}"]:checked`) as HTMLInputElement)?.value || 'target';
+        config.countMode = mode;
+        config.countUnit = (document.getElementById(`edit-count-unit-${habitId}`) as HTMLInputElement)?.value || 'reps';
+        if (mode === 'target') {
+          config.countTarget = parseInt((document.getElementById(`edit-count-target-${habitId}`) as HTMLInputElement)?.value || '8', 10);
+        }
+      } else if (tracking_type === 'duration') {
+        const mode = (selector.querySelector(`input[name="edit-durationMode-${habitId}"]:checked`) as HTMLInputElement)?.value || 'countdown';
+        config.durationMode = mode;
+        if (mode === 'countdown') {
+          config.durationTarget = parseInt((document.getElementById(`edit-duration-target-${habitId}`) as HTMLInputElement)?.value || '1', 10);
+        }
+      }
+
+      const { data, error } = await actions.habit.update({
+        id: habitId,
+        name,
+        tracking_type: tracking_type as "boolean" | "count" | "duration",
+        metadata: config
+      });
+
+      btn.disabled = false;
+      label?.classList.remove('hidden');
+      spinner?.classList.add('hidden');
+
+      if (error) {
+        if (errorMsg) {
+          errorMsg.textContent = error.message ?? 'Something went wrong. Please try again.';
+          errorMsg.classList.remove('hidden');
+        }
+        return;
+      }
+
+      document.getElementById(`edit-cancel-${habitId}`)?.click();
+      toast.success('Habit updated', { description: 'Your changes have been saved.' });
+      window.location.reload();
+    });
+  });
+</script>

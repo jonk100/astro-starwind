@@ -1,4 +1,11 @@
 ---
+/**
+ * @file src/components/apps/habit/Table/DeleteHabit.astro
+ * @description DeleteHabit AlertDialog component for deleting a habit.
+ * The component uses the actions.habit.delete() action to perform the deletion, and toast.promise() to show feedback to the user.
+ * The delete button is rendered as a DialogTrigger, and the AlertDialog shows the habit name and a confirmation message before allowing the user to confirm the deletion.
+ * After successful deletion, the page is reloaded to reflect the changes.
+ */
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, DialogClose } from '@/components/starwind/dialog';
 import type { HabitWithLogs } from '@/lib/habit/types';
 import DeleteButton from './DeleteButton.astro';

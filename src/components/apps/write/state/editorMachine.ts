@@ -1,5 +1,22 @@
 /**
- * src/components/apps/write/editor/editorCanvas.ts
+ * src/components/apps/write/state/editorMachine.ts
+ * - XState machine for managing document synchronization and state
+ * - Handles title and block changes, and syncs with Supabase
+ * - Uses Astro actions for server communication
+ * - Manages dirty state and synchronization status via XState guards and actions
+ * - Uses markSaved from stores/editor to mark documents as saved
+ * - Uses fromPromise from XState to handle async operations
+ * - Uses assign from XState to update context
+ * - Uses setup from XState to create the machine
+ * @param {EditorContext} context - The initial context for the machine
+ *   @param {string} title - The initial title for the document
+ *   @param {Block[]} blocks - The initial blocks for the document
+ *   @param {string} documentId - The ID of the document
+ *   @param {boolean} isTitleDirty - Whether the title has been modified
+ *   @param {boolean} isBlocksDirty - Whether the blocks have been modified
+ *   @param {boolean} isSynchronizing - Whether the document is currently synchronizing
+ * 
+ * @returns {import('xstate').StateMachine} The configured XState machine
  **/
 import { setup, assign, fromPromise } from 'xstate';
 import { actions } from 'astro:actions';
@@ -15,6 +32,11 @@ export interface EditorContext {
   isSynchronizing: boolean;
 }
 
+/**
+ * XState machine for managing document synchronization and state
+ * 
+ * @returns {import('xstate').StateMachine} The configured XState machine
+ */
 export const editorMachine = setup({
   types: {
     context: {} as EditorContext,
@@ -104,6 +126,15 @@ export const editorMachine = setup({
     },
     typing: {
       id: 'state_typing',
+      entry: [
+        () => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('editor:save-status', { detail: { status: 'saving' } })
+            );
+          }
+        }
+      ],
       on: {
         TITLE_CHANGED: {
           target: '#state_reset_timer',
@@ -144,7 +175,16 @@ export const editorMachine = setup({
     },
     saving: {
       id: 'state_saving',
-      entry: assign({ isSynchronizing: true }),
+      entry: [
+        assign({ isSynchronizing: true }),
+        () => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('editor:save-status', { detail: { status: 'saving' } })
+            );
+          }
+        }
+      ],
       invoke: {
         id: 'saveToSupabaseActor',
         src: 'saveToSupabase',

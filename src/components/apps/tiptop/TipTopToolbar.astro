@@ -1,0 +1,629 @@
+---
+/**
+ * @file src/components/apps/tiptop/TipTopToolbar.astro
+ * @description Rich formatting toolbar container for the TipTap editor, assembling modular tool subcomponents.
+ */
+import BlockTypeTool from './tools/BlockTypeTool.astro';
+import FontFamTools from './tools/FontFamTools.astro';
+import FontSizeTools from './tools/FontSizeTools.astro';
+import FontFormatTools from './tools/FontFormatTools.astro';
+import ListTools from './tools/ListTools.astro';
+import ColorTools from './tools/ColorTools.astro';
+import EmojiTool from './tools/EmojiTool.astro';
+import SystemTools from './tools/SystemTools.astro';
+
+import PinToggleButton from "@/components/apps/write/toolbar/PinToggleButton.astro";
+import ActionPopover from "@/components/apps/write/ActionPopover.astro";
+
+interface Props {
+  /** Hide the toolbar entirely when no document is open. */
+  activeDocumentId: string;
+  activeDocumentTitle?: string | null;
+  isArchived?: boolean;
+  isPinned?: boolean;
+  user?: any;
+}
+
+const { activeDocumentId, activeDocumentTitle = "", isArchived = false, isPinned = false, user } = Astro.props;
+---
+
+{activeDocumentId && (
+  <div class="tiptop-toolbar" id="tiptop-toolbar" role="toolbar" aria-label="Text formatting">
+    {/* Block types (H1-H5, Para, etc.) */}
+    <BlockTypeTool activeDocumentId={activeDocumentId} />
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* Font family selection */}
+    <FontFamTools />
+    
+    {/* Font size selection */}
+    <FontSizeTools />
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* Bold, Italic, Underline, Strike, Code formatting */}
+    <FontFormatTools />
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* Lists (Bullet, Ordered, Task) */}
+    <ListTools />
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* Color & Highlight Pickers */}
+    <ColorTools />
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* Emoji Dropdown Picker */}
+    <EmojiTool />
+
+    {/* Spacer pushes system tools to the right */}
+    <div class="tb-spacer" aria-hidden="true"></div>
+
+    {/* Save Status Indicator */}
+    <span
+      id="save-status"
+      class="save-status"
+      aria-live="polite"
+      aria-label="Save status"
+      data-status="saved"
+    >
+      Saved
+    </span>
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* Undo, Redo, Theme toggle, Keyboard shortcuts */}
+    <SystemTools />
+
+    <div class="tb-divider" aria-hidden="true"></div>
+
+    {/* Document options (Pin & Actions Popover) */}
+    <div class="toolbar-right">
+      <PinToggleButton activeDocumentId={activeDocumentId} isPinned={isPinned} user={user} />
+      <ActionPopover
+        type="document"
+        id={activeDocumentId}
+        name={activeDocumentTitle ?? ""}
+        actions={[
+          "rename",
+          "delete",
+          isArchived ? "unarchive" : "archive",
+          "duplicate",
+          "move"
+        ]}
+      />
+    </div>
+  </div>
+)}
+
+<style>
+  .tiptop-toolbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2, 0.5rem);
+    padding: 0.375rem 0.75rem;
+    background-color: hsl(var(--back-3-hsl)/0.35);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  .tb-divider {
+    width: 1px;
+    height: 18px;
+    background-color: var(--color-border);
+    margin: 0 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .tb-spacer {
+    flex: 1;
+  }
+
+  .save-status {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    align-self: center;
+    margin: 0 0.5rem;
+    transition: color 0.2s, opacity 0.2s;
+  }
+
+  .save-status[data-status="saving"] {
+    color: var(--color-primary, #00d2be);
+    opacity: 0.8;
+  }
+
+  .save-status[data-status="saved"] {
+    color: var(--color-text-muted);
+  }
+
+  .save-status[data-status="error"] {
+    color: var(--accent, #dc3a68);
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 0.25rem;
+  }
+
+  /* Keyboard navigation selection style */
+  :global(.tb-block-item.tb-keyboard-focused),
+  :global(.tb-font-item.tb-keyboard-focused),
+  :global(.tb-size-item.tb-keyboard-focused) {
+    background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.04)) !important;
+    color: var(--color-text, currentColor) !important;
+    outline: 2px solid var(--color-primary, #1d4ed8) !important;
+    outline-offset: -2px !important;
+  }
+  :global(.tb-emoji-item.tb-keyboard-focused) {
+    background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.04)) !important;
+    transform: scale(1.15) !important;
+    outline: 2px solid var(--color-primary, #1d4ed8) !important;
+    outline-offset: -2px !important;
+  }
+</style>
+
+<script>
+  function initToolbarShortcuts(): void {
+    const toolbar = document.getElementById('tiptop-toolbar');
+    if (!toolbar) return;
+
+    // Helper to query all clickable items in logical order
+    function getClickableItems(): HTMLElement[] {
+      if (!toolbar) return [];
+      return Array.from(
+        toolbar.querySelectorAll('.tb-dropdown-trigger, .tb-btn, .tb-color-wrap')
+      ) as HTMLElement[];
+    }
+
+    let badgesShown = false;
+    let activeItemIndex = -1;
+
+    // Helper to clear keyboard focus highlight and reset tracking index
+    function resetKeyboardFocus(): void {
+      activeItemIndex = -1;
+      if (toolbar) {
+        toolbar.querySelectorAll('.tb-keyboard-focused').forEach((el) => {
+          el.classList.remove('tb-keyboard-focused');
+        });
+      }
+      const emojiPanel = document.querySelector('.tb-emoji-panel');
+      if (emojiPanel) {
+        emojiPanel.querySelectorAll('.tb-keyboard-focused').forEach((el) => {
+          el.classList.remove('tb-keyboard-focused');
+        });
+      }
+    }
+
+    // Show visual numbers/key symbols over toolbar items
+    function showBadges(): void {
+      if (badgesShown) return;
+      document.body.classList.add('show-shortcuts');
+      const items = getClickableItems();
+      
+      items.forEach((item, index) => {
+        // First 10 items get 1-0, the next 10 items get ⌥1-⌥0
+        let text = '';
+        if (index < 10) {
+          text = String((index + 1) % 10);
+        } else if (index < 20) {
+          text = `⌥${(index - 9) % 10}`;
+        } else {
+          return; // Skip if it exceeds bounds
+        }
+
+        const badge = document.createElement('span');
+        badge.className = 'tb-shortcut-badge';
+        badge.textContent = text;
+        
+        // Premium styling for badges
+        badge.style.position = 'absolute';
+        badge.style.top = '-3px';
+        badge.style.right = '-3px';
+        badge.style.backgroundColor = 'var(--color-primary, #1d4ed8)';
+        badge.style.color = 'white';
+        badge.style.fontSize = '9px';
+        badge.style.fontWeight = '700';
+        badge.style.padding = '1px 4.5px';
+        badge.style.borderRadius = '4px';
+        badge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.25)';
+        badge.style.pointerEvents = 'none';
+        badge.style.zIndex = '999';
+        badge.style.lineHeight = '1';
+        
+        // Ensure relative positioning on the parent item for proper absolute alignment
+        if (getComputedStyle(item).position === 'static') {
+          item.style.position = 'relative';
+        }
+        item.appendChild(badge);
+      });
+      badgesShown = true;
+    }
+
+    // Remove visual indicators
+    function removeBadges(): void {
+      document.body.classList.remove('show-shortcuts');
+      if (!badgesShown || !toolbar) return;
+      toolbar.querySelectorAll('.tb-shortcut-badge').forEach((badge) => badge.remove());
+      badgesShown = false;
+    }
+
+    let isMetaPressed = false;
+
+    // Bind keyboard event listeners for main toolbar
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Meta') {
+        isMetaPressed = true;
+        removeBadges();
+      }
+      if (e.key === 'Control' && !e.repeat && !e.metaKey && !isMetaPressed) {
+        showBadges();
+      }
+    });
+
+    window.addEventListener('keyup', (e: KeyboardEvent) => {
+      if (e.key === 'Meta') {
+        isMetaPressed = false;
+      }
+      if (e.key === 'Control' || e.key === 'Meta') {
+        removeBadges();
+      }
+    });
+
+    window.addEventListener('blur', () => {
+      removeBadges();
+      resetKeyboardFocus();
+      isMetaPressed = false;
+    });
+
+    // Reset keyboard focus if the mouse hovers over menu options
+    toolbar.addEventListener('mouseover', (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('.tb-block-item, .tb-font-item, .tb-size-item');
+      if (target) {
+        resetKeyboardFocus();
+      }
+    });
+
+    // A capture-phase listener to swallow and handle keys exclusively when a menu is open
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      // 1. Check if a dropdown menu is currently active/open
+      const openDetails = toolbar.querySelector('details[open]') as HTMLDetailsElement | null;
+      const emojiPanel = document.querySelector('.tb-emoji-panel') as HTMLElement | null;
+      const isEmojiOpen = emojiPanel && emojiPanel.getAttribute('data-state') === 'open';
+
+      if (openDetails || isEmojiOpen) {
+        const key = e.key;
+
+        // A. 1-9 shortcuts inside open menu
+        if (/^[1-9]$/.test(key)) {
+          const num = parseInt(key, 10);
+          const index = num - 1;
+          
+          let items: HTMLElement[] = [];
+          if (openDetails) {
+            items = Array.from(openDetails.querySelectorAll('.tb-block-item, .tb-font-item, .tb-size-item')) as HTMLElement[];
+          } else if (isEmojiOpen && emojiPanel) {
+            items = Array.from(emojiPanel.querySelectorAll('.tb-emoji-item')) as HTMLElement[];
+          }
+
+          const targetItem = items[index];
+          if (targetItem) {
+            e.preventDefault();
+            e.stopPropagation();
+            targetItem.click();
+            
+            // Clean up and close
+            if (openDetails) {
+              openDetails.removeAttribute('open');
+            } else {
+              document.body.click(); // Close Starwind dropdown
+            }
+            
+            // Return focus back to editor in the right spot
+            window.dispatchEvent(new CustomEvent('tiptop:restore-focus'));
+            
+            resetKeyboardFocus();
+          }
+          return;
+        }
+
+        // B. Menu navigation (Arrows, Tab, Enter, Space, Escape)
+        let items: HTMLElement[] = [];
+        let isGrid = false;
+        if (openDetails) {
+          items = Array.from(openDetails.querySelectorAll('.tb-block-item, .tb-font-item, .tb-size-item')) as HTMLElement[];
+        } else if (isEmojiOpen && emojiPanel) {
+          items = Array.from(emojiPanel.querySelectorAll('.tb-emoji-item')) as HTMLElement[];
+          isGrid = true;
+        }
+
+        if (items.length > 0) {
+          if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'ArrowRight' || key === 'ArrowLeft' || key === 'Tab') {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Try to find currently active/selected item if we haven't selected anything yet
+            let isFirstNavigation = false;
+            if (activeItemIndex === -1) {
+              isFirstNavigation = true;
+              const activeIdx = items.findIndex(item => item.classList.contains('is-active'));
+              if (activeIdx !== -1) {
+                activeItemIndex = activeIdx;
+                isFirstNavigation = false;
+              }
+            }
+
+            if (isGrid) {
+              // Emoji grid navigation (6 columns)
+              const cols = 6;
+              if (isFirstNavigation) {
+                if (key === 'ArrowUp' || key === 'ArrowLeft' || (key === 'Tab' && e.shiftKey)) {
+                  activeItemIndex = items.length - 1;
+                } else {
+                  activeItemIndex = 0;
+                }
+              } else {
+                if (key === 'ArrowRight' || (key === 'Tab' && !e.shiftKey)) {
+                  activeItemIndex = (activeItemIndex + 1) % items.length;
+                } else if (key === 'ArrowLeft' || (key === 'Tab' && e.shiftKey)) {
+                  activeItemIndex = (activeItemIndex - 1 + items.length) % items.length;
+                } else if (key === 'ArrowDown') {
+                  activeItemIndex = (activeItemIndex + cols) % items.length;
+                } else if (key === 'ArrowUp') {
+                  activeItemIndex = (activeItemIndex - cols + items.length) % items.length;
+                }
+              }
+            } else {
+              // Details list navigation
+              if (isFirstNavigation) {
+                if (key === 'ArrowUp' || key === 'ArrowLeft' || (key === 'Tab' && e.shiftKey)) {
+                  activeItemIndex = items.length - 1;
+                } else {
+                  activeItemIndex = 0;
+                }
+              } else {
+                if (key === 'ArrowDown' || key === 'ArrowRight' || (key === 'Tab' && !e.shiftKey)) {
+                  activeItemIndex = (activeItemIndex + 1) % items.length;
+                } else if (key === 'ArrowUp' || key === 'ArrowLeft' || (key === 'Tab' && e.shiftKey)) {
+                  activeItemIndex = (activeItemIndex - 1 + items.length) % items.length;
+                }
+              }
+            }
+
+            // Update DOM styles
+            items.forEach((item, idx) => {
+              if (idx === activeItemIndex) {
+                item.classList.add('tb-keyboard-focused');
+                item.scrollIntoView({ block: 'nearest' });
+              } else {
+                item.classList.remove('tb-keyboard-focused');
+              }
+            });
+            return;
+          }
+
+          if (key === 'Enter' || key === ' ') {
+            if (activeItemIndex >= 0 && activeItemIndex < items.length) {
+              e.preventDefault();
+              e.stopPropagation();
+              items[activeItemIndex].click();
+              
+              if (openDetails) {
+                openDetails.removeAttribute('open');
+              } else {
+                document.body.click();
+              }
+              
+              window.dispatchEvent(new CustomEvent('tiptop:restore-focus'));
+              
+              resetKeyboardFocus();
+            }
+            return;
+          }
+
+          if (key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (openDetails) {
+              openDetails.removeAttribute('open');
+            } else {
+              document.body.click();
+            }
+            
+            window.dispatchEvent(new CustomEvent('tiptop:restore-focus'));
+            
+            resetKeyboardFocus();
+            return;
+          }
+        }
+
+        // C. FALLBACK: Ignore all other keys and keyboard shortcuts completely when a menu is open!
+        if (key !== 'Shift' && key !== 'Control' && key !== 'Alt' && key !== 'Meta') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    }, { capture: true });
+
+    // Handle standard global hotkeys for main toolbar triggers (bubble phase, only when no menu is open)
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      // 1. If a menu is open, let the capture phase listener handle it exclusively
+      const openDetails = toolbar.querySelector('details[open]') as HTMLDetailsElement | null;
+      const emojiPanel = document.querySelector('.tb-emoji-panel') as HTMLElement | null;
+      const isEmojiOpen = emojiPanel && emojiPanel.getAttribute('data-state') === 'open';
+      if (openDetails || isEmojiOpen) return;
+
+      // 2. Otherwise, handle standard global hotkeys for main toolbar trigger
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key;
+        if (/^[0-9]$/.test(key)) {
+          const num = parseInt(key, 10);
+          const index = num === 0 ? 9 : num - 1; // 1 -> index 0, 0 -> index 9
+          const items = getClickableItems();
+
+          if (e.altKey) {
+            // Tier 2: Ctrl + Alt + [Number]
+            const targetIndex = index + 10;
+            const targetItem = items[targetIndex];
+            if (targetItem) {
+              e.preventDefault();
+              e.stopPropagation();
+              targetItem.click();
+              animateClick(targetItem);
+            }
+          } else {
+            // Tier 1: Ctrl + [Number]
+            const targetItem = items[index];
+            if (targetItem) {
+              e.preventDefault();
+              e.stopPropagation();
+              targetItem.click();
+              animateClick(targetItem);
+            }
+          }
+        }
+      }
+    });
+
+    // Micro-scale transition for tactile feedback
+    function animateClick(el: HTMLElement): void {
+      el.style.transform = 'scale(0.92)';
+      el.style.transition = 'transform 0.1s ease';
+      setTimeout(() => {
+        el.style.transform = '';
+      }, 100);
+    }
+
+    // ─── Mutation Observer for Open Menu Badges ─────────────────────────────
+    // Watches for dropdowns becoming active and dynamically draws grey hotkey numbers
+    const dropdownObserver = new MutationObserver(() => {
+      // Every time menus open or close, reset the keyboard navigation index and clear classes
+      resetKeyboardFocus();
+
+      // Hook up hover listener on emoji panel if it gets opened
+      const emojiPanel = document.querySelector('.tb-emoji-panel');
+      if (emojiPanel) {
+        emojiPanel.removeEventListener('mouseover', handleEmojiPanelMouseover);
+        emojiPanel.addEventListener('mouseover', handleEmojiPanelMouseover);
+      }
+
+      // A. Standard Details dropdowns (H1-H5, Font family, Font size)
+      toolbar.querySelectorAll('details.tb-details').forEach((details) => {
+        const detailsEl = details as HTMLDetailsElement;
+        const hasBadges = detailsEl.querySelector('.tb-menu-hotkey-badge');
+        
+        if (detailsEl.open && !hasBadges) {
+          const items = detailsEl.querySelectorAll('.tb-block-item, .tb-font-item, .tb-size-item');
+          items.forEach((item, idx) => {
+            if (idx < 9) {
+              const badge = document.createElement('span');
+              badge.className = 'tb-menu-hotkey-badge';
+              badge.textContent = String(idx + 1);
+              
+              // Style the grey menu number kbd badge
+              badge.style.display = 'inline-flex';
+              badge.style.alignItems = 'center';
+              badge.style.justifyContent = 'center';
+              badge.style.backgroundColor = 'var(--color-muted, #f3f4f6)';
+              badge.style.border = '1px solid var(--color-border)';
+              badge.style.color = 'var(--color-text, #333)';
+              badge.style.fontSize = '9px';
+              badge.style.fontWeight = '700';
+              badge.style.borderRadius = '3.5px';
+              badge.style.width = '14px';
+              badge.style.height = '14px';
+              badge.style.marginLeft = 'auto';
+              badge.style.boxShadow = '0 1px 0 rgba(0,0,0,0.1)';
+              badge.style.lineHeight = '1';
+              
+              // Format item row with flex to align badge to right edge
+              const itemEl = item as HTMLElement;
+              itemEl.style.display = 'flex';
+              itemEl.style.alignItems = 'center';
+              itemEl.style.justifyContent = 'space-between';
+              itemEl.style.gap = '1.25rem';
+              itemEl.appendChild(badge);
+            }
+          });
+        } else if (!detailsEl.open && hasBadges) {
+          detailsEl.querySelectorAll('.tb-menu-hotkey-badge').forEach((b) => b.remove());
+        }
+      });
+
+      // B. Starwind Dropdown (Emoji panel)
+      if (emojiPanel) {
+        const isOpen = emojiPanel.getAttribute('data-state') === 'open';
+        const hasBadges = emojiPanel.querySelector('.tb-menu-hotkey-badge');
+        
+        if (isOpen && !hasBadges) {
+          const items = emojiPanel.querySelectorAll('.tb-emoji-item');
+          items.forEach((item, idx) => {
+            if (idx < 9) {
+              const badge = document.createElement('span');
+              badge.className = 'tb-menu-hotkey-badge';
+              badge.textContent = String(idx + 1);
+              
+              // Style emoji visual number overlay at bottom-right
+              badge.style.position = 'absolute';
+              badge.style.bottom = '-2px';
+              badge.style.right = '-2px';
+              badge.style.backgroundColor = 'var(--color-muted, #f3f4f6)';
+              badge.style.border = '1px solid var(--color-border)';
+              badge.style.color = 'var(--color-text, #333)';
+              badge.style.fontSize = '8px';
+              badge.style.fontWeight = '700';
+              badge.style.borderRadius = '2.5px';
+              badge.style.padding = '0.5px 2px';
+              badge.style.boxShadow = '0 1px 0 rgba(0,0,0,0.1)';
+              badge.style.zIndex = '10';
+              badge.style.lineHeight = '1';
+              
+              const itemEl = item as HTMLElement;
+              if (getComputedStyle(itemEl).position === 'static') {
+                itemEl.style.position = 'relative';
+              }
+              itemEl.appendChild(badge);
+            }
+          });
+        } else if (!isOpen && hasBadges) {
+          emojiPanel.querySelectorAll('.tb-menu-hotkey-badge').forEach((b) => b.remove());
+        }
+      }
+    });
+
+    function handleEmojiPanelMouseover(e: Event): void {
+      const mouseEvt = e as MouseEvent;
+      const target = (mouseEvt.target as HTMLElement).closest('.tb-emoji-item');
+      if (target) {
+        resetKeyboardFocus();
+      }
+    }
+
+    dropdownObserver.observe(document.body, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['open', 'data-state']
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initToolbarShortcuts);
+
+  // ── Save status listener for toolbar-embedded saved indicator ──
+  window.addEventListener("editor:save-status", (e: Event) => {
+    const detail = (e as CustomEvent<{ status: "saving" | "saved" | "error" }>).detail;
+    const el = document.getElementById("save-status");
+    if (!el) return;
+    const labels: Record<string, string> = {
+      saving: "Saving…",
+      saved: "Saved",
+      error: "Save failed",
+    };
+    el.setAttribute("data-status", detail.status);
+    el.textContent = labels[detail.status] ?? detail.status;
+  });
+</script>

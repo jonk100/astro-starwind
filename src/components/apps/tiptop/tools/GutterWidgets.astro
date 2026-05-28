@@ -1,0 +1,409 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/GutterWidgets.astro
+ * @description Refactored interactive coordinator placing all widgets on the right screen edge as stacked teaser tabs.
+ */
+import WritingPrompts from "./WritingPrompts.astro";
+---
+
+<!-- ALL GUTTER WIDGETS STACKED ON THE RIGHT SCREEN EDGE -->
+<div class="gutter-widgets-right" aria-label="Creative and side tools">
+  <!-- 1. Creative Lab (Writing Prompts) -->
+  <WritingPrompts />
+
+  <!-- 2. Habit Sync Tab & Panel -->
+  <button type="button" class="sparks-teaser-tab habits-teaser-tab" id="habits-teaser-tab" aria-label="Open Habit Tracker streak">
+    <span>🎯 Habits</span>
+  </button>
+  
+  <div class="gutter-card habit-card recede-panel" id="habits-panel" aria-label="Habit tracker streak">
+    <div class="card-header">
+      <div class="card-title-group">
+        <span class="card-icon">🎯</span>
+        <h5 class="card-title">Daily Habit</h5>
+      </div>
+      <button type="button" class="prompts-close" id="habits-panel-close" aria-label="Close habits panel">✕</button>
+    </div>
+    <p class="card-desc">Link your daily journal sessions to your writing habits to stay consistent.</p>
+    <div class="streak-badge">
+      <span class="streak-fire">🔥</span>
+      <span class="streak-text">Streak: <strong>5 Days</strong></span>
+    </div>
+    <a href="/app/habit/track" class="widget-btn">Open Habit Tracker</a>
+  </div>
+
+  <!-- 3. Newsletter Tab & Panel -->
+  <button type="button" class="sparks-teaser-tab news-teaser-tab" id="news-teaser-tab" aria-label="Open Mindful Writer newsletter">
+    <span>✉️ Mindful</span>
+  </button>
+  
+  <div class="gutter-card newsletter-card recede-panel" id="news-panel" aria-label="Newsletter subscription">
+    <div class="card-header">
+      <div class="card-title-group">
+        <span class="card-icon">✉️</span>
+        <h5 class="card-title">Mindful Writer</h5>
+      </div>
+      <button type="button" class="prompts-close" id="news-panel-close" aria-label="Close newsletter panel">✕</button>
+    </div>
+    <p class="card-desc">Weekly prompts, mindfulness tips, and templates directly to your inbox.</p>
+    
+    <form class="widget-form" id="gutter-news-form">
+      <input type="email" placeholder="email address" required class="widget-input" id="gutter-news-email" aria-label="Email address" />
+      <button type="submit" class="widget-btn btn-primary">Subscribe</button>
+    </form>
+    
+    <div class="newsletter-success" id="gutter-news-success" style="display:none;" aria-live="polite">
+      <span>🎉 You're in! Welcome.</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gutter-widgets-right {
+    position: absolute;
+    top: 60px;
+    left: calc(100% + 24px); /* Aligned outside the right notepad border */
+    width: 320px;
+    z-index: 45;
+    font-family: var(--font-sans, sans-serif);
+    pointer-events: auto;
+  }
+
+  /* ── Stacked Teaser Tabs on Right Edge ── */
+  .habits-teaser-tab {
+    top: 48px; /* Stacked cleanly below Sparks tab (which starts at top: 0) */
+  }
+
+  .news-teaser-tab {
+    top: 96px; /* Stacked below Habits tab */
+  }
+
+  /* ── Receding/Sliding Panel Styles ── */
+  .recede-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 320px;
+    background-color: var(--color-surface, #ffffff) !important;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    
+    /* Elegant slide-in transitions from the right */
+    opacity: 0;
+    transform: translateX(40px);
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  }
+
+  .recede-panel.is-active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .dark .recede-panel {
+    background-color: #1e1e20 !important; /* solid opaque dark background */
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* ── Card internal headers and elements ── */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-icon {
+    font-size: 1rem;
+  }
+
+  .card-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text);
+  }
+
+  .prompts-close {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    padding: 0.2rem;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+
+  .prompts-close:hover {
+    color: var(--color-text);
+  }
+
+  .card-desc {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--color-text-muted, #71717a);
+    margin: 0;
+    padding: 1rem 1rem 0.5rem;
+  }
+
+  /* Streak badge styles */
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: color-mix(in srgb, var(--accent, #dc3a68) 8%, transparent);
+    border: 1px dashed var(--accent, #dc3a68);
+    padding: 0.375rem 0.625rem;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    color: var(--accent, #dc3a68);
+    margin: 0 1rem 0.5rem;
+    align-self: flex-start;
+  }
+
+  /* Widget buttons & inputs */
+  .widget-btn {
+    display: block;
+    margin: 0.5rem 1rem 1rem;
+    border: 1px solid var(--color-border);
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 5px;
+    background-color: transparent;
+    color: var(--color-text);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+  }
+
+  .widget-btn:hover {
+    background-color: var(--color-muted, #f4f4f5);
+    border-color: var(--color-primary, #00d2be);
+  }
+
+  .dark .widget-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary, #00d2be);
+    color: white;
+    border-color: var(--color-primary, #00d2be);
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .widget-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 1rem;
+  }
+
+  .widget-input {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background-color: var(--color-muted, #f4f4f5);
+    color: var(--color-text);
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .dark .widget-input {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .widget-input:focus {
+    border-color: var(--color-primary, #00d2be);
+  }
+
+  .newsletter-success {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary, #00d2be);
+    text-align: center;
+    padding: 0.5rem 0 1rem;
+    animation: success-fade 0.3s ease;
+  }
+
+  @keyframes success-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive Hiding on smaller viewports */
+  @media (max-width: 1200px) {
+    .gutter-widgets-right {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  function initGutterWidgets(): void {
+    // ── 1. Habit Panel Controls ──
+    const habitsTab = document.getElementById('habits-teaser-tab');
+    const habitsPanel = document.getElementById('habits-panel');
+    const habitsClose = document.getElementById('habits-panel-close');
+
+    // ── 2. Newsletter Panel Controls ──
+    const newsTab = document.getElementById('news-teaser-tab');
+    const newsPanel = document.getElementById('news-panel');
+    const newsClose = document.getElementById('news-panel-close');
+    const newsForm = document.getElementById('gutter-news-form');
+    const newsSuccess = document.getElementById('gutter-news-success');
+
+    // State timeouts for mouseleave
+    let habitsTimeout: number | null = null;
+    let newsTimeout: number | null = null;
+
+    // Helper to close all other right-gutter panels to prevent overlap
+    function closeOtherPanels(activePanelId: string): void {
+      if (activePanelId !== 'tb-prompts-panel') {
+        const promptsPanel = document.getElementById('tb-prompts-panel');
+        const promptsTeaser = document.getElementById('sparks-teaser-tab');
+        if (promptsPanel?.classList.contains('is-active') || promptsPanel?.classList.contains('is-teasing')) {
+          promptsPanel.classList.remove('is-active');
+          promptsPanel.classList.remove('is-teasing');
+          if (promptsTeaser) promptsTeaser.style.display = 'flex';
+          const trigger = document.getElementById('tb-prompts');
+          trigger?.classList.remove('is-active');
+          trigger?.setAttribute('aria-pressed', 'false');
+        }
+      }
+      if (activePanelId !== 'habits-panel') {
+        if (habitsPanel?.classList.contains('is-active')) {
+          habitsPanel.classList.remove('is-active');
+          if (habitsTab) habitsTab.style.display = 'flex';
+        }
+      }
+      if (activePanelId !== 'news-panel') {
+        if (newsPanel?.classList.contains('is-active')) {
+          newsPanel.classList.remove('is-active');
+          if (newsTab) newsTab.style.display = 'flex';
+        }
+      }
+    }
+
+    // ── Habits Controls ──
+    if (habitsTab && habitsPanel) {
+      // Show tab by default
+      habitsTab.style.display = 'flex';
+
+      const showHabitsPanel = (): void => {
+        closeOtherPanels('habits-panel');
+        habitsTab.style.display = 'none';
+        habitsPanel.classList.add('is-active');
+        if (habitsTimeout) {
+          clearTimeout(habitsTimeout);
+          habitsTimeout = null;
+        }
+      };
+
+      habitsTab.addEventListener('click', showHabitsPanel);
+      habitsTab.addEventListener('mouseenter', showHabitsPanel);
+
+      habitsPanel.addEventListener('mouseenter', () => {
+        if (habitsTimeout) {
+          clearTimeout(habitsTimeout);
+          habitsTimeout = null;
+        }
+      });
+
+      habitsPanel.addEventListener('mouseleave', () => {
+        habitsTimeout = window.setTimeout(() => {
+          habitsPanel.classList.remove('is-active');
+          habitsTab.style.display = 'flex';
+        }, 3000);
+      });
+
+      habitsClose?.addEventListener('click', () => {
+        habitsPanel.classList.remove('is-active');
+        habitsTab.style.display = 'flex';
+        if (habitsTimeout) clearTimeout(habitsTimeout);
+      });
+    }
+
+    // ── Newsletter Controls ──
+    if (newsTab && newsPanel) {
+      // Show tab by default
+      newsTab.style.display = 'flex';
+
+      const showNewsPanel = (): void => {
+        closeOtherPanels('news-panel');
+        newsTab.style.display = 'none';
+        newsPanel.classList.add('is-active');
+        if (newsTimeout) {
+          clearTimeout(newsTimeout);
+          newsTimeout = null;
+        }
+      };
+
+      newsTab.addEventListener('click', showNewsPanel);
+      newsTab.addEventListener('mouseenter', showNewsPanel);
+
+      newsPanel.addEventListener('mouseenter', () => {
+        if (newsTimeout) {
+          clearTimeout(newsTimeout);
+          newsTimeout = null;
+        }
+      });
+
+      newsPanel.addEventListener('mouseleave', () => {
+        newsTimeout = window.setTimeout(() => {
+          newsPanel.classList.remove('is-active');
+          newsTab.style.display = 'flex';
+        }, 3000);
+      });
+
+      newsClose?.addEventListener('click', () => {
+        newsPanel.classList.remove('is-active');
+        newsTab.style.display = 'flex';
+        if (newsTimeout) clearTimeout(newsTimeout);
+      });
+
+      // Handle subscription submission
+      newsForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (newsSuccess) newsSuccess.style.display = 'block';
+        if (newsForm) newsForm.style.display = 'none';
+        // Auto-recede after 2.5 seconds
+        setTimeout(() => {
+          newsPanel.classList.remove('is-active');
+          newsTab.style.display = 'flex';
+        }, 2500);
+      });
+    }
+
+    // ── Listen to custom prompt commands to close other panels ──
+    window.addEventListener('tiptop:prompts-opened', () => {
+      closeOtherPanels('tb-prompts-panel');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initGutterWidgets);
+</script>

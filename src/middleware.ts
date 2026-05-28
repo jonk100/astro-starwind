@@ -2,6 +2,11 @@ import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@/lib/supabase";
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // If the page is being prerendered at build time, bypass request-time Supabase auth
+  if (context.isPrerendered) {
+    return next();
+  }
+
   const { url, locals, redirect } = context;
   const supabase = createClient({
     request: context.request,

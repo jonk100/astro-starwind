@@ -1,0 +1,50 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/FontFamTools.astro
+ * @description Font family dropdown tool for the TipTap editor.
+ */
+import ToolMenu from "./ToolMenu.astro";
+import { FONT_FAMILIES } from "../tiptap.consts";
+---
+<ToolMenu
+  id="tb-font-family-details"
+  labelId="tb-font-family-label"
+  defaultLabel="Sans"
+  ariaLabel="Font family"
+>
+  {FONT_FAMILIES.map((f) => (
+    <div data-font-family={f.value} class="tb-font-item" style={`font-family: ${f.value}`}>
+      {f.label}
+    </div>
+  ))}
+</ToolMenu>
+
+<script>
+  import { dispatch, initDropdown, setLabel } from './toolbarUtils.ts';
+  import type { SelectionState } from './toolbarUtils.ts';
+
+  function initFontFamilyTool(): void {
+    initDropdown('tb-font-family-details', '[data-font-family]', (item: HTMLElement) => {
+      const value = item.dataset.fontFamily ?? 'sans-serif';
+      dispatch('setFontFamily', { fontFamily: value });
+      setLabel('tb-font-family-label', item.textContent?.trim() ?? value);
+    });
+
+    window.addEventListener('tiptop:selection-changed', (e: Event) => {
+      const state = (e as CustomEvent<SelectionState>).detail;
+      const fontFamily = state.attrs.fontFamily as string | undefined;
+      
+      // Update label based on currently selected font family in TipTap state
+      if (fontFamily) {
+        const item = document.querySelector<HTMLElement>(
+          `#tb-font-family-details [data-font-family="${fontFamily}"]`
+        );
+        setLabel('tb-font-family-label', item?.textContent?.trim() ?? 'Sans');
+      } else {
+        setLabel('tb-font-family-label', 'Sans');
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initFontFamilyTool);
+</script>

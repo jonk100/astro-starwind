@@ -1,0 +1,117 @@
+---
+/**
+ * @file src/components/apps/tiptop/tools/SystemTools.astro
+ * @description System tools (undo, redo, theme toggle, keyboard shortcuts dropdown) for the TipTap editor.
+ */
+import ToolButton from "./ToolButton.astro";
+import { ButtonGroup } from "@/components/starwind/button-group";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownLabel,
+  DropdownSeparator,
+} from '@/components/starwind/dropdown';
+import { Kbd } from '@/components/starwind/kbd';
+import { SHORTCUTS, type Shortcut } from '../tiptap.consts';
+---
+<div class="tb-system-tools">
+  <ButtonGroup aria-label="History">
+    <ToolButton id="tb-undo" ariaLabel="Undo" title="Undo (Ctrl+Z)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>
+    </ToolButton>
+    <ToolButton id="tb-redo" ariaLabel="Redo" title="Redo (Ctrl+Shift+Z)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"></path></svg>
+    </ToolButton>
+  </ButtonGroup>
+
+  <ButtonGroup aria-label="View options">
+    <ToolButton id="tb-theme" ariaLabel="Toggle theme" title="Toggle dark/light mode">
+      <svg id="tb-theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <svg id="tb-theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </ToolButton>
+
+    <ToolButton id="tb-prompts" ariaLabel="Writing Prompts" title="Writing prompts & games (Ctrl+Win+Q)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5 5 3Z"/>
+        <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z"/>
+      </svg>
+    </ToolButton>
+
+    <Dropdown>
+      <DropdownTrigger
+        id="tb-help-trigger"
+        class="tb-btn"
+        aria-label="Keyboard shortcuts"
+        title="Keyboard shortcuts"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+      </DropdownTrigger>
+      <DropdownContent side="bottom" align="end" class="tb-shortcuts-panel">
+        <DropdownLabel class="tb-shortcuts-title">Keyboard shortcuts</DropdownLabel>
+        <DropdownSeparator />
+        {SHORTCUTS.map((s: Shortcut) => (
+          <div class="tb-shortcut-row">
+            <span class="tb-shortcut-label">{s.label}</span>
+            <span class="tb-shortcut-keys">
+              {s.keys.map((k: string, i: number) => (
+                <>
+                  {i > 0 && <span class="tb-shortcut-plus">+</span>}
+                  <Kbd>{k}</Kbd>
+                </>
+              ))}
+            </span>
+          </div>
+        ))}
+      </DropdownContent>
+    </Dropdown>
+  </ButtonGroup>
+</div>
+
+<style>
+  .tb-system-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+</style>
+
+<script>
+  import { dispatch } from './toolbarUtils.ts';
+
+  function initSystemTools(): void {
+    // ── History ──
+    document.getElementById('tb-undo')?.addEventListener('click', () => dispatch('undo'));
+    document.getElementById('tb-redo')?.addEventListener('click', () => dispatch('redo'));
+
+    // ── Theme toggle ──
+    const themeBtn = document.getElementById('tb-theme') as HTMLButtonElement | null;
+    const iconDark  = document.getElementById('tb-theme-icon-dark')  as SVGSVGElement | null;
+    const iconLight = document.getElementById('tb-theme-icon-light') as SVGSVGElement | null;
+
+    function isDark(): boolean {
+      return document.documentElement.getAttribute('data-theme') === 'dark'
+        || document.documentElement.classList.contains('dark');
+    }
+
+    function syncIcon(): void {
+      const dark = isDark();
+      if (iconDark)  iconDark.style.display  = dark ? 'block' : 'none';
+      if (iconLight) iconLight.style.display = dark ? 'none'  : 'block';
+    }
+
+    syncIcon();
+
+    themeBtn?.addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      localStorage.setItem('theme', next);
+      syncIcon();
+      window.dispatchEvent(new CustomEvent('theme:toggle', { detail: { theme: next } }));
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initSystemTools);
+</script>
