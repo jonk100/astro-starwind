@@ -1,6 +1,11 @@
 @import "./colorRaw.tokens.css";
 
 :root {
+  --warm-neutral: rgba(242, 242, 215, 0.71);
+  --warm-neutral-rgb: 242, 242, 215;
+  --warm-neutral-tint: #ffe083c4;
+  --warm-neutral-tint-rgb: 255, 224, 131;
+
   /* -------------------------
     Surfaces
     ------------------------- */
@@ -133,6 +138,9 @@
    /*========================================================= */
 
 .dark {
+  --warm-neutral: #171513;
+  --warm-neutral-tint: #201E1C;
+
   --background: rgb(var(--neutral-0));
   --text: rgb(var(--neutral-9));
 

@@ -70,6 +70,54 @@ import WritingPrompts from "./WritingPrompts.astro";
   }
 
   /* ── Stacked Teaser Tabs on Right Edge ── */
+  :global(.sparks-teaser-tab) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--color-surface, #ffffff) !important;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    z-index: 100;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary, #00d2be);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: var(--font-sans, sans-serif);
+    animation: sparks-pulse 2s infinite ease-in-out;
+    white-space: nowrap;
+    border-color: var(--color-primary, #00d2be);
+  }
+
+  :global(.sparks-teaser-tab):hover {
+    background-color: var(--color-muted, #f3f4f6);
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(0, 210, 190, 0.3);
+  }
+
+  :global(.dark .sparks-teaser-tab) {
+    background-color: #1e1e20 !important;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  @keyframes sparks-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 210, 190, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(0, 210, 190, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 210, 190, 0);
+    }
+  }
+
   .habits-teaser-tab {
     top: 48px; /* Stacked cleanly below Sparks tab (which starts at top: 0) */
   }

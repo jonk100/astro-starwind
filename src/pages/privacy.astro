@@ -1,0 +1,127 @@
+---
+import Layout from '@/layouts/Site.astro';
+import { SITE_TITLE } from '@/consts';
+
+export const prerender = true;
+---
+
+<Layout 
+  title={`Privacy Policy - ${SITE_TITLE}`} 
+  description="Learn how reMindMatters guards your emotional sanctuary and personal data with strict encryption and zero-tracking models."
+>
+  <div class="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8 font-sans">
+    
+    {/* ── Page Header Card ── */}
+    <div class="bg-[var(--warm-neutral)] border border-border p-8 md:p-12 rounded-3xl shadow-xs text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-serif font-bold text-[rgb(var(--purple))] mb-4">
+        Privacy Policy
+      </h1>
+      <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
+        We believe mental wellness requires complete emotional safety. Here is how we safeguard your sanctuary.
+      </p>
+      <div class="mt-6 flex justify-center items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <span>Last updated: May 28, 2026</span>
+        <span>•</span>
+        <span>Version 1.2</span>
+      </div>
+    </div>
+
+    {/* ── Key Disclosures Grid ── */}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+      <div class="bg-card border border-border p-6 rounded-2xl flex flex-col gap-3 shadow-xs">
+        <div class="text-3xl">🔒</div>
+        <h3 class="font-serif font-bold text-lg text-foreground">Complete Privacy</h3>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          Your journal notes, mood logs, and habit streaks are securely encrypted and belong entirely to you.
+        </p>
+      </div>
+      <div class="bg-card border border-border p-6 rounded-2xl flex flex-col gap-3 shadow-xs">
+        <div class="text-3xl">🚫</div>
+        <h3 class="font-serif font-bold text-lg text-foreground">Zero Advertising</h3>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          We do not monetize your mind. There are no trackers, no third-party scripts, and no data sales. Ever.
+        </p>
+      </div>
+      <div class="bg-card border border-border p-6 rounded-2xl flex flex-col gap-3 shadow-xs">
+        <div class="text-3xl">📤</div>
+        <h3 class="font-serif font-bold text-lg text-foreground">Full Exportability</h3>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          Easily download your entire reflective history in JSON or CSV formats at any point. Your path, your files.
+        </p>
+      </div>
+    </div>
+
+    {/* ── Content Sections ── */}
+    <div class="space-y-12 leading-relaxed text-foreground">
+      
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          1. Our Privacy Philosophy
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          At reMindMatters, we view digital privacy not just as a compliance checkbox, but as a critical therapeutic prerequisite. Reflective journaling, emotional tracking, and forming healthy habits require vulnerability. If you worry about who is parsing your words, you cannot be fully honest with yourself. Therefore, our architecture is engineered from the ground up to prevent unauthorized exposure.
+        </p>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          2. The Data We Collect & Guard
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          We strictly limit the data we process to what is necessary for providing support loops:
+        </p>
+        <ul class="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong>Account Information:</strong> A secure email address and hash password managed via Supabase Auth.
+          </li>
+          <li>
+            <strong>Journal & Block Records:</strong> The words, formatting blocks, and reflective titles you record in the TipTap editor are saved to an isolated database table bound to your User ID.
+          </li>
+          <li>
+            <strong>Habit Check-ins:</strong> Log entries, checkboxes, custom streaks, and matrix cells are stored as relational entries, purely for drawing your progress dashboard.
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          3. Technical Security Measures
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          We use modern security layers to isolate and protect your emotional metrics:
+        </p>
+        <div class="bg-[var(--warm-neutral-tint)]/40 border border-border p-6 rounded-2xl space-y-3">
+          <p class="text-sm text-muted-foreground">
+            <strong>Row-Level Security (RLS):</strong> Our database is governed by strict PostgreSQL RLS rules. This means it is physically impossible for any system query or another user to read or modify your records.
+          </p>
+          <p class="text-sm text-muted-foreground">
+            <strong>Transport & Rest Encryption:</strong> All transactions are signed using TLS 1.3 in transport, and physical database drives utilize AES-256 standard encryption.
+          </p>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          4. Zero Third-Party Integrations
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          We do not embed third-party analytics (like Google Analytics or Meta Pixels) that profile users. Any platform analytics are built in-house and aggregate data anonymously to ensure your personal tracking coordinates never leave the reMindMatters ecosystem.
+        </p>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          5. Contact & Support Inquiries
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          If you have questions about database storage, security parameters, or would like to request immediate manual account erasure, please contact our data sanctuary officers at:
+        </p>
+        <p class="text-sm font-semibold text-primary">
+          <a href="mailto:privacy@remindmatters.com" class="hover:underline">privacy@remindmatters.com</a>
+        </p>
+      </section>
+
+    </div>
+
+  </div>
+</Layout>

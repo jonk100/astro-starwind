@@ -87,28 +87,17 @@ const itemBasis = getItemBasis(slidesPerView as 1 | 2 | 3);
       w-full 
       px-20 
       rounded-xl
+      h-full
     "
   >
-    <Carousel
-      opts=
-      {carouselOpts}
-      class
-      ="
-        w-full
-        rounded-lg
-        bg-white/10
-        bg-white
-        shadow-[inset_0_2px_4px_rgba(255,255,255,0.10),inset_0_6px_16px_rgba(255,255,255,0.18),inset_0_12px_32px_rgba(255,255,255,0.14)]
-        p-6
-      "
-    >
+    <Carousel opts={carouselOpts} class="w-full rounded-lg bg-white/10 dark:bg-gray-900/50 dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.10),inset_0_6px_16px_rgba(0,0,0,0.18),inset_0_12px_32px_rgba(0,0,0,0.14)] shadow-[inset_0_2px_4px_rgba(255,255,255,0.10),inset_0_6px_16px_rgba(255,255,255,0.18),inset_0_12px_32px_rgba(255,255,255,0.14)] p-6 border-2 border-stone-200 dark:border-stone-800">
       <CarouselContent class="ml-0">
         {displayPosts.map((post: BlogPost) => (
           <CarouselItem class={`${itemBasis} px-2`}>
             <VerticalBlogCard
               post={post}
               variant={cardVariant}
-              size="md"
+              size="lg"
               showImage={showImage}
               showTags={showTags}
               showAuthor={showAuthor}
@@ -118,8 +107,8 @@ const itemBasis = getItemBasis(slidesPerView as 1 | 2 | 3);
           </CarouselItem>
         ))}
       </CarouselContent>
-      {showArrows && <CarouselPrevious class="border-1 bg-blur hidden md:flex size-12 [&>svg]:size-7 [&>svg]:mx-auto bg-primary/80 hover:bg-primary text-primary-foreground hover:text-primary-foreground hover:scale-110 transition-transform duration-200 mx-4 shadow-xl hover:scale-110 hover:shadow-2xl transition-all duration-300" />}
-      {showArrows && <CarouselNext class="border-1 bg-blur hidden md:flex size-12 [&>svg]:size-7 [&>svg]:mx-auto bg-primary/80 hover:bg-primary text-primary-foreground hover:text-primary-foreground hover:scale-110 transition-transform duration-200 mx-4 shadow-xl hover:scale-110 hover:shadow-2xl transition-all duration-300" />}
+      {showArrows && <CarouselPrevious class="border-1 bg-blur hidden md:flex size-12 [&>svg]:size-7 [&>svg]:mx-auto bg-primary/80 hover:bg-primary text-primary-foreground hover:text-primary-foreground hover:scale-110 transition-transform duration-200 mx-4 shadow-xl hover:scale-110 hover:shadow-2xl transition-all duration-300 dark:bg-text-primary/80 dark:hover:bg-text-primary dark:hover:text-text-primary dark:border-2 dark:bg-blur" />}
+      {showArrows && <CarouselNext class="border-1 bg-blur hidden md:flex size-12 [&>svg]:size-7 [&>svg]:mx-auto bg-primary/80 hover:bg-primary text-primary-foreground hover:text-primary-foreground hover:scale-110 transition-transform duration-200 mx-4 shadow-xl hover:scale-110 hover:shadow-2xl transition-all duration-300 dark:bg-text-primary/80 dark:hover:bg-text-primary dark:hover:text-text-primary dark:border-2 dark:bg-blur" />}
     </Carousel>
   </div>
 </div>

@@ -9,7 +9,6 @@
 import { getCollection } from 'astro:content';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/starwind/tabs';
 import MinimalBlogCard from '@/components/blog/MinimalBlogCard.astro';
-import MinimalBlogCardLong from '@/components/blog/MinimalBlogCardLong.astro';
 import type { CollectionEntry } from 'astro:content';
 import { getCategoryColors } from '@/lib/utils';
 
@@ -101,18 +100,37 @@ const getFilteredItems = (category: string) => {
     {/* Tab Content */}
     <TabsContent value="all" data-tab-index="0">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:auto-rows-fr cards-grid" data-active-tab="all">
-        {items.map((item: VariantData[typeof variant], index: number) => {
-          const isLong = i === index && o === 'long';
-          const CardComponent = isLong ? MinimalBlogCardLong : MinimalBlogCard;
-          return (
-            <CardComponent
+        {items.map((item: VariantData[typeof variant], index: number) => (
+          <MinimalBlogCard
+            variant={variant}
+            size={i === index && o ? o : 'default'}
+            title={item.data.title}
+            description={item.data.description}
+            image={item.data.image}
+            imageAlt={item.data.title}
+            category={item.data.categories?.[0]}
+            categoryStyle={item.data.categories?.[0] ? getCategoryColors(item.data.categories[0]) : undefined}
+            date={item.data.date}
+            author={item.data.author || item.data.authors}
+            href={`/${variant}/${item.id}`}
+            class={cardClass}
+            style={cardStyle}
+          />
+        ))}
+      </div>
+    </TabsContent>
+
+    {categories.map((category: string, tabIndex: number) => (
+      <TabsContent value={category} data-tab-index={tabIndex + 1}>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:auto-rows-fr cards-grid" data-active-tab={category}>
+          {getFilteredItems(category).slice(0, 7).map((item: VariantData[typeof variant], index: number) => (
+            <MinimalBlogCard
               variant={variant}
-              size={isLong ? 'long' : 'default'}
+              size={i === index && o ? o : 'default'}
               title={item.data.title}
               description={item.data.description}
               image={item.data.image}
               imageAlt={item.data.title}
-              tags={item.data.tags}
               category={item.data.categories?.[0]}
               categoryStyle={item.data.categories?.[0] ? getCategoryColors(item.data.categories[0]) : undefined}
               date={item.data.date}
@@ -121,36 +139,7 @@ const getFilteredItems = (category: string) => {
               class={cardClass}
               style={cardStyle}
             />
-          );
-        })}
-      </div>
-    </TabsContent>
-
-    {categories.map((category: string, tabIndex: number) => (
-      <TabsContent value={category} data-tab-index={tabIndex + 1}>
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:auto-rows-fr cards-grid" data-active-tab={category}>
-          {getFilteredItems(category).slice(0, 7).map((item: VariantData[typeof variant], index: number) => {
-            const isLong = i === index && o === 'long';
-            const CardComponent = isLong ? MinimalBlogCardLong : MinimalBlogCard;
-            return (
-              <CardComponent
-                variant={variant}
-                size={isLong ? 'long' : 'default'}
-                title={item.data.title}
-                description={item.data.description}
-                image={item.data.image}
-                imageAlt={item.data.title}
-                tags={item.data.tags}
-                category={item.data.categories?.[0]}
-                categoryStyle={item.data.categories?.[0] ? getCategoryColors(item.data.categories[0]) : undefined}
-                date={item.data.date}
-                author={item.data.author || item.data.authors}
-                href={`/${variant}/${item.id}`}
-                class={cardClass}
-                style={cardStyle}
-              />
-            );
-          })}
+          ))}
         </div>
       </TabsContent>
     ))}

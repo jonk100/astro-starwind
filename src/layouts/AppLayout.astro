@@ -27,7 +27,7 @@ const user = userProp ?? Astro.locals.user;
   </head>
   <Toaster position="bottom-right" />
 
-	<body class="app-body">
+	<div class="app-body min-h-screen">
     <slot name="header" slot="header"/>
     <main class="app--main-top">
       <slot name="hero" slot="hero"/>
@@ -51,16 +51,12 @@ const user = userProp ?? Astro.locals.user;
         <slot name="footer" slot="footer"/>
       </footer>
     </main>
+  </div>
 </Layout>
 
 <style>
   .app-body {
     color: var(--color-foreground);
     background-color: var(--color-background);
-  }
-
-  :global(html.dark) .app-body {
-    color: var(--color-background);
-    background-color: var(--color-foreground);
   }
 </style>

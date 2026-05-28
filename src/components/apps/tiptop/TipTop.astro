@@ -194,6 +194,42 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
    * XState machine actor, then creates the TipTap editor instance.
    */
   function initTipTop(): void {
+    // ── Clean up previous editor, machine, and event listeners ──
+    if ((window as any).activeTipTopEditor) {
+      try {
+        console.log('[TipTop] Destroying old editor instance...');
+        (window as any).activeTipTopEditor.destroy();
+      } catch (e) {
+        console.error('[TipTop] Error destroying editor:', e);
+      }
+      (window as any).activeTipTopEditor = null;
+    }
+
+    if ((window as any).activeTipTopMachine) {
+      try {
+        console.log('[TipTop] Stopping old machine actor...');
+        (window as any).activeTipTopMachine.stop();
+      } catch (e) {
+        console.error('[TipTop] Error stopping machine:', e);
+      }
+      (window as any).activeTipTopMachine = null;
+    }
+
+    if ((window as any).activeTipTopAbortController) {
+      try {
+        console.log('[TipTop] Aborting old event listeners...');
+        (window as any).activeTipTopAbortController.abort();
+      } catch (e) {
+        console.error('[TipTop] Error aborting listeners:', e);
+      }
+      (window as any).activeTipTopAbortController = null;
+    }
+
+    // Create a new AbortController for this initialization
+    const abortController = new AbortController();
+    (window as any).activeTipTopAbortController = abortController;
+    const { signal } = abortController;
+
     const shell = document.querySelector<HTMLElement>('.tiptop-shell');
     if (!shell) return;
 
@@ -246,12 +282,14 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
         })
       : null;
 
-    machine?.start();
+    if (machine) {
+      machine.start();
+      (window as any).activeTipTopMachine = machine;
+    }
 
     // ── Create TipTap editor ──────────────────────────────────────────────────
     const editorEl = document.getElementById('tiptop-editor');
     if (!editorEl) return;
-    if (editorEl.querySelector('.ProseMirror')) return;
 
     /**
      * Tracks the last known ProseMirror selection before the editor loses
@@ -370,6 +408,8 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
       },
     });
 
+    (window as any).activeTipTopEditor = editor;
+
     // ── Initial word count ────────────────────────────────────────────────────
     // onUpdate only fires after the first keystroke, so we seed the display
     // here in case the document already has content on load.
@@ -399,10 +439,13 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
       // Current Starwind-based toolbar (TipTopToolbar.astro).
       // getSavedSelection is passed so the bridge can restore cursor position
       // after a dropdown click steals focus from the editor.
-      initNewToolbarBridge(editor, getSavedSelection);
+      initNewToolbarBridge(editor, getSavedSelection, signal);
 
       // Legacy BlockToolbar — kept during migration so the old toolbar still works.
-      initLegacyToolbarBridge(editor);
+      initLegacyToolbarBridge(editor, signal);
+
+      // Gutter Hints keyboard shortcut helper
+      initGutterHints(signal);
     }
 
     // ── Typewriter Centering on Enter ─────────────────────────────────────────
@@ -446,7 +489,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
       } else {
         editor.commands.focus();
       }
-    });
+    }, { signal });
 
     // ── Global Ctrl + Win keyboard shortcuts ──────────────────────────────────
     window.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -531,13 +574,13 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
           return;
         }
       }
-    });
+    }, { signal });
 
     // ── Cleanup ───────────────────────────────────────────────────────────────
     window.addEventListener('beforeunload', () => {
       editor.destroy();
       machine?.stop();
-    });
+    }, { signal });
   }
 
   /**
@@ -719,7 +762,8 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
    */
   function initNewToolbarBridge(
     editor: Editor,
-    getSavedSelection: () => SavedSelection | null
+    getSavedSelection: () => SavedSelection | null,
+    signal: AbortSignal
   ): void {
     window.addEventListener('tiptop:command', (e: Event) => {
       const detail  = (e as CustomEvent<TipTopCommandDetail>).detail;
@@ -959,7 +1003,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
         }
       }); // end requestAnimationFrame
 
-    }); // end addEventListener
+    }, { signal }); // end addEventListener
   } // end initNewToolbarBridge
 
   // ─── Legacy toolbar bridge ────────────────────────────────────────────────
@@ -973,7 +1017,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
    *
    * @param editor - The live TipTap Editor instance.
    */
-  function initLegacyToolbarBridge(editor: Editor): void {
+  function initLegacyToolbarBridge(editor: Editor, signal: AbortSignal): void {
     window.addEventListener('editor:set-block-type', (e: Event) => {
       const { blockType } = (e as CustomEvent<{ blockType: string }>).detail;
 
@@ -1028,7 +1072,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
         default:
           console.warn('[TipTop] Legacy toolbar — unknown block type:', blockType);
       }
-    });
+    }, { signal });
   }
 
   // ─── Title field ──────────────────────────────────────────────────────────
@@ -1095,7 +1139,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
    * Listens to Tiptap selection changed events and highlights the most
    * active/relevant keyboard shortcut in the margin hints gutter.
    */
-  function initGutterHints(): void {
+  function initGutterHints(signal: AbortSignal): void {
     const leftHints = document.getElementById('tiptop-left-hints');
     const rightHints = document.getElementById('tiptop-right-hints');
     let isCtrlPressed = false;
@@ -1107,7 +1151,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
         leftHints?.classList.add('is-visible');
         rightHints?.classList.add('is-visible');
       }
-    });
+    }, { signal });
 
     window.addEventListener('keyup', (e: KeyboardEvent) => {
       if (!e.ctrlKey && !e.metaKey) {
@@ -1115,7 +1159,7 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
         leftHints?.classList.remove('is-visible');
         rightHints?.classList.remove('is-visible');
       }
-    });
+    }, { signal });
 
     window.addEventListener('tiptop:selection-changed', (e: Event) => {
       const state = (e as CustomEvent<SelectionChangedDetail>).detail;
@@ -1141,18 +1185,16 @@ const { documentId, title, isArchived = false, isPinned = false, user } = Astro.
           document.getElementById('ms-format')?.classList.add('is-active');
         }
       }
-    });
+    }, { signal });
   }
 
   // ─── Boot ─────────────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', () => {
     initTipTop();
-    initGutterHints();
   });
 
   document.addEventListener('astro:page-load', () => {
     initTipTop();
-    initGutterHints();
   });
 </script>

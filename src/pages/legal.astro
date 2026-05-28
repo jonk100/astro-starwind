@@ -1,0 +1,117 @@
+---
+import Layout from '@/layouts/Site.astro';
+import { SITE_TITLE } from '@/consts';
+
+export const prerender = true;
+---
+
+<Layout 
+  title={`Terms & Legal stuff - ${SITE_TITLE}`} 
+  description="Terms of service, cookie policies, and important mental health disclaimers for the reMindMatters wellness platform."
+>
+  <div class="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8 font-sans">
+    
+    {/* ── Page Header Card ── */}
+    <div class="bg-[var(--warm-neutral)] border border-border p-8 md:p-12 rounded-3xl shadow-xs text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-serif font-bold text-[rgb(var(--purple))] mb-4">
+        Terms & Legal stuff
+      </h1>
+      <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
+        Platform guidelines, privacy disclaimers, and clear boundaries for our support tools.
+      </p>
+      <div class="mt-6 flex justify-center items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <span>Effective date: May 28, 2026</span>
+        <span>•</span>
+        <span>Revision 1.0</span>
+      </div>
+    </div>
+
+    {/* ── CRITICAL MEDICAL DISCLAIMER ── */}
+    <div class="bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-200 dark:border-amber-900/50 p-6 md:p-8 rounded-2xl mb-12">
+      <div class="flex items-start gap-4">
+        <div class="text-3xl shrink-0 mt-0.5">⚠️</div>
+        <div class="space-y-2">
+          <h2 class="text-lg font-serif font-bold text-amber-900 dark:text-amber-300 leading-none">
+            Mental Health & Medical Disclaimer
+          </h2>
+          <p class="text-xs md:text-sm text-amber-850 dark:text-amber-400/90 leading-relaxed">
+            reMindMatters offers habit tracking, reflective journaling, and mindfulness aids. <strong>We do not provide clinical therapy, medical treatment, or crisis intervention.</strong> The articles and interactive tools on this site are for educational and cognitive support, not a replacement for professional clinical care.
+          </p>
+          <p class="text-xs text-amber-800 dark:text-amber-500/80 leading-relaxed">
+            If you are experiencing severe distress or thoughts of self-harm, please reach out to mental health professionals or an emergency crisis line immediately. You are not alone.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* ── Content Sections ── */}
+    <div class="space-y-12 leading-relaxed text-foreground">
+      
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          1. Acceptance of Terms
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          By signing up for a secure account or browsing the resources of reMindMatters, you agree to comply with these terms of service. If you do not agree to all sections or disclaimers, please discontinue your use of our digital helper apps.
+        </p>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          2. Platform Usage & Account Safety
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          To maintain an emotionally safe sanctuary, users are expected to follow basic community guidelines:
+        </p>
+        <ul class="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong>Account Security:</strong> You are responsible for protecting the password bound to your Supabase credentials. Do not share credentials.
+          </li>
+          <li>
+            <strong>Emotional Safety:</strong> Do not use the collaborative sections (like comments or shared templates) to post abusive, clinically harmful, or harassing content.
+          </li>
+          <li>
+            <strong>Fair Use:</strong> Do not use automated scrapers, denial-of-service processes, or scripting payloads to disrupt our support loops.
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          3. Subscription Plans & Payments
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          Certain advanced habits, tracking analytics, and cognitive re-framing guides may require subscription access:
+        </p>
+        <p class="text-sm text-muted-foreground">
+          - Payment is securely handled through certified processors and never directly stored on our databases. Upgrades, billing dates, and renewals can be modified inside your user settings panel at any time.
+        </p>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          4. Cookie & Tracking Disclosures
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          To protect your sanctuary, our cookie policy is extremely minimal:
+        </p>
+        <div class="bg-[var(--warm-neutral-tint)]/40 border border-border p-6 rounded-2xl">
+          <p class="text-sm text-muted-foreground">
+            We use only <strong>essential functional cookies</strong> to maintain your active log-in state and respect your theme choices (dark vs light mode preferences). We do not load marketing trackers or pixel identifiers that follow your habits across the web.
+          </p>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-serif font-bold text-[rgb(var(--purple))] border-b border-border pb-2">
+          5. Limitation of Liability
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          Under no circumstances shall reMindMatters, its team, or contributors be held liable for any damages resulting from system downtime, data deletion, or decisions made based on educational articles or cognitive prompts rendered inside our journaling dashboard.
+        </p>
+      </section>
+
+    </div>
+
+  </div>
+</Layout>

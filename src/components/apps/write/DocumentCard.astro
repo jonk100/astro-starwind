@@ -125,28 +125,83 @@ const displayDate = typeof updatedAt === "string" ? new Date(updatedAt) : update
 
 <style>
   .document-card {
-    background: hsl(var(--back-3-hsl)/0.45);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(15, 18, 25, 0.06);
-    border-radius: 12px;
-    padding: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    background: rgba(var(--warm-neutral-rgb), 0.02);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(15, 18, 25, 0.6);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
     max-width: 720px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition:
+      transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.15s ease,
+      color 0.25s ease;
+    opacity: .1;
   }
 
-  .document-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    background: rgba(255, 255, 255, 0.65);
-    border-color: rgba(0, 210, 190, 0.15); /* pri green tint border */
-  }
+  /* Base gradient layer */
+    .document-card::before,
+    .document-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    /* Initial gradient */
+    .document-card::before {
+      background: linear-gradient(
+        -165deg,
+        rgba(var(--warm-neutral-rgb), 0.01) 0%,
+        rgba(var(--warm-neutral-rgb), 0.61) 80%
+      );
+
+      opacity: 1;
+    }
+
+    /* Hover gradient */
+    .document-card::after {
+      background: linear-gradient(
+        -125deg,
+        rgba(var(--warm-neutral-rgb), 0.05) 60%,
+        rgba(var(--warm-neutral-rgb), 0.71) 95%
+      );
+
+      opacity: 0;
+    }
+
+    .document-card:hover {
+      transform: translateY(-1px);
+
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.04);
+
+      border-color:
+        rgba(var(--red-5), 0.5);
+    }
+
+    .document-card:hover::before {
+      opacity: 0;
+    }
+
+    .document-card:hover::after {
+      opacity: 1;
+    }
+
+    /* Keep content above gradients */
+    .document-card > * {
+      position: relative;
+      z-index: 1;
+    }
 
   .document-card.is-pinned {
     background: hsl(var(--back-3-hsl)/0.25);
-    border-color: rgba(220, 58, 104, 0.12); /* accent red border hint */
+    border-color: rgba(220, 58, 104, 0.12);
   }
 
   .card-inner {
@@ -170,15 +225,15 @@ const displayDate = typeof updatedAt === "string" ? new Date(updatedAt) : update
   }
 
   .status-dot {
-    width: 6px;
-    height: 6px;
+    width: 12px;
+    height: 12px;
     border-radius: 99px;
     flex-shrink: 0;
   }
 
   .card-title {
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: var(--fslg);
+    font-weight: 500;
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -189,6 +244,7 @@ const displayDate = typeof updatedAt === "string" ? new Date(updatedAt) : update
     color: var(--txt-3, #1e293b);
     text-decoration: none;
     transition: color 0.2s ease;
+    font-size: var(--fsxl) !important;
   }
 
   .title-link:hover {
@@ -260,7 +316,7 @@ const displayDate = typeof updatedAt === "string" ? new Date(updatedAt) : update
   .btn-quick-edit {
     display: inline-flex;
     align-items: center;
-    font-size: 0.725rem;
+    font-size: var(--fs-xs);
     font-weight: 600;
     color: var(--txt-3, #1e293b);
     background: rgba(15, 18, 25, 0.04);
@@ -273,7 +329,7 @@ const displayDate = typeof updatedAt === "string" ? new Date(updatedAt) : update
 
   .btn-quick-edit:hover {
     color: #fff;
-    background: var(--pri, #00d2be);
-    border-color: var(--pri, #00d2be);
+    background: var(--accent);
+    border-color: var(--pri);
   }
 </style>

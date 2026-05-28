@@ -79,7 +79,7 @@ const wrapperProps = href ? { href } : {};
   class:list={[
     'minimal-card group overflow-hidden rounded-xl', 
     'border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
-    'transition-all duration-300 hover:shadow-2xl hover:-translate-y-1',
+    'transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 h-70',
       // [TALL SIZE]: spans 2 rows in the grid
       size === 'tall' && 'lg:row-span-2 card-tall',
       // [DEFAULT SIZE]: stacked column layout
@@ -101,7 +101,7 @@ const wrapperProps = href ? { href } : {};
   <div
     class:list={[
       'flex-shrink-0 overflow-hidden bg-stone-100 dark:bg-stone-800',
-      size === 'default' && 'aspect-[3/2] w-full h-1/2',
+      size === 'default' && 'aspect-[3/2] w-full',
       // At small screens: full width stacked. At md+: half width side-by-side
       size === 'long' && 'aspect-[3/2] w-full md:w-1/2 md:aspect-auto card-image-long rounded-none',
     ]}
@@ -256,6 +256,7 @@ const wrapperProps = href ? { href } : {};
     margin: 0;
     padding: 0;
     margin-block-end: 0.5em;
+    max-height: 100px
   }
 </style>
 

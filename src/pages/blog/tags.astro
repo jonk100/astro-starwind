@@ -11,6 +11,7 @@ import NewsletterSection from '@/components/sections/newsletter/NewsletterSectio
 import ContactSection from '@/components/sections/contact/ContactSection.astro';
 import Center from '@/components/layout/primitives/Center.astro';
 import BlogHero from '@/components/sections/blog/BlogHero.astro';
+import BlogSearch from '@/components/blog/Search/BlogSearch.astro';
 
 export const prerender = true;
 
@@ -40,6 +41,13 @@ const sortedTags = [...tagPostsMap.keys()].sort((a, b) => {
   }
   return a.localeCompare(b);
 });
+
+// Shape posts for BlogSearch
+const allPostsData = allPosts.map(post => ({
+  ...post.data,
+  slug: post.id,
+  content: post.body,
+}));
 ---
 
 <BlogIndexLayout
@@ -59,9 +67,11 @@ const sortedTags = [...tagPostsMap.keys()].sort((a, b) => {
       subheading={`${sortedTags.length} tags · ${allPosts.length} articles`}
       variant="card"
     >
-      <p class="text-muted-foreground text-center max-w-2xl mx-auto my-0">
-        Browse articles sorted by specific mindfulness themes, techniques, and condition guides.
-      </p>
+      <BlogSearch
+        posts={allPostsData}
+        placeholder="Search articles by tag..."
+        showFilters={false}
+      />
 
       <div class="flex gap-3 justify-center flex-wrap mt-6">
         <a

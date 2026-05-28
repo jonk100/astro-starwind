@@ -289,7 +289,98 @@ export function blockToTipTapNode(block: Block): TipTapNode | null {
   try {
     node = JSON.parse(block.content);
   } catch {
-    return null;
+    const textContent = block.content || '';
+    switch (block.type) {
+      case 'paragraph':
+      case 'prompt':
+        node = {
+          type: 'paragraph',
+          content: textContent ? [{ type: 'text', text: textContent }] : [],
+        };
+        break;
+      case 'heading':
+      case 'heading-1':
+      case 'heading-2':
+      case 'heading-3':
+      case 'heading-4':
+      case 'heading-5':
+        node = {
+          type: 'heading',
+          attrs: { level: resolveHeadingLevel(block) },
+          content: textContent ? [{ type: 'text', text: textContent }] : [],
+        };
+        break;
+      case 'quote':
+        node = {
+          type: 'blockquote',
+          content: [{
+            type: 'paragraph',
+            content: textContent ? [{ type: 'text', text: textContent }] : [],
+          }],
+        };
+        break;
+      case 'code':
+        node = {
+          type: 'codeBlock',
+          attrs: { language: block.meta?.language || '' },
+          content: textContent ? [{ type: 'text', text: textContent }] : [],
+        };
+        break;
+      case 'separator':
+        node = {
+          type: 'horizontalRule',
+        };
+        break;
+      case 'checklist':
+        node = {
+          type: 'taskItem',
+          attrs: { checked: block.meta?.checked === true },
+          content: [{
+            type: 'paragraph',
+            content: textContent ? [{ type: 'text', text: textContent }] : [],
+          }],
+        };
+        break;
+      case 'list':
+        node = {
+          type: block.meta?.ordered ? 'orderedList' : 'bulletList',
+          content: [{
+            type: 'listItem',
+            content: [{
+              type: 'paragraph',
+              content: textContent ? [{ type: 'text', text: textContent }] : [],
+            }]
+          }]
+        };
+        break;
+      case 'list-item':
+        node = {
+          type: 'listItem',
+          content: [{
+            type: 'paragraph',
+            content: textContent ? [{ type: 'text', text: textContent }] : [],
+          }],
+        };
+        break;
+      case 'callout':
+      case 'callout-info':
+      case 'callout-warning':
+      case 'callout-success':
+      case 'callout-danger':
+        node = {
+          type: 'blockquote',
+          content: [{
+            type: 'paragraph',
+            content: textContent ? [{ type: 'text', text: textContent }] : [],
+          }],
+        };
+        break;
+      default:
+        node = {
+          type: 'paragraph',
+          content: textContent ? [{ type: 'text', text: textContent }] : [],
+        };
+    }
   }
 
   // Reapply meta attributes

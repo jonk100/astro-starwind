@@ -9,27 +9,26 @@ interface Props {
 const { recentPosts } = Astro.props;
 ---
 
-<!-- Recent Posts Carousel -->
 {recentPosts.length > 0 && (
   <section 
-    class
-    ="
-      he-full
-      py-2
-      my-8
+    class="
+      h-full
+      py-8
+      my-12
       max-w-5xl
       mx-auto
-      bg-color-white
+      bg-[var(--warm-neutral-tint)]/30
+      dark:bg-[var(--warm-neutral-tint)]/10
+      border
+      border-border
+      rounded-3xl
       text-center
+      px-4
+      sm:px-8
+      shadow-xs
     "
   >
-    <h2 class
-    ="
-        text-xl
-        font-semibold
-        text-[rgb(var(--purple))]
-      "
-    >
+    <h2 class="text-3xl font-semibold text-[rgb(var(--purple))] mb-4">
       Recent Articles
     </h2>
     <BlogCardCarousel

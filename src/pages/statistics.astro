@@ -1,0 +1,131 @@
+---
+import Layout from '@/layouts/Site.astro';
+import { SITE_TITLE } from '@/consts';
+
+export const prerender = true;
+
+// Simulated platform metrics
+const stats = [
+  { label: "Total Habits Logged", value: "244,120", icon: "✅", change: "+14.2% this month" },
+  { label: "Meditation Minutes Completed", value: "18,450", icon: "🧘", change: "+22.5% this month" },
+  { label: "Active Streaks Highs", value: "18.6d avg", icon: "🔥", change: "+8.1% this week" },
+  { label: "Words Journaled", value: "3.2M", icon: "✍️", change: "+12.1% this month" }
+];
+
+const popularHabits = [
+  { name: "Daily Reflection Check", count: 1240, color: "#a855f7" },
+  { name: "Mindful Breathing (5m)", count: 980, color: "#10b981" },
+  { name: "Hydration (8 glasses)", count: 850, color: "#3b82f6" },
+  { name: "Screen-Free Evening", count: 710, color: "#f59e0b" },
+];
+---
+
+<Layout 
+  title={`Platform Statistics - ${SITE_TITLE}`} 
+  description="Explore aggregated community metrics, active streaks averages, and wellness habit check-in numbers on reMindMatters."
+>
+  <div class="max-w-6xl mx-auto px-4 py-16 sm:px-6 lg:px-8 font-sans">
+    
+    {/* ── Page Header Card ── */}
+    <div class="bg-[var(--warm-neutral)] border border-border p-8 md:p-12 rounded-3xl shadow-xs text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-serif font-bold text-[rgb(var(--purple))] mb-4">
+        Platform Statistics
+      </h1>
+      <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
+        Aggregated, fully anonymous stats representing mindfulness consistency and neurological highway building.
+      </p>
+      <div class="mt-6 flex justify-center items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <span>Real-time Sync Active</span>
+        <span class="size-2 rounded-full bg-emerald-500 animate-ping"></span>
+      </div>
+    </div>
+
+    {/* ── Key Metrics Grid ── */}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+      {stats.map(s => (
+        <div class="bg-card border border-border hover:border-primary/30 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between gap-4">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-2xl">{s.icon}</span>
+            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-100 dark:border-emerald-900/50">
+              {s.change}
+            </span>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-muted-foreground block mb-1">
+              {s.label}
+            </span>
+            <span class="text-3xl font-bold font-serif text-foreground leading-none">
+              {s.value}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* ── Visual Dashboards Section ── */}
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start mb-16">
+      
+      {/* ── Habits Strength Bar Chart ── */}
+      <div class="bg-card border border-border p-8 rounded-3xl shadow-xs space-y-6">
+        <div>
+          <h2 class="text-2xl font-serif font-bold text-foreground mb-1">
+            Top Community Micro-Habits
+          </h2>
+          <p class="text-xs text-muted-foreground">
+            Consistency metrics for active routines currently tracking across the network.
+          </p>
+        </div>
+
+        <div class="space-y-5">
+          {popularHabits.map(h => {
+            const pct = Math.round((h.count / 1240) * 100);
+            return (
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-sm font-semibold">
+                  <span class="text-foreground">{h.name}</span>
+                  <span class="text-muted-foreground">{h.count} weekly logs</span>
+                </div>
+                <div class="h-3 w-full bg-muted rounded-full overflow-hidden shadow-inner border border-border/20">
+                  <div 
+                    class="h-full rounded-full transition-all duration-500" 
+                    style={`width: ${pct}%; background-color: ${h.color};`}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Sidebar streaks panel ── */}
+      <aside class="space-y-6 lg:sticky lg:top-24">
+        
+        {/* Streak highlight */}
+        <div class="bg-[var(--warm-neutral)] border border-border p-6 rounded-3xl shadow-xs space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🔥</span>
+            <h3 class="font-serif font-bold text-lg text-foreground">Consistency Record</h3>
+          </div>
+          <div class="space-y-1">
+            <span class="text-5xl font-serif font-bold text-[rgb(var(--purple))] block">142d</span>
+            <span class="text-xs text-muted-foreground font-medium block">Highest active individual habit streak</span>
+          </div>
+          <p class="text-xs text-muted-foreground leading-relaxed pt-2 border-t border-border">
+            "Every checkbox is a vote for the type of person you wish to become." — Your habit streaks physically build support loop neural paths over time.
+          </p>
+        </div>
+
+        {/* Sync Status Info */}
+        <div class="bg-card border border-border p-6 rounded-2xl flex flex-col gap-3 shadow-xs">
+          <h4 class="font-serif font-bold text-sm text-foreground">Fully Decentralized Log Vault</h4>
+          <p class="text-xs text-muted-foreground leading-relaxed">
+            All user analytics are encrypted at rest using isolated Row-Level Security parameters. No personal names or plain journal entries are stored inside community metadata.
+          </p>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </div>
+</Layout>

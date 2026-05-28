@@ -8,11 +8,19 @@ import {
   CardTitle,
   CardAction,
 } from "@/components/starwind/card";
+
 import { Badge } from "@/components/starwind/badge";
 import { Button } from "@/components/starwind/button";
 import { Image } from "@/components/starwind/image";
+
 import { tv } from "tailwind-variants";
-import type { BlogPost, BlogCardVariant, BlogCardSize } from "../";
+
+import type {
+  BlogPost,
+  BlogCardVariant,
+  BlogCardSize,
+} from "../";
+
 import { formatDate } from "../utils";
 import { getTagColorClass } from "@/lib/blog/tagColors";
 
@@ -28,7 +36,10 @@ interface Props {
   class?: string;
 }
 
-// Destructure props with default values
+/* -------------------------------------------------------------------------- */
+/* Props                                                                      */
+/* -------------------------------------------------------------------------- */
+
 const {
   post,
   variant = "default",
@@ -41,17 +52,39 @@ const {
   class: className,
 } = Astro.props;
 
-// Tailwind Variants configuration
+/* -------------------------------------------------------------------------- */
+/* Card Variants                                                              */
+/* -------------------------------------------------------------------------- */
+
 const verticalBlogCard = tv({
-  base: "group hover:shadow-lg transition-all duration-300",
+  base: `
+    group
+    h-full
+    flex
+    flex-col
+    overflow-hidden
+    transition-shadow
+    duration-300
+    hover:shadow-lg
+  `,
+
   variants: {
     variant: {
       default: "border-border bg-card",
-      featured: "border-[rgb(var(--accent))] bg-[rgba(var(--accent),0.05)] shadow-md",
-      minimal: "border-transparent bg-transparent shadow-none",
-      compact: "border-border bg-card",
-      colorful: "border-transparent shadow-md",
+
+      featured:
+        "border-[rgb(var(--accent))] bg-[rgba(var(--accent),0.05)] shadow-md",
+
+      minimal:
+        "border-transparent bg-transparent shadow-none",
+
+      compact:
+        "border-border bg-card",
+
+      colorful:
+        "border-transparent shadow-md",
     },
+
     size: {
       sm: "w-full max-w-sm",
       md: "w-full max-w-md",
@@ -60,121 +93,335 @@ const verticalBlogCard = tv({
   },
 });
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Returns a Tailwind gradient class pair based on the post's tags.
- * Used only when variant === "colorful".
- *
- * @param {BlogPost} post - The blog post whose tags determine the colour theme.
- * @returns {string} A Tailwind `from-*` / `to-*` gradient class string.
+ * Returns a gradient class pair based on tags.
  */
 const getCardColor = (post: BlogPost): string => {
   const tags = post.tags ?? [];
 
-  if (tags.includes("mental health") || tags.includes("emotional regulation")) {
-    return "from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950";
+  if (
+    tags.includes("mental health") ||
+    tags.includes("emotional regulation")
+  ) {
+    return `
+      from-blue-50
+      to-indigo-100
+      dark:from-blue-950
+      dark:to-indigo-950
+    `;
   }
-  if (tags.includes("mindfulness") || tags.includes("meditation")) {
-    return "from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-950";
+
+  if (
+    tags.includes("mindfulness") ||
+    tags.includes("meditation")
+  ) {
+    return `
+      from-green-50
+      to-emerald-100
+      dark:from-green-950
+      dark:to-emerald-950
+    `;
   }
-  if (tags.includes("stress management") || tags.includes("anxiety")) {
-    return "from-yellow-50 to-orange-100 dark:from-yellow-950 dark:to-orange-950";
+
+  if (
+    tags.includes("stress management") ||
+    tags.includes("anxiety")
+  ) {
+    return `
+      from-yellow-50
+      to-orange-100
+      dark:from-yellow-950
+      dark:to-orange-950
+    `;
   }
-  if (tags.includes("self-care") || tags.includes("well-being")) {
-    return "from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950";
+
+  if (
+    tags.includes("self-care") ||
+    tags.includes("well-being")
+  ) {
+    return `
+      from-purple-50
+      to-pink-100
+      dark:from-purple-950
+      dark:to-pink-950
+    `;
   }
-  if (tags.includes("educational") || tags.includes("cognitive")) {
-    return "from-cyan-50 to-blue-100 dark:from-cyan-950 dark:to-blue-950";
+
+  if (
+    tags.includes("educational") ||
+    tags.includes("cognitive")
+  ) {
+    return `
+      from-cyan-50
+      to-blue-100
+      dark:from-cyan-950
+      dark:to-blue-950
+    `;
   }
-  return "from-gray-50 to-slate-100 dark:from-gray-950 dark:to-slate-950";
+
+  return `
+    from-gray-50
+    to-slate-100
+    dark:from-gray-950
+    dark:to-slate-950
+  `;
 };
 
-// Get card color for colorful variant
-const cardColorClass = variant === "colorful" ? getCardColor(post) : "";
-const cardSize = size === "sm" ? "sm" : "default";
-const isFeatured = post.tags?.includes("featured") ?? false;
-const imageUrl = Array.isArray(post.image) ? post.image[0] : post.image;
+const cardColorClass =
+  variant === "colorful"
+    ? getCardColor(post)
+    : "";
 
-/** Composed class string for the Card element. */
+const cardSize =
+  size === "sm"
+    ? "sm"
+    : "default";
+
+const isFeatured =
+  post.tags?.includes("featured") ?? false;
+
+const imageUrl = Array.isArray(post.image)
+  ? post.image[0]
+  : post.image;
+
+/**
+ * Final composed class string.
+ */
 const cardClass = [
-  verticalBlogCard({ variant, size, class: className }),
-  variant === "colorful" ? `bg-gradient-to-br ${cardColorClass}` : "",
-].filter(Boolean).join(" ");
+  verticalBlogCard({
+    variant,
+    size,
+    class: className,
+  }),
+
+  variant === "colorful"
+    ? `bg-gradient-to-br ${cardColorClass}`
+    : "",
+]
+  .filter(Boolean)
+  .join(" ");
 ---
 
 {
   href ? (
-    <a href={href} class="block max-w-96 mx-8 my-4 rounded-t-xl">
-      <Card 
-        class={`h-full gap-4 p-0 hover:gap-3 hover:group transition-all duration-300 ${cardClass}`}
-        size={cardSize} 
-        
+    <a
+      href={href}
+      class="block h-full rounded-xl"
+    >
+      <Card
+        class={`h-full border border-blue-200 dark:border-blue-800 ${cardClass}`}
+        size={cardSize}
       >
+        {/* ----------------------------------------------------------------- */}
+        {/* Image                                                             */}
+        {/* ----------------------------------------------------------------- */}
+
         {showImage && post.image && (
-          <div class="relative overflow-hidden mb-auto rounded-none transition-all duration-300">
+          <div
+            class="
+              relative
+              overflow-hidden
+            "
+          >
             <Image
               src={imageUrl}
               alt={post.title}
               inferSize
-              class="w-full aspect-[16/10] object-cover transition-transform duration-300 group-hover:scale-105"
+              class="
+                aspect-[16/10]
+                w-full
+                object-cover
+                transition-transform
+                duration-300
+                group-hover:scale-105
+              "
             />
+
             {variant === "featured" && (
-              <div class="absolute">
-                <Badge size="sm" variant="primary">Featured</Badge>
+              <div class="absolute top-3 right-3">
+                <Badge
+                  size="sm"
+                  variant="primary"
+                >
+                  Featured
+                </Badge>
               </div>
             )}
           </div>
         )}
 
-        <CardHeader class="mb-auto">
+        {/* ----------------------------------------------------------------- */}
+        {/* Header                                                            */}
+        {/* ----------------------------------------------------------------- */}
+
+        <CardHeader class="flex-1">
           {variant !== "minimal" && isFeatured && (
             <CardAction>
-              <Badge size="sm" variant="secondary">Featured</Badge>
+              <Badge
+                size="sm"
+                variant="secondary"
+              >
+                Featured
+              </Badge>
             </CardAction>
           )}
-          <CardTitle class="line-clamp-2 group-hover:text-[var(--blue-1)] transition-all duration-300 mb-auto">
+
+          <CardTitle
+            class="
+              line-clamp-2
+              transition-colors
+              duration-300
+              group-hover:text-[var(--blue-1)]
+            "
+          >
             {post.title}
           </CardTitle>
-          <CardDescription class="line-clamp-3 mt-2 text-base group-hover:text-lg transition-all duration-300">
+
+          <CardDescription
+            class="
+              mt-2
+              line-clamp-3
+              text-base
+              transition-colors
+              duration-300
+              group-hover:text-foreground
+            "
+          >
             {post.description}
           </CardDescription>
         </CardHeader>
 
-        <CardContent class="line-clamp-1 center mt-auto mb-0 bottom-0 flex flex-wrap gap-1">
-          {showTags && post.tags && post.tags.length > 0 && (
-            <div class="flex flex-wrap gap-1.5">
-              {post.tags.slice(0, 3).map((tag: string) => (
-                <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${getTagColorClass(tag)}`}>
-                  {tag}
-                </span>
-              ))}
-              {post.tags.length > 3 && (
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border border-border text-muted-foreground bg-muted/40">
-                  +{post.tags.length - 3}
-                </span>
-              )}
-            </div>
-          )}
+        {/* ----------------------------------------------------------------- */}
+        {/* Tags                                                              */}
+        {/* ----------------------------------------------------------------- */}
+
+        <CardContent
+          class="
+            mt-auto
+            overflow-hidden
+          "
+        >
+          {showTags &&
+            post.tags &&
+            post.tags.length > 0 && (
+              <div
+                class="
+                  flex
+                  flex-nowrap
+                  gap-1.5
+                  overflow-hidden
+                  whitespace-nowrap
+                "
+              >
+                {post.tags
+                  .slice(0, 3)
+                  .map((tag: string) => (
+                    <span
+                      class={`
+                        inline-flex
+                        shrink-0
+                        items-center
+                        rounded-full
+                        border
+                        px-2
+                        py-0.5
+                        text-xs
+                        font-semibold
+                        ${getTagColorClass(tag)}
+                      `}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+
+                {post.tags.length > 3 && (
+                  <span
+                    class="
+                      inline-flex
+                      shrink-0
+                      items-center
+                      rounded-full
+                      border
+                      border-border
+                      bg-muted/40
+                      px-2
+                      py-0.5
+                      text-xs
+                      font-semibold
+                      text-muted-foreground
+                    "
+                  >
+                    +{post.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
         </CardContent>
 
-        <CardFooter class="flex items-center justify-between py-2 mt-auto bg-background">
-          <div class="flex items-center gap-2 text-sm text-muted-foreground">
+        {/* ----------------------------------------------------------------- */}
+        {/* Footer                                                            */}
+        {/* ----------------------------------------------------------------- */}
+
+        <CardFooter
+          class="
+            mt-auto
+            flex
+            items-center
+            justify-between
+            gap-4
+            border-t
+            bg-background
+            py-3
+          "
+        >
+          <div
+            class="
+              flex
+              flex-wrap
+              items-center
+              gap-2
+              text-sm
+              text-muted-foreground
+            "
+          >
             {showAuthor && post.author && (
-              <Fragment>
+              <>
                 <span>{post.author}</span>
                 <span>•</span>
-              </Fragment>
+              </>
             )}
-            {post.date && <span>{formatDate(post.date)}</span>}
-            {showReadTime && post.minutesRead && (
-              <Fragment>
-                <span>•</span>
-                <span>{post.minutesRead}</span>
-              </Fragment>
+
+            {post.date && (
+              <span>
+                {formatDate(post.date)}
+              </span>
             )}
+
+            {showReadTime &&
+              post.minutesRead && (
+                <>
+                  <span>•</span>
+                  <span>
+                    {post.minutesRead}
+                  </span>
+                </>
+              )}
           </div>
+
           <Button
             size="sm"
-            class="opacity-100 group-hover:opacity-100 transition-opacity py-0"
+            class="
+              shrink-0
+              bg-accent/80
+              py-0
+              transition-opacity
+              duration-300
+              hover:bg-accent/50
+            "
           >
             Read →
           </Button>
@@ -182,78 +429,205 @@ const cardClass = [
       </Card>
     </a>
   ) : (
-    <div class="block">
-      <Card class={cardClass} size={cardSize}>
+    <div class="block h-full">
+      <Card
+        class={cardClass}
+        size={cardSize}
+      >
+        {/* ----------------------------------------------------------------- */}
+        {/* Image                                                             */}
+        {/* ----------------------------------------------------------------- */}
+
         {showImage && post.image && (
-          <div class="relative overflow-hidden rounded-t-lg">
+          <div class="relative overflow-hidden">
             <Image
               src={imageUrl}
               alt={post.title}
               inferSize
-              class=
-              "
-                w-full aspect-[16/10] object-cover transition-transform duration-300 group-hover:scale-105
+              class="
+                aspect-[16/10]
+                w-full
+                object-cover
+                transition-transform
+                duration-300
+                group-hover:scale-105
               "
             />
+
             {variant === "featured" && (
               <div class="absolute top-3 right-3">
-                <Badge size="sm" variant="primary">Featured</Badge>
+                <Badge
+                  size="sm"
+                  variant="primary"
+                >
+                  Featured
+                </Badge>
               </div>
             )}
           </div>
         )}
 
-        <CardHeader class="pb-3">
+        {/* ----------------------------------------------------------------- */}
+        {/* Header                                                            */}
+        {/* ----------------------------------------------------------------- */}
+
+        <CardHeader class="flex-1">
           {variant !== "minimal" && isFeatured && (
             <CardAction>
-              <Badge size="sm" variant="secondary">Featured</Badge>
+              <Badge
+                size="sm"
+                variant="secondary"
+              >
+                Featured
+              </Badge>
             </CardAction>
           )}
-          <CardTitle class="line-clamp-2 group-hover:text-[rgb(var(--purple))] transition-colors">
+
+          <CardTitle
+            class="
+              line-clamp-2
+              transition-colors
+              duration-300
+              group-hover:text-[rgb(var(--purple))]
+            "
+          >
             {post.title}
           </CardTitle>
-          <CardDescription class="line-clamp-3">
+
+          <CardDescription
+            class="
+              mt-2
+              line-clamp-3
+              transition-colors
+              duration-300
+              group-hover:text-foreground
+            "
+          >
             {post.description}
           </CardDescription>
         </CardHeader>
 
-        <CardContent class="space-y-3">
-          {showTags && post.tags && post.tags.length > 0 && (
-            <div class="flex flex-wrap gap-1.5">
-              {post.tags.slice(0, 3).map((tag: string) => (
-                <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${getTagColorClass(tag)}`}>
-                  {tag}
-                </span>
-              ))}
-              {post.tags.length > 3 && (
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border border-border text-muted-foreground bg-muted/40">
-                  +{post.tags.length - 3}
-                </span>
-              )}
-            </div>
-          )}
+        {/* ----------------------------------------------------------------- */}
+        {/* Tags                                                              */}
+        {/* ----------------------------------------------------------------- */}
+
+        <CardContent class="overflow-hidden">
+          {showTags &&
+            post.tags &&
+            post.tags.length > 0 && (
+              <div
+                class="
+                  flex
+                  flex-nowrap
+                  gap-1.5
+                  overflow-hidden
+                  whitespace-nowrap
+                "
+              >
+                {post.tags
+                  .slice(0, 3)
+                  .map((tag: string) => (
+                    <span
+                      class={`
+                        inline-flex
+                        shrink-0
+                        items-center
+                        rounded-full
+                        border
+                        px-2
+                        py-0.5
+                        text-xs
+                        font-semibold
+                        ${getTagColorClass(tag)}
+                      `}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+
+                {post.tags.length > 3 && (
+                  <span
+                    class="
+                      inline-flex
+                      shrink-0
+                      items-center
+                      rounded-full
+                      border
+                      border-border
+                      bg-muted/40
+                      px-2
+                      py-0.5
+                      text-xs
+                      font-semibold
+                      text-muted-foreground
+                    "
+                  >
+                    +{post.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
         </CardContent>
 
-        <CardFooter class="flex items-center justify-between pt-0">
-          <div class="flex items-center gap-2 text-sm text-muted-foreground">
+        {/* ----------------------------------------------------------------- */}
+        {/* Footer                                                            */}
+        {/* ----------------------------------------------------------------- */}
+
+        <CardFooter
+          class="
+            mt-auto
+            flex
+            items-center
+            justify-between
+            gap-4
+            pt-0
+          "
+        >
+          <div
+            class="
+              flex
+              flex-wrap
+              items-center
+              gap-2
+              text-sm
+              text-muted-foreground
+            "
+          >
             {showAuthor && post.author && (
-              <Fragment>
+              <>
                 <span>{post.author}</span>
                 <span>•</span>
-              </Fragment>
+              </>
             )}
-            {post.date && <span>{formatDate(post.date)}</span>}
-            {showReadTime && post.minutesRead && (
-              <Fragment>
-                <span>•</span>
-                <span>{post.minutesRead}</span>
-              </Fragment>
+
+            {post.date && (
+              <span>
+                {formatDate(post.date)}
+              </span>
             )}
+
+            {showReadTime &&
+              post.minutesRead && (
+                <>
+                  <span>•</span>
+                  <span>
+                    {post.minutesRead}
+                  </span>
+                </>
+              )}
           </div>
+
           <Button
             size="sm"
             variant="ghost"
-            class="opacity-0 group-hover:opacity-100 transition-opacity"
+            class="
+              shrink-0
+              bg-accent
+              opacity-0
+              transition-opacity
+              duration-300
+              group-hover:opacity-100
+            "
           >
             Read →
           </Button>
